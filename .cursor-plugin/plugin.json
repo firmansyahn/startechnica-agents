@@ -1,0 +1,25 @@
+{
+  "name": "startechnica-agents",
+  "displayName": "Startechnica agent skills",
+  "description": "Agent skills for Go services, Next.js apps, OAuth, git and GitLab: focused skills with rules, review scans and checklists",
+  "version": "0.1.0",
+  "author": {
+    "name": "Firmansyah Nainggolan",
+    "email": "firmansyah@nainggolan.id"
+  },
+  "homepage": "https://github.com/firmansyahn/startechnica-agents",
+  "repository": "https://github.com/firmansyahn/startechnica-agents",
+  "license": "MIT",
+  "keywords": [
+    "agent-skills",
+    "claude-code",
+    "go",
+    "golang",
+    "nextjs",
+    "oauth",
+    "git",
+    "gitlab",
+    "code-review"
+  ],
+  "skills": "./skills/"
+}

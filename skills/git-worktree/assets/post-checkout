@@ -1,0 +1,31 @@
+#!/bin/sh
+# post-checkout: give every worktree the main checkout's gitignored local files.
+# Enabled once per clone with: git config core.hooksPath tools/git-hooks
+#
+# In a worktree other than the main checkout (git worktree add, or another tool's worktree), copy
+# each path listed in the main checkout's .worktreeinclude that the worktree lacks. Nothing is
+# overwritten. Lines are paths relative to the repo root; blank lines and # comments are skipped.
+# Claude Code reads the same file for the worktrees it creates itself.
+top="$(git rev-parse --show-toplevel)"
+common="$(git rev-parse --path-format=absolute --git-common-dir)"
+main="$(dirname "$common")"
+
+if [ "$top" != "$main" ] && [ -f "$main/.worktreeinclude" ]; then
+  # tr, not sed 's/\r$//': BSD sed (macOS) reads \r as a plain r.
+  tr -d '\r' <"$main/.worktreeinclude" | sed -e 's/#.*//' -e 's/[[:space:]]*$//' | while IFS= read -r entry; do
+    [ -n "$entry" ] || continue
+    entry="${entry#/}"
+    entry="${entry%/}"
+    src="$main/$entry"
+    dst="$top/$entry"
+    [ -e "$src" ] || continue
+    mkdir -p "$(dirname "$dst")"
+    if [ -d "$src" ]; then
+      cp -Rn "$src" "$(dirname "$dst")/" 2>/dev/null
+    elif [ ! -e "$dst" ]; then
+      cp "$src" "$dst"
+    fi
+  done
+fi
+
+exit 0

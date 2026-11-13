@@ -1,0 +1,70 @@
+# .gitignore starting point (git-gitignore). Keep the blocks for tools the repo uses, delete the
+# rest, and name the tool in each block's comment. Your own notes and tools only you run go in
+# .git/info/exclude, not here. In a repo with several apps, put an app's own blocks in
+# <app>/.gitignore (paths relative to it), or prefix them with the app's folder here.
+
+# Env files with values; .env.example documents the variables and is committed.
+.env
+.env.*
+!.env.example
+
+# Local agent and tool settings
+.claude/settings.local.json
+
+# Branch worktrees (git-worktree)
+/.worktrees/
+
+# Node and Next.js: dependencies, build output, caches
+node_modules/
+.next/
+/out/
+*.tsbuildinfo
+next-env.d.ts
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Yarn 4: only the shared parts are committed (yarn.lock stays committed)
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
+
+# Tests: reports and coverage
+/coverage/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+# Binaries and build output (go.sum stays committed)
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+bin/
+dist/
+
+# Python caches
+__pycache__/
+
+# SQLite databases
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/

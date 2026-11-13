@@ -1,0 +1,7 @@
+# .worktreeinclude: gitignored files every worktree needs, copied from the main checkout.
+# Claude Code copies them into the worktrees it creates; the post-checkout hook into the others.
+# One path per line, relative to the repo root. Never list a file a branch tracks.
+.claude/settings.local.json
+.env
+.env.local
+# a nested app's own file too, e.g. <app>/.env.local

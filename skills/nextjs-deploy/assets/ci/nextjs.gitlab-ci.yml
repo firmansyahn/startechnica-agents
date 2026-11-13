@@ -1,0 +1,253 @@
+# <app>/.gitlab-ci.yml, included by the root file: a Next.js app's checks, image build and chart bump.
+# <app> is the app's folder under the repo root, also used as its job prefix. Replace <org>/<ci-templates>,
+# <app> and the paths (for an app at the repo root, drop the "<app>/" path prefixes); the org's shared templates do the kaniko
+# build and the chart-repo trigger.
+spec:
+  inputs:
+    app-name:
+      description: Application name (chart appVersion label).
+      type: string
+      default: <app>-web
+    app-version:
+      description: Application artifact version.
+      type: string
+      default: 0.1.0
+    chart-name:
+      description: Subchart key in the wrapper chart's values.yaml.
+      type: string
+      default: <app>-web
+    chart-project-path:
+      description: GitLab path of the Helm chart repository.
+      type: string
+      default: <org>/charts/<chart-repo>
+    chart-version:
+      description: Helm chart version.
+      type: string
+      default: 0.1.0
+    nodejs-version:
+      description: Node.js major version for the Next.js build.
+      type: string
+      default: "24"
+---
+
+include:
+  - project: <org>/<ci-templates>
+    ref: main
+    file: ci/templates/Jobs/Image-Build-Push.gitlab-ci.yml
+    inputs:
+      job-name: <app>:build
+      job-stage: build
+      containerfile-dir: <app>/shrine
+  - project: <org>/<ci-templates>
+    ref: main
+    file: ci/templates/Jobs/Image-Release.gitlab-ci.yml
+    inputs:
+      job-name: <app>:release
+      job-stop-name: <app>:stop-release
+      job-stage: deploy
+
+# What runs the app's jobs: its own tree, the root pipeline definition, and the API document
+# the app's types are generated from (yarn gen:api).
+.<app>-changes: &app-changes
+  - <app>/**/*
+  - .gitlab-ci.yml
+  - <path-to>/openapi.json
+
+# Per-app variables for the build and release jobs: the chart-bump identity (read by the chart
+# pipeline) and the image destination. A `variables:` block on a job replaces the template's, so
+# the jobs below spell out the template variables they still need.
+.<app>-app-vars: &app-vars
+  APP_NAME: $[[ inputs.app-name ]]
+  APP_VERSION: $[[ inputs.app-version ]]
+  APP_CHART_NAME: $[[ inputs.chart-name ]]
+  APP_CHART_VERSION: $[[ inputs.chart-version ]]
+  APP_CHART_PROJECT_PATH: $[[ inputs.chart-project-path ]]
+  APP_IMAGE_REPOSITORY: ${CI_PROJECT_PATH}/<app>-web
+  APP_IMAGE_TAG: ${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}-$[[ inputs.nodejs-version ]]
+  APP_REGISTRY_IMAGE: ${CI_REGISTRY_IMAGE}/<app>-web
+
+# Shared setup: the image, Yarn and the app's rules.
+.<app>:
+  stage: test
+  image: $IMAGE_MIRROR/node:$[[ inputs.nodejs-version ]]-trixie-slim
+  variables:
+    # Yarn's cache folder, so the job cache below can keep it.
+    YARN_CACHE_FOLDER: $CI_PROJECT_DIR/.cache/yarn
+  before_script:
+    - cd <app>
+    # The committed Yarn release (yarnPath) runs on plain Node: no Corepack, no global Yarn.
+    - yarn() { node .yarn/releases/yarn-*.cjs "$@"; }
+  rules:
+    - changes: *app-changes
+
+.yarn-cache: &yarn-cache
+  key:
+    files:
+      - <app>/yarn.lock
+  paths:
+    - .cache/yarn
+
+# Installs the dependencies once. The checks below, and the Playwright job, take <app>/node_modules
+# from this job's artifact instead of each running yarn install. It is built on Debian (glibc),
+# like the Playwright image, so the native packages in it run in both.
+<app>:install:
+  extends: .<app>
+  stage: prepare
+  cache: *yarn-cache
+  script:
+    - yarn install --immutable
+  artifacts:
+    paths:
+      - <app>/node_modules/
+      # yarn run refuses to start without its install state.
+      - <app>/.yarn/install-state.gz
+    expire_in: 1 day
+
+.<app>-check:
+  extends: .<app>
+  needs: ["<app>:install"]
+
+# The typecheck and the lint run in every merge request that touches the app. Branch and tag
+# pipelines don't run them: the merge request already did.
+.<app>-mr-rules: &mr-rules
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    changes: *app-changes
+
+<app>:typecheck:
+  extends: .<app>-check
+  rules: *mr-rules
+  script:
+    # The generated API types must match the committed API document.
+    - yarn gen:api --check
+    # The route types tsc reads come from Next, which a fresh checkout hasn't run yet.
+    - yarn next typegen
+    - yarn typecheck
+
+<app>:lint:
+  extends: .<app>-check
+  rules: *mr-rules
+  script:
+    - yarn lint
+
+# Automatic and blocking in every MR and on the development branch: unattended merges rely on a
+# green pipeline meaning the tests passed. Vitest splits the test files between two parallel jobs
+# (gitlab-ci references/fast-tests.md); raise parallel when the suite grows.
+<app>:test:
+  extends: .<app>-check
+  parallel: 2
+  rules:
+    - changes: *app-changes
+  script:
+    - yarn test --shard="$CI_NODE_INDEX/$CI_NODE_TOTAL"
+
+<app>:playwright:
+  extends: .<app>-check
+  image: mcr.microsoft.com/playwright:v1.64.1-noble   # in step with @playwright/test
+  rules:
+    - changes: *app-changes
+      when: manual
+  allow_failure: true
+  script:
+    - yarn test:e2e
+  artifacts:
+    when: always
+    paths:
+      - <app>/playwright-report/
+      - <app>/test-results/
+    expire_in: 10 days
+
+# The org template sets needs: [], which would start the build beside the tests. Tag pipelines
+# always count as changed. A merge request into main builds the image main would release without
+# pushing it, so a change that breaks `next build` is found before it lands; other merge requests
+# only test.
+<app>:build:
+  needs:
+    # Optional: the typecheck runs only in merge requests.
+    - job: "<app>:typecheck"
+      optional: true
+    - job: "<app>:test"
+      optional: true
+  variables:
+    <<: *app-vars
+    # The template's own variables, which this block replaces: the kaniko image, the Dockerfile
+    # for the tier (the template falls back to Dockerfile.default), and the kaniko flags. Kaniko
+    # is the maintained osscontainertools fork on ghcr.io (gcr.io/kaniko-project is archived).
+    OCI_BUILDER_IMAGE: ghcr.io/osscontainertools/kaniko:v1.29.0-debug
+    APP_CONTAINERFILE_NAME: <app>/shrine/Dockerfile.${APP_DEPLOYMENT_TIER}
+    # --no-push on a merge request into main (rules below); empty otherwise.
+    WEB_BUILD_PUSH_OPTS: ""
+    # --compressed-caching=false trades build time for kaniko memory (an install in the prod-deps
+    # stage was OOM-killed with it on).
+    BUILD_OPTS: >-
+      ${WEB_BUILD_PUSH_OPTS}
+      --build-arg NODE_VERSION=$[[ inputs.nodejs-version ]]
+      --build-arg GIT_SHA=${CI_COMMIT_SHORT_SHA}
+      --build-arg APP_VERSION=${CI_COMMIT_REF_NAME}
+      --cache=true
+      --cache-repo ${APP_REGISTRY_IMAGE}/cache
+      --cache-ttl 168h
+      --snapshot-mode=redo
+      --compressed-caching=false
+      --push-retry=3
+      --image-download-retry=3
+      --image-fs-extract-retry=3
+  rules:
+    # A scheduled pipeline is the nightly full test run: it never builds or releases.
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ $APP_REF_PRD'
+      changes: *app-changes
+      variables:
+        APP_DEPLOYMENT_TIER: production
+        WEB_BUILD_PUSH_OPTS: --no-push
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_COMMIT_REF_NAME =~ $APP_REF_INTEG'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_TAG || $APP_DEPLOYMENT_TIER != "other"'
+      changes: *app-changes
+
+# Triggers the chart repository's pipeline on the tier's chart branch, which bumps the image tag.
+<app>:release:
+  needs: ["<app>:build"]
+  environment:
+    name: $APP_ENVIRONMENT_NAME
+    on_stop: <app>:stop-release
+  variables:
+    <<: *app-vars
+    # The release template's own variables, for the chart pipeline.
+    UPSTREAM_PROJECT_ID: ${CI_PROJECT_ID}
+    UPSTREAM_PROJECT_NAME: ${CI_PROJECT_NAME}
+    UPSTREAM_ENVIRONMENT_NAME: ${CI_ENVIRONMENT_NAME}
+    UPSTREAM_ENVIRONMENT_TIER: ${CI_ENVIRONMENT_TIER}
+    UPSTREAM_COMMIT_TITLE: ${CI_COMMIT_TITLE}
+    UPSTREAM_PIPELINE_ID: ${CI_PIPELINE_ID}
+  trigger:
+    forward:
+      pipeline_variables: true
+  rules:
+    # A scheduled pipeline is the nightly full test run: it never builds or releases.
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_COMMIT_REF_NAME =~ $APP_REF_INTEG'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_TAG || $APP_DEPLOYMENT_TIER != "other"'
+      changes: *app-changes
+
+<app>:stop-release:
+  rules:
+    # A scheduled pipeline is the nightly full test run: it never builds or releases.
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_COMMIT_REF_NAME =~ $APP_REF_INTEG'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_TAG || $APP_DEPLOYMENT_TIER != "other"'
+      changes: *app-changes
+      when: manual
+  # A manual job in rules defaults to allow_failure: false and would leave the pipeline blocked.
+  # The org release template sets it too; restated so it holds whatever the template does.
+  allow_failure: true

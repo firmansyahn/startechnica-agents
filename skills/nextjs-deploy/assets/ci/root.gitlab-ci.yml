@@ -1,0 +1,83 @@
+# Root .gitlab-ci.yml: branch → deployment tier, chart branch and environment, then one child file
+# per app (backend, web). Replace <org>/<chart-repo> and the runner tags; keep the tier rules.
+spec:
+  inputs:
+    chart-project-path:
+      description: GitLab path of the Helm chart repository.
+      type: string
+      default: <org>/charts/<chart-repo>
+    nodejs-version:
+      description: Node.js major version for the Next.js build.
+      type: string
+      default: "24"
+    runner-tags:
+      description: GitLab runner tags for the parent-pipeline jobs.
+      type: array
+      default:
+        - <runner-tag>
+---
+
+default:
+  tags:
+    - $[[ inputs.runner-tags ]]
+  interruptible: true
+
+variables:
+  APP_DEPLOYMENT_TIER: other
+  APP_IMAGE_REGISTRY: ${CI_REGISTRY}
+  APP_IMAGE_TAG_LATEST: ${CI_COMMIT_REF_SLUG}-latest
+  APP_CONTAINER_NAME: ${CI_PROJECT_PATH_SLUG}
+  # APP_IMAGE_REPOSITORY / APP_REGISTRY_IMAGE are per app and live in each child file, not here:
+  # a value here forwards as a pipeline variable and outranks the child's YAML, which would put
+  # every app's image in the same repository.
+  APP_REF_DEV: /^dev(elop(ment)?)?$/
+  APP_REF_INTEG: /^(add|chore|rc|feat(ure)?|(bug)?fix)[\/-].*$/
+  APP_REF_PRD: /^(master|main|trunk)$/
+  APP_REF_STG: /^(?:stg(?:-[\w-]+){1,2}|staging|stg)$/
+  APP_REF_TEST: /^(test|testing)$/
+  IMAGE_MIRROR: <registry-mirror>/docker/library   # where the jobs pull base images from
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    # A branch with an open merge request gets the merge request's pipeline only.
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: "$CI_COMMIT_BRANCH =~ $APP_REF_PRD || $CI_COMMIT_TAG =~ /^v/"
+      variables:
+        APP_DEPLOYMENT_TIER: "production"
+        APP_CHART_BRANCH: "main"
+        APP_ENVIRONMENT_NAME: "production"
+    - if: "$CI_COMMIT_BRANCH =~ $APP_REF_STG"
+      variables:
+        APP_DEPLOYMENT_TIER: "staging"
+        APP_CHART_BRANCH: "staging"
+        APP_ENVIRONMENT_NAME: "staging"
+    - if: "$CI_COMMIT_BRANCH =~ $APP_REF_TEST"
+      variables:
+        APP_DEPLOYMENT_TIER: "testing"
+        APP_CHART_BRANCH: "testing"
+        APP_ENVIRONMENT_NAME: "testing"
+    - if: "$CI_COMMIT_BRANCH =~ $APP_REF_INTEG"
+      variables:
+        APP_DEPLOYMENT_TIER: other
+        APP_CHART_BRANCH: other
+        APP_ENVIRONMENT_NAME: other
+    - if: "$CI_COMMIT_BRANCH =~ $APP_REF_DEV"
+      variables:
+        APP_DEPLOYMENT_TIER: "development"
+        APP_CHART_BRANCH: "develop"
+        APP_ENVIRONMENT_NAME: "development"
+
+# Each app brings its own test, image build and chart bump jobs; inputs are passed down.
+include:
+  - local: <app>/.gitlab-ci.yml   # nextjs-deploy assets/ci/nextjs.gitlab-ci.yml; one line per app
+    inputs:
+      chart-project-path: $[[ inputs.chart-project-path ]]
+      nodejs-version: $[[ inputs.nodejs-version ]]
+
+stages:
+  - prepare
+  - test
+  - build
+  - deploy
