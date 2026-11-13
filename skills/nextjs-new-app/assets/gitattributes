@@ -1,0 +1,9 @@
+# Copy to the repo root as .gitattributes (merge with an existing one).
+* text=auto eol=lf
+# The committed Yarn release: never rewritten for line endings, hidden from diffs and language stats.
+/<app>/.yarn/releases/** binary linguist-vendored
+/<app>/.yarn/plugins/**  binary linguist-vendored
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary

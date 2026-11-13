@@ -1,0 +1,17 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Try again",
+    "noRecords": "No records found",
+    "loadFailed": "Failed to load records"
+  },
+  "home": {
+    "meta": {
+      "title": "Home",
+      "description": "Start page"
+    },
+    "title": "Welcome"
+  }
+}

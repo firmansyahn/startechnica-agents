@@ -1,0 +1,143 @@
+/* =============================================================================
+   Theme presets (OKLCH) — drop-in starting set for a shadcn/Tailwind-v4 app.
+   Selected via <html data-theme="<name>">. Each preset = a light block +
+   a paired dark block ([data-theme="x"].dark). `default` = your :root/.dark
+   (no block here). Selector form is [data-theme="x"].dark for EVERY preset —
+   keep it consistent (specificity/override order).
+
+   ADAPT BEFORE USE:
+   - Match the KEY SET to the target repo's @theme inline block. These blocks set
+     base/card/popover/role/border/ring + chrome (--navbar) + --chart-1..5.
+     If the repo maps tokens not here (e.g. a real --sidebar* surface), ADD them.
+     If the repo lacks some, drop them.
+   - These use LIGHT chrome (--navbar light in light mode). If you keep dark
+     chrome, change --navbar/--navbar-foreground and DON'T run the light-chrome
+     hover sweep.
+   - Do NOT add status/grey/fixed-accent tokens here — they're semantic/fixed and
+     inherit from :root (see references/token-model.md).
+   - Rename presets to your brand vocabulary; keep the name list in sync with the
+     config validator (PRESET_NAMES) + a parity test.
+   ============================================================================= */
+
+/* -- ocean (example; rename) -- */
+[data-theme="ocean"] {
+  --background: oklch(100% 0 0);
+  --foreground: oklch(13.7% 0.036 258.5);
+  --card: oklch(100% 0 0);
+  --card-foreground: oklch(13.7% 0.036 258.5);
+  --popover: oklch(100% 0 0);
+  --popover-foreground: oklch(13.7% 0.036 258.5);
+  --primary: oklch(54.6% 0.2153 262.9);
+  --primary-foreground: oklch(98.4% 0.0035 247.9);
+  --secondary: oklch(96.8% 0.0068 247.9);
+  --secondary-foreground: oklch(20.8% 0.0399 265.7);
+  --muted: oklch(96.8% 0.0068 247.9);
+  --muted-foreground: oklch(55.5% 0.0407 257.4);
+  --accent: oklch(96.8% 0.0068 247.9);
+  --accent-foreground: oklch(20.8% 0.0399 265.7);
+  --destructive: oklch(63.7% 0.2078 25.3);
+  --destructive-foreground: oklch(98.4% 0.0035 247.9);
+  --border: oklch(92.9% 0.0126 255.5);
+  --input: oklch(92.9% 0.0126 255.5);
+  --ring: oklch(54.6% 0.2153 262.9);
+  /* chrome — LIGHT in light mode */
+  --navbar: oklch(98% 0.005 255);
+  --navbar-foreground: oklch(20.8% 0.0399 265.7);
+  /* charts — ramp of the preset hue (DON'T skip) */
+  --chart-1: oklch(54.6% 0.2153 262.9);
+  --chart-2: oklch(62.3% 0.1879 259.8);
+  --chart-3: oklch(70% 0.15 258);
+  --chart-4: oklch(78% 0.11 256);
+  --chart-5: oklch(85% 0.07 254);
+}
+[data-theme="ocean"].dark {
+  --background: oklch(23.8% 0.0114 293.2);
+  --foreground: oklch(98.4% 0.0035 247.9);
+  --card: oklch(27.7% 0.011 293.3);
+  --card-foreground: oklch(98.4% 0.0035 247.9);
+  --popover: oklch(27.7% 0.011 293.3);
+  --popover-foreground: oklch(98.4% 0.0035 247.9);
+  --primary: oklch(62.3% 0.1879 259.8);
+  --primary-foreground: oklch(20.8% 0.0399 265.7);
+  --secondary: oklch(28% 0.0369 260);
+  --secondary-foreground: oklch(98.4% 0.0035 247.9);
+  --muted: oklch(28% 0.0369 260);
+  --muted-foreground: oklch(71.1% 0.0351 256.8);
+  --accent: oklch(28% 0.0369 260);
+  --accent-foreground: oklch(98.4% 0.0035 247.9);
+  --destructive: oklch(39.6% 0.1331 25.7);
+  --destructive-foreground: oklch(98.4% 0.0035 247.9);
+  --border: oklch(35.2% 0.0103 293.5);
+  --input: oklch(35.2% 0.0103 293.5);
+  --ring: oklch(48.8% 0.217 264.4);
+  --navbar: oklch(27.7% 0.011 293.3);
+  --navbar-foreground: oklch(98.4% 0.0035 247.9);
+  --chart-1: oklch(62.3% 0.1879 259.8);
+  --chart-2: oklch(70% 0.15 258);
+  --chart-3: oklch(76% 0.12 256);
+  --chart-4: oklch(82% 0.09 254);
+  --chart-5: oklch(88% 0.06 252);
+}
+
+/* -- green -- */
+[data-theme="green"] {
+  --background: oklch(100% 0 0);
+  --foreground: oklch(14.1% 0.0044 285.8);
+  --card: oklch(100% 0 0);
+  --card-foreground: oklch(14.1% 0.0044 285.8);
+  --popover: oklch(100% 0 0);
+  --popover-foreground: oklch(14.1% 0.0044 285.8);
+  --primary: oklch(62.7% 0.17 149.2);
+  --primary-foreground: oklch(97% 0.0149 12.4);
+  --secondary: oklch(96.8% 0.0013 286.4);
+  --secondary-foreground: oklch(21% 0.0059 285.9);
+  --muted: oklch(96.8% 0.0013 286.4);
+  --muted-foreground: oklch(55.2% 0.0137 285.9);
+  --accent: oklch(96.8% 0.0013 286.4);
+  --accent-foreground: oklch(21% 0.0059 285.9);
+  --destructive: oklch(63.7% 0.2078 25.3);
+  --destructive-foreground: oklch(98.5% 0 0);
+  --border: oklch(92% 0.004 286.3);
+  --input: oklch(92% 0.004 286.3);
+  --ring: oklch(62.7% 0.17 149.2);
+  --navbar: oklch(98% 0.01 150);
+  --navbar-foreground: oklch(21% 0.0059 285.9);
+  --chart-1: oklch(62.7% 0.17 149.2);
+  --chart-2: oklch(70% 0.14 150);
+  --chart-3: oklch(77% 0.11 151);
+  --chart-4: oklch(83% 0.08 152);
+  --chart-5: oklch(89% 0.05 153);
+}
+[data-theme="green"].dark {
+  --background: oklch(23.8% 0.0114 293.2);
+  --foreground: oklch(98.4% 0.0035 247.9);
+  --card: oklch(27.7% 0.011 293.3);
+  --card-foreground: oklch(98.4% 0.0035 247.9);
+  --popover: oklch(27.7% 0.011 293.3);
+  --popover-foreground: oklch(98.4% 0.0035 247.9);
+  --primary: oklch(72.3% 0.1921 149.6);
+  --primary-foreground: oklch(24.1% 0.0481 154.3);
+  --secondary: oklch(27.4% 0.0055 286);
+  --secondary-foreground: oklch(98.5% 0 0);
+  --muted: oklch(27.4% 0.0055 286);
+  --muted-foreground: oklch(71.2% 0.0129 286.1);
+  --accent: oklch(27.4% 0.0055 286);
+  --accent-foreground: oklch(98.5% 0 0);
+  --destructive: oklch(39.6% 0.1331 25.7);
+  --destructive-foreground: oklch(98.5% 0 0);
+  --border: oklch(35.2% 0.0103 293.5);
+  --input: oklch(35.2% 0.0103 293.5);
+  --ring: oklch(72.3% 0.1921 149.6);
+  --navbar: oklch(27.7% 0.011 293.3);
+  --navbar-foreground: oklch(98.4% 0.0035 247.9);
+  --chart-1: oklch(72.3% 0.1921 149.6);
+  --chart-2: oklch(78% 0.15 150);
+  --chart-3: oklch(83% 0.12 151);
+  --chart-4: oklch(88% 0.09 152);
+  --chart-5: oklch(92% 0.06 153);
+}
+
+/* Add more presets by copying a pair and shifting the hue.
+   A typical set: orange, blue, green, violet, red, amber, sky.
+   Keep each block's KEY SET identical (base+role+chrome+chart) so none
+   half-recolors. */

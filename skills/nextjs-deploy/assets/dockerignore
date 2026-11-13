@@ -1,0 +1,18 @@
+# Copy to the repo root as .dockerignore: the images build from the repo root, so keep the large
+# and private directories out of the build context. Add the repo's own large folders.
+# <app> is the Next.js app's folder; for an app at the repo root, drop the "<app>/" prefixes.
+.git
+artifacts
+test-results
+docs
+
+<app>/node_modules
+<app>/.next
+<app>/.env*
+!<app>/.env.example
+<app>/playwright-report
+<app>/test-results
+<app>/tsconfig.tsbuildinfo
+# Yarn's local state; only the committed release goes into the image.
+<app>/.yarn/*
+!<app>/.yarn/releases

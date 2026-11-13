@@ -1,0 +1,221 @@
+# <app>/.gitlab-ci.yml: a Go service's test, image build and chart release jobs, included by the
+# root .gitlab-ci.yml (nextjs-deploy assets/ci/root.gitlab-ci.yml) with:
+#
+#   include:
+#     - local: <app>/.gitlab-ci.yml
+#       inputs:
+#         chart-project-path: $[[ inputs.chart-project-path ]]
+#         golang-version: $[[ inputs.golang-version ]]
+#
+# Replace <app>, <org>/<ci-templates>, <org>/charts/<chart-repo> and <APP>. The module root is
+# <app>/ (the folder with go.mod); the Dockerfiles are <app>/shrine/Dockerfile.<tier> and .default.
+spec:
+  inputs:
+    app-name:
+      description: Application name (chart appVersion label).
+      type: string
+      default: <app>
+    app-version:
+      description: Application artifact version.
+      type: string
+      default: 0.1.0
+    chart-name:
+      description: Subchart key in the wrapper chart's values.yaml.
+      type: string
+      default: <app>
+    chart-project-path:
+      description: GitLab path of the Helm chart repository.
+      type: string
+      default: <org>/charts/<chart-repo>
+    chart-version:
+      description: Helm chart version.
+      type: string
+      default: 0.1.0
+    golang-version:
+      description: Go major version for the vet and test jobs.
+      type: string
+      default: "1.27"
+---
+
+# The image jobs come from the org templates, included under this app's own job names so several
+# apps can share one pipeline.
+include:
+  - project: <org>/<ci-templates>
+    ref: main
+    file: ci/templates/Jobs/Image-Build-Push.gitlab-ci.yml
+    inputs:
+      job-name: <app>:build
+      job-stage: build
+      containerfile-dir: <app>/shrine
+  - project: <org>/<ci-templates>
+    ref: main
+    file: ci/templates/Jobs/Image-Release.gitlab-ci.yml
+    inputs:
+      job-name: <app>:release
+      job-stop-name: <app>:stop-release
+      job-stage: deploy
+
+# What runs this app's jobs: its tree (this file and the Dockerfiles are in it), or the root
+# pipeline file, whose tier variables and inputs the build and release jobs read.
+.<app>-changes: &app-changes
+  - <app>/**/*
+  - .gitlab-ci.yml
+
+# Per-app variables for the build and release jobs. They live here, not in the root: a root value
+# is a pipeline variable and would outrank this file. The jobs below also restate what the org
+# templates set in their own `variables`, because a job's `variables:` block replaces the
+# template's instead of merging with it.
+.<app>-app-vars: &app-vars
+  APP_NAME: $[[ inputs.app-name ]]
+  APP_VERSION: $[[ inputs.app-version ]]
+  APP_CHART_NAME: $[[ inputs.chart-name ]]
+  APP_CHART_VERSION: $[[ inputs.chart-version ]]
+  APP_CHART_PROJECT_PATH: $[[ inputs.chart-project-path ]]
+  APP_IMAGE_REPOSITORY: ${CI_PROJECT_PATH}/<app>
+  APP_IMAGE_TAG: ${CI_COMMIT_REF_SLUG}-${CI_COMMIT_SHORT_SHA}
+  APP_REGISTRY_IMAGE: ${CI_REGISTRY_IMAGE}/<app>
+
+.<app>:
+  stage: test
+  # Start with the pipeline; the checks need nothing from earlier stages.
+  needs: []
+  image: $IMAGE_MIRROR/golang:$[[ inputs.golang-version ]]
+  variables:
+    # The job cache can only keep paths under the project dir.
+    GOMODCACHE: $CI_PROJECT_DIR/.cache/go-mod
+    GOCACHE: $CI_PROJECT_DIR/.cache/go-build
+    # Read the cache, don't write it: uploading a Go build cache takes minutes a job. One job on
+    # the development branch writes it (<app>:test's rules; ci-cache-write-once).
+    CACHE_POLICY: pull
+  cache:
+    key:
+      files:
+        - <app>/go.sum
+    paths:
+      - .cache/go-mod
+      - .cache/go-build
+    policy: $CACHE_POLICY
+  before_script:
+    - cd <app>
+  rules:
+    - changes: *app-changes
+
+# Vet and test run automatically on every change and block the merge (ci-tests-block-merge):
+# unattended merges rely on a green pipeline meaning the tests passed. The suite is split by
+# package into parallel jobs (references/fast-tests.md): name the slowest packages in their own
+# shards, and "rest" takes everything else, new packages included. Each shard vets its own
+# packages, reusing what its tests compile. A small service can drop the matrix and run ./...
+<app>:test:
+  extends: .<app>
+  parallel:
+    matrix:
+      - TEST_SHARD: [slow, rest]
+  rules:
+    # The shard that compiles the most writes the cache, on the development branch only.
+    - if: '$CI_COMMIT_BRANCH =~ $APP_REF_DEV && $TEST_SHARD == "slow"'
+      changes: *app-changes
+      variables:
+        CACHE_POLICY: pull-push
+    - changes: *app-changes
+  services:
+    # The official image carries the contrib extensions migrations create (citext, pg_trgm).
+    - name: $IMAGE_MIRROR/postgres:16-alpine
+      alias: postgres
+      # Test packages run in parallel on one server; a throwaway server needn't be durable.
+      command: ["postgres", "-c", "max_connections=500", "-c", "fsync=off", "-c", "full_page_writes=off"]
+  variables:
+    POSTGRES_PASSWORD: ci-only
+    # Jobs run as root, where a test helper's own initdb refuses to start, so tests use the service.
+    <APP>_TEST_DSN: postgres://postgres:ci-only@postgres:5432/postgres?sslmode=disable
+  script:
+    - |
+      case "$TEST_SHARD" in
+        slow) pkgs="./internal/<slowest-package>" ;;   # measure first: the package that takes longest
+        rest) pkgs="$(go list ./... | grep -vE '/internal/<slowest-package>$' | tr '\n' ' ')" ;;
+        *)    echo "unknown TEST_SHARD '$TEST_SHARD'" >&2; exit 2 ;;
+      esac
+      go vet $pkgs
+      go test -race $pkgs
+
+# The org template sets needs: [], which would start the build beside the tests. The context is
+# the repo root (the template's default), as the Dockerfile copies from <app>/. MR pipelines only
+# test; tag pipelines always count as changed.
+<app>:build:
+  needs:
+    - job: "<app>:test"
+      optional: true
+  variables:
+    <<: *app-vars
+    # The template's own variables, which this block replaces: the kaniko image, the Dockerfile
+    # for the tier, and the kaniko flags. Kaniko is the maintained osscontainertools fork on
+    # ghcr.io (gcr.io/kaniko-project is archived), pinned, -debug for the template's shell steps.
+    OCI_BUILDER_IMAGE: ghcr.io/osscontainertools/kaniko:v1.29.0-debug
+    APP_CONTAINERFILE_NAME: <app>/shrine/Dockerfile.${APP_DEPLOYMENT_TIER}
+    BUILD_OPTS: >-
+      --cache=true
+      --cache-repo ${APP_REGISTRY_IMAGE}/cache
+      --cache-ttl 168h
+      --use-new-run
+      --build-arg GIT_SHA=${CI_COMMIT_SHORT_SHA}
+      --build-arg APP_VERSION=${CI_COMMIT_REF_NAME}
+      --build-arg GOLANG_VERSION=$[[ inputs.golang-version ]]
+  rules:
+    # A scheduled pipeline is the nightly full test run: it never builds or releases.
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_COMMIT_REF_NAME =~ $APP_REF_INTEG'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_TAG || $APP_DEPLOYMENT_TIER != "other"'
+      changes: *app-changes
+
+# The tier variables (APP_CHART_BRANCH, APP_ENVIRONMENT_NAME) come from workflow:rules as pipeline
+# variables, so forward them to the chart pipeline. These rules replace the template's, whose
+# zero-CI_COMMIT_BEFORE_SHA never-rule would drop every tag pipeline (tags always have a zero
+# BEFORE_SHA). They match the build's, since this job needs it.
+<app>:release:
+  needs: ["<app>:build"]
+  # The stop job keeps the name it was included under.
+  environment:
+    name: $APP_ENVIRONMENT_NAME
+    on_stop: <app>:stop-release
+  variables:
+    <<: *app-vars
+    # The release template's own variables, read by the chart pipeline.
+    UPSTREAM_PROJECT_ID: ${CI_PROJECT_ID}
+    UPSTREAM_PROJECT_NAME: ${CI_PROJECT_NAME}
+    UPSTREAM_ENVIRONMENT_NAME: ${CI_ENVIRONMENT_NAME}
+    UPSTREAM_ENVIRONMENT_TIER: ${CI_ENVIRONMENT_TIER}
+    UPSTREAM_COMMIT_TITLE: ${CI_COMMIT_TITLE}
+    UPSTREAM_PIPELINE_ID: ${CI_PIPELINE_ID}
+  trigger:
+    forward:
+      pipeline_variables: true
+  rules:
+    # A scheduled pipeline is the nightly full test run: it never builds or releases.
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_COMMIT_REF_NAME =~ $APP_REF_INTEG'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_TAG || $APP_DEPLOYMENT_TIER != "other"'
+      changes: *app-changes
+
+# Same rules, manual, so the environment's stop action exists wherever a release ran.
+<app>:stop-release:
+  rules:
+    # A scheduled pipeline is the nightly full test run: it never builds or releases.
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_COMMIT_REF_NAME =~ $APP_REF_INTEG'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_TAG || $APP_DEPLOYMENT_TIER != "other"'
+      changes: *app-changes
+      when: manual
+  # A manual job in rules defaults to allow_failure: false and would leave the pipeline blocked.
+  # The org release template sets it too; restated so it holds whatever the template does.
+  allow_failure: true
