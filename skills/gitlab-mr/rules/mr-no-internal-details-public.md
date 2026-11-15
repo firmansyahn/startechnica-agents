@@ -2,7 +2,7 @@
 title: Keep internal details out of public MRs
 impact: CRITICAL
 tags: security, public, disclosure
-check: scan, review
+check: scan (candidates), hook (candidates), review
 ---
 
 ## Keep internal details out of public MRs
@@ -26,4 +26,4 @@ glab mr create --title "fix(db): read the pool's host from the environment"
 
 If something already leaked: stop and tell the user. The fix is a history rewrite plus recreating the repo, or the host's support; deleting a repo is the user's decision.
 
-**How to check:** grep the staged diff, the commit messages and the MR description for the project's known internal names, IPv4 addresses, emails and non-public domains before posting.
+**How to check:** for a public repo, `scripts/scan.sh` with `REPO_PUBLIC=1` lists IPv4 addresses outside the documentation ranges, non-noreply emails and `INTERNAL_PATTERNS` matches in the commit messages, added lines and branch name, and, through `glab`, in the MR's title, description, source branch and notes. The `guard-public-text.mjs` hook (`assets/hooks/`) finds the visibility itself and, when it is public or unknown, refuses `glab mr create|update|note`, `glab release create`, `gh pr create|edit|comment` and `git push` whose text (inline, in the file it reads, or in the commits no remote has yet) has the same hits. Both are only as complete as `INTERNAL_PATTERNS`, and an IP-shaped version number is a false positive. Products and network setup described in prose, and anything already published, stay review.

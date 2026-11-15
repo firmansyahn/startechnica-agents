@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for git repositories hosted on GitLab.
 metadata:
   author: firmansyahn
-  version: "0.1.1"
+  version: "0.2.0"
 ---
 
 # Worktrees: the team's overlay
@@ -84,26 +84,32 @@ Team rules on top of the upstream skills. One file per rule in `rules/`; the fil
 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
-| [wt-no-switch-in-shared-checkout](rules/wt-no-switch-in-shared-checkout.md) | Don't switch branches in a checkout someone else is using | HIGH | review |
+| [wt-no-switch-in-shared-checkout](rules/wt-no-switch-in-shared-checkout.md) | Don't switch branches in a checkout someone else is using | HIGH | hook, review |
 | [wt-know-the-base](rules/wt-know-the-base.md) | Know the branch's base, and target the MR at it | MEDIUM | review (`git log --oneline origin/<target>..HEAD`) |
 | [wt-own-dependencies](rules/wt-own-dependencies.md) | Give each worktree its own dependency install | HIGH | scan (`node_modules`/`vendor` links, `replace`/`go.work` paths, `.worktrees/` not ignored), hook, review |
 | [wt-unlink-before-remove](rules/wt-unlink-before-remove.md) | Remove links alone, and check, before removing the worktree | CRITICAL | hook (`guard-worktree-remove.mjs`) |
-| [wt-stop-processes-before-remove](rules/wt-stop-processes-before-remove.md) | Stop processes running from the worktree before removing it | MEDIUM | review |
+| [wt-stop-processes-before-remove](rules/wt-stop-processes-before-remove.md) | Stop processes running from the worktree before removing it | MEDIUM | hook, review |
 | [wt-remove-after-merge](rules/wt-remove-after-merge.md) | Remove the worktree and its branch once the MR merged | LOW | scan (worktree folders that are gone), review (`git worktree list`) |
 
 ## Reviewing
 
 1. **Scope:** the repo and every worktree (`git worktree list`).
 2. **Scan:** `bash <this skill>/scripts/scan.sh [--strict]` from anywhere in the repo. Every line is a candidate: open the rule and confirm it.
-3. **Read what the scan can't:** each worktree's base and whether its MR targets it (`wt-know-the-base`), leftovers whose MR has merged (`wt-remove-after-merge`), and whether the repo installed the hook (`guard-worktree-remove.mjs`) or relies on review.
+3. **Read what the scan can't:** each worktree's base and whether its MR targets it (`wt-know-the-base`), whether a worktree or branch the scan lists as gone upstream really merged (`wt-remove-after-merge`), and whether the repo installed the hooks (`guard-worktree-remove.mjs`, `guard-shared-checkout.mjs`) or relies on review.
 4. **Report** each finding in the team's format (`agent-skills-authoring`), ordered by impact.
 
 ## Enforce it in Claude Code
 
-[assets/hooks/guard-worktree-remove.mjs](assets/hooks/guard-worktree-remove.mjs) is a `PreToolUse` hook for the `Bash` tool (Node; Linux, macOS and Windows) that refuses `git worktree remove` while any `node_modules` or `vendor` in the target (up to three levels down) is a link, and names the platform's way to remove it:
+Two `PreToolUse` hooks for the `Bash` tool (Node; Linux, macOS and Windows). Copy them to `tools/agent-hooks/` and register them in `.claude/settings.json`:
+
+- [assets/hooks/guard-worktree-remove.mjs](assets/hooks/guard-worktree-remove.mjs) refuses `git worktree remove` while any `node_modules` or `vendor` in the target (up to three levels down) is a link, naming the platform's way to remove it, and then while a process runs from the target (its path in the command line; on Linux and macOS also its working directory), listing the pids. `REMOVE_WITH_PROCESSES=1` in front lets a removal through when those processes aren't the worktree's.
+- [assets/hooks/guard-shared-checkout.mjs](assets/hooks/guard-shared-checkout.mjs) refuses a branch switch (`git switch`, `git checkout <branch>` or `-b`, `glab mr checkout`, `gh pr checkout`) in the main checkout while it has uncommitted or untracked files, and points to `git worktree add`. Restoring files and linked worktrees pass; `SWITCH_SHARED=1` in front lets a deliberate switch through.
 
 ```json
-{ "matcher": "Bash", "hooks": [ { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/tools/agent-hooks/guard-worktree-remove.mjs\"", "timeout": 20 } ] }
+{ "matcher": "Bash", "hooks": [
+  { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/tools/agent-hooks/guard-worktree-remove.mjs\"", "timeout": 20 },
+  { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/tools/agent-hooks/guard-shared-checkout.mjs\"", "timeout": 20 }
+] }
 ```
 
 [assets/post-checkout](assets/post-checkout) goes in the repo's hooks folder (`tools/git-hooks/post-checkout`, enabled once per clone with `git config core.hooksPath tools/git-hooks`), next to a `.worktreeinclude` like [assets/worktreeinclude](assets/worktreeinclude).

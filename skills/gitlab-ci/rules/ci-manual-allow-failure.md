@@ -2,7 +2,7 @@
 title: Give manual jobs in rules allow_failure: true
 impact: MEDIUM
 tags: rules, manual, merge
-check: scan, review
+check: scan, ci, review
 ---
 
 ## Give manual jobs in rules allow_failure: true
@@ -35,4 +35,4 @@ web:test:
 
 Restate it in the job even when an included template sets it, so the job holds whatever the template does.
 
-**How to check:** an MR whose only unrun jobs are manual shows pipeline status `success`, not `blocked` or `manual`.
+**How to check:** `scripts/scan.sh` lists jobs made manual in `rules` with no `allow_failure` of their own (the raw file, so it also catches a job that relies on its template's). `scripts/check-merged.sh` (the `ci:rules` job in `assets/ci-rules.gitlab-ci.yml`) is exact over the merged configuration: a rule with `when: manual` whose own `allow_failure`, or else the job's, isn't `true` (`exit_codes` doesn't count). Whether a manual job should be manual at all is review (`ci-tests-block-merge`); an MR whose only unrun jobs are manual shows pipeline status `success`, not `blocked` or `manual`.

@@ -2,7 +2,7 @@
 title: Commit to public repos with a noreply identity
 impact: MEDIUM
 tags: identity, public, privacy
-check: scan, review
+check: scan (`REPO_PUBLIC=1`), hook, review
 ---
 
 ## Commit to public repos with a noreply identity
@@ -24,4 +24,4 @@ git config --local user.email "<id>+<user>@users.noreply.github.com"
 git commit -m "docs: add the README"
 ```
 
-**How to check:** `git log --format='%ae %ce' <base>..HEAD | sort -u` shows only the noreply address in a public repo.
+**How to check:** `scripts/scan.sh` with `REPO_PUBLIC=1` lists commits in `<base>..HEAD` whose author or committer email isn't a noreply address. The `assets/hooks/pre-commit` git hook finds the visibility itself (`gh repo view`) for a repo whose origin is on github.com, and refuses a commit without the noreply address when the repo is public or `gh` can't tell (`COMMIT_IDENTITY_OK=1` in front after checking it's private). Neither covers a public repo on another host, or the name in `user.name`: review those, with `git log --format='%an %ae %cn %ce' <base>..HEAD | sort -u`.

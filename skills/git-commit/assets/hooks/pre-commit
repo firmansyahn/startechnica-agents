@@ -1,0 +1,41 @@
+#!/bin/sh
+# pre-commit: in a public GitHub repo, refuses a commit whose author or committer email isn't a
+# noreply address (commit-identity-public). It finds the visibility itself with the gh CLI, so it
+# needs no setting, unlike scripts/scan.sh (REPO_PUBLIC=1).
+#
+# Only repos whose origin is on github.com are checked (the noreply address is GitHub's). When gh is
+# missing or can't tell the visibility, the commit is refused too unless the email is a noreply one:
+# check the visibility by hand, and commit with COMMIT_IDENTITY_OK=1 in front if the repo is private.
+#
+# Install: copy to the repo's hooks folder (tools/git-hooks/pre-commit), commit it executable
+# (git update-index --chmod=+x tools/git-hooks/pre-commit), and enable it once per clone with
+# git config core.hooksPath tools/git-hooks. POSIX sh: Linux, macOS, Git Bash on Windows.
+
+[ "${COMMIT_IDENTITY_OK:-0}" = 1 ] && exit 0
+
+origin="$(git remote get-url origin 2>/dev/null)"
+case "$origin" in
+  *github.com[:/]*) ;;
+  *) exit 0 ;;
+esac
+
+# The identities this commit gets: the environment wins over the config, as in git itself.
+author="${GIT_AUTHOR_EMAIL:-$(git config user.email)}"
+committer="${GIT_COMMITTER_EMAIL:-$(git config user.email)}"
+noreply() { printf '%s\n' "$1" | grep -qE '@users\.noreply\.github\.com$'; }
+noreply "$author" && noreply "$committer" && exit 0
+
+visibility="$(gh repo view --json visibility -q .visibility 2>/dev/null)"
+case "$visibility" in
+  PRIVATE | INTERNAL) exit 0 ;;
+  PUBLIC) why="this repo is public" ;;
+  *) why="gh couldn't tell whether this repo is public" ;;
+esac
+
+{
+  echo "pre-commit: $why, and the commit would publish author <$author>, committer <$committer> (commit-identity-public)."
+  echo "Commit with your GitHub noreply address, set for this repo only:"
+  echo "  git config --local user.email \"<id>+<user>@users.noreply.github.com\""
+  [ -n "$visibility" ] || echo "If the repo is private, commit again with COMMIT_IDENTITY_OK=1 in front."
+} >&2
+exit 1

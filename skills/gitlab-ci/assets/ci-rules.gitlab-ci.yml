@@ -1,0 +1,39 @@
+# ci-rules.gitlab-ci.yml: a job that checks the merged CI configuration against the gitlab-ci rules
+# only the merged view shows, because the jobs come from org templates: ci-build-needs-checks,
+# ci-cache-write-once, ci-forward-pipeline-variables, ci-manual-allow-failure, ci-mr-pipeline-only
+# and ci-tag-before-sha. The checks are the gitlab-ci skill's scripts/check-merged.sh.
+#
+# Set up once:
+#   1. Copy scripts/check-merged.sh to tools/ci/check-merged.sh, and this file to ci/ci-rules.gitlab-ci.yml.
+#   2. Include it from the root .gitlab-ci.yml:   include: - local: ci/ci-rules.gitlab-ci.yml
+#   3. The CI lint API is not open to the job token. Create a project access token with the Developer
+#      role and the read_api scope, and store it as the masked CI/CD variable CI_RULES_TOKEN (not
+#      protected: merge request pipelines run on unprotected branches).
+#
+# Deliberate exceptions go in the job's variables: NEEDS_EMPTY_OK (build jobs whose needs: [] is
+# intended) and CACHE_WRITERS (the one job that writes the cache), each a regex of job names.
+ci:rules:
+  stage: test
+  # Reads only the configuration; nothing to wait for.
+  needs: []
+  image: $IMAGE_MIRROR/alpine:3.22
+  variables:
+    GITLAB_HOST: $CI_SERVER_URL
+    GITLAB_TOKEN: $CI_RULES_TOKEN
+    NEEDS_EMPTY_OK: ""
+    CACHE_WRITERS: ""
+  before_script:
+    # yq-go is mikefarah's yq v4, which the script needs (yq-python is a different tool).
+    - apk add --no-cache bash jq glab yq-go
+  script:
+    - bash tools/ci/check-merged.sh --strict --ref "$CI_COMMIT_SHA"
+  rules:
+    # Merge requests that change a CI file, and the nightly run, which also catches a change in an
+    # included org template (they're included at a branch, so they move without a change here).
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - .gitlab-ci.yml
+        - "**/.gitlab-ci.yml"
+        - "**/*.gitlab-ci.yml"
+        - tools/ci/check-merged.sh
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'

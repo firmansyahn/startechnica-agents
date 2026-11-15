@@ -27,4 +27,4 @@ OCI_BUILDER_IMAGE: ghcr.io/osscontainertools/kaniko:v1.29.0-debug
 
 To upgrade, pick a fork release that has been out for at least two weeks (`gh api repos/osscontainertools/kaniko/releases --jq '.[] | "\(.tag_name) \(.published_at)"'`) and use its `-debug` tag.
 
-**How to check:** grep the CI files for `image:` and `_IMAGE:` values with `:latest`, `:debug` alone, no tag, or `gcr.io/kaniko-project`.
+**How to check:** `scripts/scan.sh` reports `image:` and `_IMAGE:` values with `:latest`, `:debug` alone, no tag, or `gcr.io/kaniko-project`; images pulled straight from Docker Hub instead of `$IMAGE_MIRROR/`; and a `mcr.microsoft.com/playwright:v<X>` image whose version isn't the `@playwright/test` in a tracked `package.json`. It misses `services:` entries and the `image: name:` form, and doesn't know which tool images exist on the mirror; review those and the exact pins.

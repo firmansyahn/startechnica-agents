@@ -1,0 +1,32 @@
+#!/bin/sh
+# commit-msg: refuses a commit whose subject isn't a Conventional Commit, <type>(<scope>)!: <description>
+# (commit-conventional). The same check as scripts/scan.sh, made at commit time.
+#
+# Passes: merges ("Merge ..."), and fixup!/squash!/amend! commits, which `git rebase --autosquash`
+# folds away before they are pushed. Whether the scope names the component touched stays review.
+#
+# Install: copy to the repo's hooks folder (tools/git-hooks/commit-msg), commit it executable
+# (git update-index --chmod=+x tools/git-hooks/commit-msg), and enable it once per clone with
+# git config core.hooksPath tools/git-hooks. POSIX sh: Linux, macOS, Git Bash on Windows.
+
+TYPES='feat|fix|build|chore|ci|docs|perf|refactor|revert|style|test'
+
+# The subject: the first line that isn't a comment or blank (git strips both after this hook).
+subject="$(grep -vE '^[[:space:]]*(#|$)' "$1" | head -n 1)"
+
+case "$subject" in
+  "Merge "* | "fixup! "* | "squash! "* | "amend! "*) exit 0 ;;
+esac
+
+if printf '%s\n' "$subject" | grep -qE "^($TYPES)(\([^)]+\))?!?: [^ ]"; then
+  exit 0
+fi
+
+{
+  echo "commit-msg: the subject isn't a Conventional Commit (commit-conventional):"
+  echo "  $subject"
+  echo "Write <type>(<scope>): <description>, for example: fix(web): lighten the dark-mode destructive red"
+  echo "  type: ${TYPES} (add ! before the colon for a breaking change)"
+  echo "  scope: the component touched (app, package, chart, module or top-level folder)"
+} >&2
+exit 1

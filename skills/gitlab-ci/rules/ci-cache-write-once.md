@@ -2,7 +2,7 @@
 title: Let one job on the integration branch write the cache
 impact: MEDIUM
 tags: cache, speed, parallel
-check: review
+check: ci, scan (candidates), review
 ---
 
 ## Let one job on the integration branch write the cache
@@ -42,4 +42,4 @@ api:test:
     - changes: *api-changes
 ```
 
-**How to check:** in an MR job's trace there is no `Creating cache` / `Uploading cache` section; on the integration branch exactly one job has one.
+**How to check:** `scripts/check-merged.sh` (the `ci:rules` job in `assets/ci-rules.gitlab-ci.yml`) resolves each job's cache policy in the merged configuration, a `$VAR` policy through the job's and the global `variables`, and reports a job whose cache is `pull-push` in every pipeline it runs in (except the writer named in `CACHE_WRITERS`), a parallel job that does so, and a parallel job's rule that sets the policy variable to `pull-push` with no condition on a matrix variable or `CI_NODE_INDEX`. `scripts/scan.sh` lists, from the raw files, caches with no `policy:` and literal `policy: pull-push`. Whether the one writer is on the integration branch is read in review: in an MR job's trace there is no `Creating cache` / `Uploading cache` section; on the integration branch exactly one job has one.

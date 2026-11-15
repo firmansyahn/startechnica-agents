@@ -27,4 +27,4 @@ git branch -D feat/report
 git ls-remote --heads origin feat/report                       # prints nothing
 ```
 
-**How to check:** `git worktree list` and `git branch --merged origin/<target>` show no finished branches.
+**How to check:** `scripts/scan.sh` lists worktrees whose folder is gone, and worktrees and local branches whose upstream branch is gone from the remote (`[gone]` after `git fetch --prune`; GitLab deletes the source branch on merge). It misses a branch pushed without an upstream (`-u`), and a remote branch deleted without a merge is a false positive: confirm the MR merged. In review, `git worktree list` and `git branch --merged origin/<target>` show no finished branches.
