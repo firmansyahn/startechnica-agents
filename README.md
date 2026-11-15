@@ -1,8 +1,8 @@
 # startechnica-agents
 
-Agent skills for building and shipping Go services and Next.js apps: one focused skill per topic, each with its rules (one file per rule, with how a violation is caught), a review section, a scan script for what can be checked mechanically, and a checklist. They follow the [Agent Skills](https://agentskills.io) format and work with Claude Code, Codex, Cursor, Gemini CLI, OpenCode and any other tool that reads `SKILL.md` folders.
+Agent skills for building and shipping Go services and Next.js apps: one focused skill per topic, each with its rules (one file per rule, with how a violation is caught), a review section, a scan script for what can be checked mechanically, and a checklist. They follow the [Agent Skills](https://agentskills.io) format and work with Claude Code, Codex, Cursor, Gemini CLI, OpenCode, oh-my-pi and any other tool that reads `SKILL.md` folders.
 
-Where an established public skill already covers a topic well, it is included unchanged (vendored) with its licence and an `UPSTREAM.md` naming its source and pinned commit, and a team skill adds what it leaves open.
+Where an established public skill already covers a topic well, it is either included unchanged (vendored) with its licence and an `UPSTREAM.md` naming its source and pinned commit, with a team skill adding what it leaves open, or absorbed into a team skill and edited to agree with the team.
 
 ## Install
 
@@ -31,8 +31,8 @@ Each area has a small router skill that sends a task to the right skill and list
 
 | Area | Router | Topic skills |
 |---|---|---|
-| Go services | `go-how-to` | `go-project-layout`, `go-code-style`, `go-error-handling`, `go-concurrency`, `go-database`, `go-testing`, `go-security`, `go-http-handlers`, `go-knadh-koanf`, `go-nextjs-api-contract` |
-| Next.js apps | `nextjs-how-to` | `nextjs-new-app`, `nextjs-app-structure`, `nextjs-data`, `nextjs-bff`, `nextjs-forms`, `nextjs-ui`, `nextjs-logging`, `nextjs-security`, `nextjs-e2e`, `nextjs-deploy`, `nextjs-package-manager` |
+| Go services | `go-how-to` | `go-project-layout`, `go-code-style`, `go-error-handling`, `go-concurrency`, `go-database`, `go-testing`, `go-security`, `go-http-handlers`, `go-knadh-koanf`, `go-observability`, `go-performance`, `go-safety`, `go-data-structures`, `go-refactoring`, `go-troubleshooting`, `go-nextjs-api-contract` |
+| Next.js apps | `nextjs-how-to` | `nextjs-new-app`, `nextjs-app-structure`, `nextjs-data`, `nextjs-bff`, `nextjs-forms`, `nextjs-ui`, `nextjs-logging`, `nextjs-security`, `nextjs-e2e`, `nextjs-deploy`, `nextjs-package-manager`, `nextjs-upgrade` |
 | OAuth / OIDC | (from `go-how-to`, `nextjs-how-to`) | `oauth-server`, `oauth-client` |
 | git | `git-how-to` | `git-worktree`, `git-commit`, `git-gitignore` |
 | GitLab | `gitlab-how-to` | `gitlab-mr`, `gitlab-ci` |
@@ -45,14 +45,13 @@ Included unchanged, each under its own licence (see its `LICENSE` and `UPSTREAM.
 
 | Skills | Source | Licence |
 |---|---|---|
-| `golang-benchmark`, `golang-context`, `golang-data-structures`, `golang-dependency-injection`, `golang-dependency-management`, `golang-design-patterns`, `golang-documentation`, `golang-lint`, `golang-modernize`, `golang-naming`, `golang-performance`, `golang-refactoring`, `golang-safety`, `golang-structs-interfaces`, `golang-troubleshooting` | [samber/cc-skills-golang](https://github.com/samber/cc-skills-golang) | MIT |
 | `next-dev-loop`, `next-bundle-optimizer` | [vercel/next.js](https://github.com/vercel/next.js/tree/canary/skills) | MIT |
 | `git-using-worktrees`, `finishing-a-development-branch` | [obra/superpowers](https://github.com/obra/superpowers) | MIT |
 | `git-resolve-conflicts` | [tailcallhq/forgecode](https://github.com/tailcallhq/forgecode) | Apache-2.0 |
 | `gitlab-glab`, `gitlab-mr-description`, `git-mr-adversarial-review`, `gitlab-pipeline-watch`, `gitlab-babysit-mr`, `gitlab-stacked-mrs` | [gitlab-org/ai/skills](https://gitlab.com/gitlab-org/ai/skills) | MIT |
 | `gitlab-ci-skill` | [gitlab-org/ci-cd/gitlab-ci-skill](https://gitlab.com/gitlab-org/ci-cd/gitlab-ci-skill) | MIT |
 
-Eight of samber's Go skills (project layout, code style, error handling, concurrency, database, testing, security, observability) are absorbed into the matching `go-<topic>` skill, under "In depth", with both copyrights in its `LICENSE`.
+All of samber's Go skills the team uses ([samber/cc-skills-golang](https://github.com/samber/cc-skills-golang), MIT) are absorbed rather than vendored: each `go-<topic>` skill holds the team's rules and decisions first, and the upstream material, edited to agree, under "In depth" or as one of its references, with both copyrights in its `LICENSE`. `go-how-to` maps every upstream `golang-*` name to the team skill that holds it.
 
 ## Reviewing with the skills
 
@@ -71,7 +70,7 @@ Every line is a candidate: open the rule file and confirm it before reporting.
 node skills/agent-skills-authoring/scripts/lint-skills.mjs
 ```
 
-It checks frontmatter, licences, upstream records, links and anchors, rule files and IDs, that every skill is routed, that no skill hard-codes an install path, and LF line endings. CI runs it on every push and pull request. Before publishing a fork elsewhere, set `SKILLS_INTERNAL_PATTERNS` to a regex of your organisation's own names to catch any that slipped into an example.
+It checks frontmatter, licences, upstream records, that each team skill opens with a one-sentence principle and has no role (persona) lines, links and anchors, rule files and IDs, that every skill is routed, that no skill hard-codes an install path, and LF line endings. CI runs it on every push and pull request. Before publishing a fork elsewhere, set `SKILLS_INTERNAL_PATTERNS` to a regex of your organisation's own names to catch any that slipped into an example.
 
 ## Licence
 
