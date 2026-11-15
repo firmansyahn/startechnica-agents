@@ -45,6 +45,11 @@ include:
       job-name: <app>:release
       job-stop-name: <app>:stop-release
       job-stage: deploy
+  # nextjs-security's two CI checks: the scheduled framework-advisory audit, and (under a nonce CSP) the
+  # check that no page was prerendered. Copy nextjs-security/assets/ci/security.gitlab-ci.yml to
+  # <app>/security.gitlab-ci.yml and its two .mjs scripts to <app>/scripts/ci/. It extends the hidden jobs
+  # below. Its nonce job runs `yarn build` in every merge request: drop the job if the proxy sets no nonce.
+  - local: <app>/security.gitlab-ci.yml
 
 # What runs the app's jobs: its own tree, the root pipeline definition, and the API document
 # the app's types are generated from (yarn gen:api).

@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Next.js apps.
 metadata:
   author: firmansyahn
-  version: "0.2.0"
+  version: "0.2.1"
 ---
 
 # Logging in Next.js
@@ -29,7 +29,7 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
 | [log-no-console](rules/log-no-console.md) | Log through the logger, not console | MEDIUM | eslint: kit (scan candidates) |
-| [log-structured-request-id](rules/log-structured-request-id.md) | Log constant messages with fields and the request id | MEDIUM | eslint, review |
+| [log-structured-request-id](rules/log-structured-request-id.md) | Log constant messages with fields and the request id | MEDIUM | eslint, scan (candidates), review |
 | [log-errors-under-err](rules/log-errors-under-err.md) | Errors go in err | MEDIUM | eslint, review |
 | [log-backend-field-names](rules/log-backend-field-names.md) | Field names follow the backend's scheme | MEDIUM | review |
 | [log-meaningful-levels](rules/log-meaningful-levels.md) | Levels mean something | MEDIUM | review |

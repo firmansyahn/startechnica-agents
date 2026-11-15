@@ -1,6 +1,6 @@
-# <app>/security.gitlab-ci.yml: two nextjs-security checks the merge-request jobs don't make. Include it
-# from the app's file (include: - local: <app>/security.gitlab-ci.yml) next to nextjs-deploy's
-# nextjs.gitlab-ci.yml, whose hidden jobs it extends: .<app> (the Node image, `cd <app>`, the yarn()
+# <app>/security.gitlab-ci.yml: two nextjs-security checks the merge-request jobs don't make. The app's
+# nextjs.gitlab-ci.yml (nextjs-deploy) includes it (include: - local: <app>/security.gitlab-ci.yml) and
+# defines the hidden jobs it extends: .<app> (the Node image, `cd <app>`, the yarn()
 # function that runs the committed release) and .<app>-check (adds <app>/node_modules from <app>:install).
 # Copy framework-advisories.mjs and prerendered-pages.mjs to <app>/scripts/ci/. Replace <app>.
 

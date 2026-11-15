@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # scan.sh — read-only scan of a Next.js app for the nextjs-logging rules a script can detect (log-no-console,
 # log-error-page-shows-digest, log-global-error-page, log-onrequesterror, log-redaction-test, log-silent-probes,
-# log-source-maps-not-served).
+# log-source-maps-not-served, log-structured-request-id (the root logger in request code)).
 # Prints one finding per line: <rule-id>\t<file>:<line> <text>, then a count per rule.
 # Findings are candidates: confirm each against this skill's rules/<rule-id>.md before reporting it.
 #
@@ -96,6 +96,17 @@ if [ -f .next/BUILD_ID ] && [ -d .next/static ]; then   # a production build (ne
   MAP="$(find .next/static -name '*.map' 2>/dev/null | head -n1)"
   [ -n "$MAP" ] && echo "$MAP:1: the build output has browser source maps ($(find .next/static -name '*.map' | wc -l | tr -d ' ') files); delete them after the upload" | emit log-source-maps-not-served
 fi
+
+# log-structured-request-id (candidates): request code (the BFF folder, "use server" files, route handlers)
+# logs through requestLogger(), which carries the request id, not the root logger. A call on the root
+# logger in a server action's startup or in a notable business event can be on purpose: confirm each.
+REQ_FILES="$( { [ -d src/api ] && gl "$LOGCALL" src/api; gl "$LOGCALL" "${DIRS[@]}" | grep -E '(^|/)route\.(ts|tsx|js|jsx)$'
+  # a "use server" file: the directive on a line of its own
+  for f in $(gl "^[[:space:]]*['\"]use server['\"]" "${DIRS[@]}"); do echo "$f"; done; } | sort -u )"
+for f in $REQ_FILES; do
+  case "$f" in */libs/logger.*|*/instrumentation.*) continue ;; esac
+  grep -nE '(^|[^.[:alnum:]_])logger\.(debug|info|warn|error|fatal)\(' "$f" | grep -vE '^[0-9]+:[[:space:]]*(//|\*)' | sed "s#^#$f:#" | cut -c1-220 | emit log-structured-request-id
+done
 
 if [ ! -s "$OUT" ]; then echo "no findings"; exit 0; fi
 sort -u "$OUT"

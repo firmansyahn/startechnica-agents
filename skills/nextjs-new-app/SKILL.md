@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Next.js apps.
 metadata:
   author: firmansyahn
-  version: "0.2.0"
+  version: "0.2.1"
 ---
 
 # New Next.js app
@@ -119,6 +119,7 @@ Copy from `nextjs-deploy/assets/`:
 - `Dockerfile` → `<app>/shrine/Dockerfile.production`, and the same file without the `NODE_ENV=production` line → `<app>/shrine/Dockerfile.default`
 - `dockerignore` → `<repo>/.dockerignore`
 - `ci/root.gitlab-ci.yml` and `ci/nextjs.gitlab-ci.yml`
+- `nextjs-security/assets/ci/security.gitlab-ci.yml` → `<app>/security.gitlab-ci.yml`, and its `framework-advisories.mjs`, `prerendered-pages.mjs` → `<app>/scripts/ci/` (the app CI file includes it)
 
 Then:
 
