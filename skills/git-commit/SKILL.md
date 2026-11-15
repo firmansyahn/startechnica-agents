@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for git repositories hosted on GitLab.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Committing
@@ -83,6 +83,7 @@ One file per rule in `rules/`; the file name is the rule ID. Sections and impact
 | [commit-lf-endings](rules/commit-lf-endings.md) | Commit LF line endings, enforced by .gitattributes | LOW | scan (`.gitattributes`, `git ls-files --eol`) |
 | [commit-ci-skip-without-code](rules/commit-ci-skip-without-code.md) | Use [ci skip] only on commits without code | MEDIUM | scan |
 | [commit-identity-public](rules/commit-identity-public.md) | Commit to public repos with a noreply identity | MEDIUM | scan (`REPO_PUBLIC=1`) |
+| [commit-no-backslash-escaped-backticks](rules/commit-no-backslash-escaped-backticks.md) | Do not backslash-escape backticks in text passed through PowerShell | MEDIUM | scan |
 
 ## Reviewing
 

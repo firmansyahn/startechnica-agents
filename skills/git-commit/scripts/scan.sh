@@ -53,6 +53,10 @@ if [ "${REPO_PUBLIC:-0}" = 1 ]; then
     | sed 's/^/commit /' | emit commit-identity-public
 fi
 
+# commit-no-backslash-escaped-backticks: backslash-backtick in a commit subject or body (PowerShell quoting)
+git log --no-merges --format='%h%x09%s%x09%b' "$RANGE" | grep -F '\`' | cut -f1-2 \
+  | sed 's/\t/: /' | sed 's/^/commit /' | emit commit-no-backslash-escaped-backticks
+
 # --- files in the checkout ---------------------------------------------------------------------
 # commit-lf-endings
 grep -qE '^\*[[:space:]].*eol=lf' .gitattributes 2>/dev/null || echo ".gitattributes: no '* text=auto eol=lf' line" | emit commit-lf-endings
