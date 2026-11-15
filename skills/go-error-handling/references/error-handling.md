@@ -93,4 +93,4 @@ func safeHandler(next http.Handler) http.Handler {
 
 ## Logging Errors with `slog`
 
-→ See [golang-observability](../../golang-observability/SKILL.md) for comprehensive structured logging guidance (the team's logging rules: [go-code-style](../../go-code-style/SKILL.md)), including `slog` setup, log levels, log handlers, HTTP middleware, and cost considerations.
+→ See [go-observability](../../go-observability/SKILL.md) for comprehensive structured logging guidance (the team's logging rules: [go-code-style](../../go-code-style/SKILL.md)), including `slog` setup, log levels, log handlers, HTTP middleware, and cost considerations.

@@ -119,7 +119,7 @@ When auditing error handling across a large codebase, use up to 5 parallel sub-a
 
 ### Cross-References
 
-- → [golang-observability](../golang-observability/SKILL.md) for structured logging setup, log levels, and request logging middleware ([go-code-style](../go-code-style/SKILL.md) for the team's logging rules)
+- → [go-observability](../go-observability/SKILL.md) for structured logging setup, log levels, and request logging middleware ([go-code-style](../go-code-style/SKILL.md) for the team's logging rules)
 - → [golang-safety](../golang-safety/SKILL.md) for the nil interface trap and nil error comparison pitfalls
 - → [golang-naming](../golang-naming/SKILL.md) for error naming conventions (ErrNotFound, PathError)
 

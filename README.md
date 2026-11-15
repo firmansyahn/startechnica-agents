@@ -45,14 +45,14 @@ Included unchanged, each under its own licence (see its `LICENSE` and `UPSTREAM.
 
 | Skills | Source | Licence |
 |---|---|---|
-| `golang-benchmark`, `golang-context`, `golang-data-structures`, `golang-dependency-injection`, `golang-dependency-management`, `golang-design-patterns`, `golang-documentation`, `golang-lint`, `golang-modernize`, `golang-naming`, `golang-observability`, `golang-performance`, `golang-refactoring`, `golang-safety`, `golang-structs-interfaces`, `golang-troubleshooting` | [samber/cc-skills-golang](https://github.com/samber/cc-skills-golang) | MIT |
+| `golang-benchmark`, `golang-context`, `golang-data-structures`, `golang-dependency-injection`, `golang-dependency-management`, `golang-design-patterns`, `golang-documentation`, `golang-lint`, `golang-modernize`, `golang-naming`, `golang-performance`, `golang-refactoring`, `golang-safety`, `golang-structs-interfaces`, `golang-troubleshooting` | [samber/cc-skills-golang](https://github.com/samber/cc-skills-golang) | MIT |
 | `next-dev-loop`, `next-bundle-optimizer` | [vercel/next.js](https://github.com/vercel/next.js/tree/canary/skills) | MIT |
 | `git-using-worktrees`, `finishing-a-development-branch` | [obra/superpowers](https://github.com/obra/superpowers) | MIT |
 | `git-resolve-conflicts` | [tailcallhq/forgecode](https://github.com/tailcallhq/forgecode) | Apache-2.0 |
 | `gitlab-glab`, `gitlab-mr-description`, `git-mr-adversarial-review`, `gitlab-pipeline-watch`, `gitlab-babysit-mr`, `gitlab-stacked-mrs` | [gitlab-org/ai/skills](https://gitlab.com/gitlab-org/ai/skills) | MIT |
 | `gitlab-ci-skill` | [gitlab-org/ci-cd/gitlab-ci-skill](https://gitlab.com/gitlab-org/ci-cd/gitlab-ci-skill) | MIT |
 
-Seven of samber's Go skills (project layout, code style, error handling, concurrency, database, testing, security) are absorbed into the matching `go-<topic>` skill, under "In depth", with both copyrights in its `LICENSE`.
+Eight of samber's Go skills (project layout, code style, error handling, concurrency, database, testing, security, observability) are absorbed into the matching `go-<topic>` skill, under "In depth", with both copyrights in its `LICENSE`.
 
 ## Reviewing with the skills
 

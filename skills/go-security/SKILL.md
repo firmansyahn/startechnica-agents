@@ -230,7 +230,7 @@ See **[Security Architecture](./references/architecture.md)** for detailed anti-
 
 ### Cross-References
 
-See `go-database`, `golang-safety`, `golang-observability` and `gitlab-ci` (the project's CI, where `govulncheck` and `gosec` run when the project has them) skills.
+See `go-database`, `golang-safety`, `go-observability` and `gitlab-ci` (the project's CI, where `govulncheck` and `gosec` run when the project has them) skills.
 
 
 ### Additional Resources

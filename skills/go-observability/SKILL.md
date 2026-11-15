@@ -1,23 +1,55 @@
 ---
-name: golang-observability
-description: "Golang everyday observability — the always-on signals in production. Covers structured logging with slog, Prometheus metrics, OpenTelemetry distributed tracing, continuous profiling with pprof/Pyroscope, server-side RUM event tracking, alerting, and Grafana dashboards. Apply when instrumenting Go services for production monitoring, setting up metrics or alerting, adding OpenTelemetry tracing, correlating logs with traces, migrating legacy loggers (zap/logrus/zerolog) to slog, adding observability to new features, or implementing GDPR/CCPA-compliant tracking with Customer Data Platforms (CDP). Not for temporary deep-dive performance investigation (→ See `samber/cc-skills-golang@golang-benchmark` and `samber/cc-skills-golang@golang-performance` skills)."
+name: go-observability
+description: "Use when instrumenting a Go service for production: structured logging with slog (levels, ECS json to stdout, the logging block in the settings file), Prometheus metrics (the four types, low-cardinality labels, PromQL as comments), OpenTelemetry tracing (spans, sampling, context propagation), profiling (pprof toggles, Pyroscope), alerting and Grafana dashboards, migrating zap/logrus/zerolog to slog, or reviewing a diff that adds or changes instrumentation. Absorbs samber/cc-skills-golang@golang-observability, adapted to the team (injected logger, the logging config block). Not for a one-off performance investigation (golang-benchmark, golang-performance)."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex or similar harness, and for projects using Golang.
+compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for Go server projects.
 metadata:
-  author: samber
-  version: "1.3.2"
-  openclaw:
-    emoji: "📡"
-    homepage: https://github.com/samber/cc-skills-golang
-    requires:
-      bins:
-        - go
-    install: []
-allowed-tools: Read Edit Write Glob Grep Bash(go:*) Bash(golangci-lint:*) Bash(git:*) Agent WebFetch WebSearch AskUserQuestion
-paths:
-  - "**/*.go"
+  author: firmansyahn
+  version: "0.1.0"
 ---
+
+# Go observability (team)
+
+> **Absorbed.** This skill includes `samber/cc-skills-golang@golang-observability` (MIT, Samuel Berthe; source and pinned commit in [UPSTREAM.md](UPSTREAM.md)), adapted to the team: the team's rules and decisions come first and win, and "In depth" holds the upstream material, edited where the team decided otherwise. The project's own `AGENTS.md`, `CLAUDE.md` and project skills win over this skill.
+
+Related: [go-code-style](../go-code-style/SKILL.md) (the injected structured logger, `style-structured-logger`), [go-knadh-koanf](../go-knadh-koanf/SKILL.md) (the `logging` block in the settings file), [go-http-handlers](../go-http-handlers/SKILL.md) (request logging middleware), [go-how-to](../go-how-to/SKILL.md) (the Go skills and the rules they all assume).
+
+## When to use
+
+- Adding or changing metrics, spans, log lines or profiling toggles in a Go service
+- Setting up observability in a new service: logger, TracerProvider, metrics endpoint
+- Migrating a legacy logger (`zap`, `logrus`, `zerolog`) to `slog`
+- Reviewing a diff that touches instrumentation
+
+## The team's rules
+
+- **The logger is injected** (`*slog.Logger`), built once at the root from the settings file's `logging` block (`level`, `format`, `probe.enabled`; [go-knadh-koanf](../go-knadh-koanf/SKILL.md) section 4b), never a package-level `slog` default (`style-structured-logger`).
+- **`format: json` writes one Elastic Common Schema object per line to stdout** — that is what a deployment collects; `console` is for a terminal.
+- **Probe requests are not logged** by default (`probe.enabled: false`): the kubelet calls `/livez` and `/readyz` every few seconds per pod.
+- **Every metric var has its PromQL queries and alert rules as comments above its declaration**, so the queries live where the metric is defined.
+- **Labels are bounded:** never an unbounded value (user ID, full URL) as a label; the route pattern, not the path.
+- **A feature is not done until it is observable:** metrics declared, spans opened and closed, structured log fields consistent.
+
+## Team decisions
+
+1. **The injected logger wins** over upstream's `slog.SetDefault()` examples: the logger is constructed from the settings file and passed to constructors (`NewStore(db, log)`), not set as a process-wide default.
+2. **The logging block in the settings file** (`level`, `format`, `probe.enabled`) is the team's minimum, from [go-knadh-koanf](../go-knadh-koanf/SKILL.md) section 4b; upstream's environment-variable toggles for profiling are kept.
+3. **Errors are logged or returned, never both** — the single handling rule lives in [go-error-handling](../go-error-handling/SKILL.md) (`err-handle-once`); upstream passages that show `slog.Error` plus `return err` are read through that rule.
+4. Links to skills that aren't vendored (`samber/cc-skills@promql-cli`) are skipped.
+
+## Review checklist
+
+- [ ] The logger is injected, built from the `logging` block; no package-level `slog` default added
+- [ ] New metrics have PromQL and alert rules as comments above their declarations
+- [ ] Labels bounded; no user IDs or full URLs as label values
+- [ ] Spans opened and closed on service methods, DB queries, external calls; errors recorded with `span.RecordError()`
+- [ ] No PII in logs; probe requests stay unlogged unless `probe.enabled` is on
+- [ ] Legacy logger calls migrated to `slog` with context variants (`slog.InfoContext`)
+
+## In depth
+
+The material below is `samber/cc-skills-golang@golang-observability`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: the ones absorbed are now team skills (`go-how-to` maps the names), the rest are vendored as `golang-*` or not adopted.
 
 **Persona:** You are a Go observability engineer. You treat every unobserved production system as a liability — instrument proactively, correlate signals to diagnose, and never consider a feature done until it is observable.
 
@@ -29,15 +61,13 @@ paths:
 - **Review mode** — reviewing a PR's instrumentation changes. Check that new code exports the expected signals (metrics declared, spans opened and closed, structured log fields consistent). Sequential.
 - **Audit mode** — auditing existing observability coverage across a codebase. Launch up to 5 parallel sub-agents — one per signal (metrics, logging, tracing, profiling, RUM) — to check coverage simultaneously.
 
-> **Community default.** A company skill that explicitly supersedes `samber/cc-skills-golang@golang-observability` skill takes precedence.
-
-# Go Observability Best Practices
+### Go Observability Best Practices
 
 Observability is the ability to understand a system's internal state from its external outputs. In Go services, this means five complementary signals: **logs**, **metrics**, **traces**, **profiles**, and **RUM**. Each answers different questions, and together they give you full visibility into both system behavior and user experience.
 
 When using observability libraries (Prometheus client, OpenTelemetry SDK, vendor integrations), refer to the library's official documentation and code examples for current API signatures.
 
-## Best Practices Summary
+#### Best Practices Summary
 
 1. **Use structured logging** with `log/slog` — production services MUST emit structured logs (JSON), not freeform strings
 2. **Choose the right log level** — Debug for development, Info for normal operations, Warn for degraded states, Error for failures requiring attention
@@ -53,15 +83,14 @@ When using observability libraries (Prometheus client, OpenTelemetry SDK, vendor
 12. **A feature is not done until it is observable** — declare metrics, add proper logging, create spans
 13. **[awesome-prometheus-alerts](https://samber.github.io/awesome-prometheus-alerts/) provides ~500 ready-to-use alerting rules** organized by technology for infrastructure and dependency monitoring
 
-## Cross-References
+#### Cross-References
 
-- → See `samber/cc-skills-golang@golang-error-handling` skill for the single handling rule.
-- → See `samber/cc-skills-golang@golang-troubleshooting` skill for using observability signals to diagnose production issues.
-- → See `samber/cc-skills-golang@golang-security` skill for protecting pprof endpoints and avoiding PII in logs.
-- → See `samber/cc-skills-golang@golang-context` skill for propagating trace context across service boundaries.
-- → See `samber/cc-skills@promql-cli` skill for querying and exploring PromQL expressions against Prometheus from the CLI.
+- → [go-error-handling](../go-error-handling/SKILL.md) for the single handling rule.
+- → [golang-troubleshooting](../golang-troubleshooting/SKILL.md) for using observability signals to diagnose production issues.
+- → [go-security](../go-security/SKILL.md) for protecting pprof endpoints and avoiding PII in logs.
+- → [golang-context](../golang-context/SKILL.md) for propagating trace context across service boundaries.
 
-### Go 1.26+: slog multi-handler
+##### Go 1.26+: slog multi-handler
 
 For simple fan-out to multiple slog handlers, prefer stdlib `slog.NewMultiHandler` before adding third-party handler-composition dependencies.
 
@@ -74,7 +103,7 @@ logger := slog.New(slog.NewMultiHandler(
 
 Use third-party slog handler libraries only when the stdlib handler composition is insufficient.
 
-## The Five Signals
+#### The Five Signals
 
 | Signal | Question it answers | Tool | When to use |
 | --- | --- | --- | --- |
@@ -84,7 +113,7 @@ Use third-party slog handler libraries only when the stdlib handler composition 
 | **Profiles** | Why is it slow / using memory? | pprof, Pyroscope | CPU hotspots, memory leaks, lock contention |
 | **RUM** | How do users experience it? | PostHog, Segment | Product analytics, funnels, session replay |
 
-## Detailed Guides
+#### Detailed Guides
 
 Each signal has a dedicated guide with full code examples, configuration patterns, and cost analysis:
 
@@ -102,11 +131,11 @@ Each signal has a dedicated guide with full code examples, configuration pattern
 
 - **[Grafana Dashboards](references/dashboards.md)** — Prebuilt dashboards for Go runtime monitoring (heap allocation, GC pause frequency, goroutine count, CPU). Explains the standard dashboards to install, how to customize them for your service, and when each dashboard answers a different operational question.
 
-## Correlating Signals
+#### Correlating Signals
 
 Signals are most powerful when connected. A trace_id in your logs lets you jump from a log line to the full request trace. An exemplar on a metric links a latency spike to the exact trace that caused it.
 
-### Logs + Traces: `otelslog` bridge
+##### Logs + Traces: `otelslog` bridge
 
 ```go
 import "go.opentelemetry.io/contrib/bridges/otelslog"
@@ -120,7 +149,7 @@ slog.InfoContext(ctx, "order created", "order_id", orderID)
 // Output includes: {"trace_id":"abc123", "span_id":"def456", "msg":"order created", ...}
 ```
 
-### Metrics + Traces: Exemplars
+##### Metrics + Traces: Exemplars
 
 ```go
 // When recording a histogram observation, attach the trace_id as an exemplar
@@ -133,7 +162,7 @@ if eo, ok := obs.(prometheus.ExemplarObserver); ok {
 }
 ```
 
-## Migrating Legacy Loggers
+#### Migrating Legacy Loggers
 
 If the project currently uses `zap`, `logrus`, or `zerolog`, migrate to `log/slog`. It is the standard library logger since Go 1.21, has a stable API, and the ecosystem has consolidated around it. Continuing with third-party loggers means maintaining an extra dependency for no benefit.
 
@@ -144,7 +173,7 @@ If the project currently uses `zap`, `logrus`, or `zerolog`, migrate to `log/slo
 3. Gradually replace all `zap.L().Info(...)` / `logrus.Info(...)` / `log.Info().Msg(...)` calls with `slog.Info(...)`
 4. Once fully migrated, remove the bridge handler and the old logger dependency
 
-## Definition of Done for Observability
+#### Definition of Done for Observability
 
 A feature is not production-ready until it is observable. Before marking a feature as done, verify:
 
@@ -154,7 +183,7 @@ A feature is not production-ready until it is observable. Before marking a featu
 - [ ] **Dashboards and alerts exist** — the PromQL from your metric comments is wired into Grafana dashboards and Prometheus alerting rules. Ready-to-use alert rules for common infrastructure dependencies are available at [awesome-prometheus-alerts](https://samber.github.io/awesome-prometheus-alerts/).
 - [ ] **RUM events tracked** — key business events tracked server-side (PostHog/Segment), identity key is `user_id` (not email), consent checked before tracking.
 
-## Common Mistakes
+#### Common Mistakes
 
 ```go
 // ✗ Bad — log AND return (error gets logged multiple times up the chain)
