@@ -1,12 +1,12 @@
 ---
 name: go-knadh-koanf
-description: "Use when a Go service's settings are loaded, added, changed, validated or tested with koanf (github.com/knadh/koanf/v2): the one config package and its Config struct with koanf tags, defaults from a Defaults() struct through the structs provider, the YAML settings file through the file provider, several YAML files layered in order (a repeatable -config flag, a base plus a secrets file, a conf.d directory), strict decoding (unknown keys refused, durations like 5m, weakly typed numbers), validating and normalising each block with errors that name the file and key, an optional default path versus an explicit -config flag, flags that override a setting, secrets inline or as a mounted *_file, the documented example file, and the tests that pin all of it. Also when choosing between koanf and viper, or reviewing a config change. The team uses koanf, not spf13/viper."
+description: "Use when a Go service's settings are loaded, added, changed, validated or tested with koanf (github.com/knadh/koanf/v2): the one config package and its Config struct with koanf tags, defaults from a Defaults() struct through the structs provider, the YAML settings file through the file provider, several YAML files layered in order (a repeatable -config flag, a base plus a secrets file, a conf.d directory), the logging block every service carries (level, ECS json or console format, probe logging off by default), strict decoding (unknown keys refused, durations like 5m, weakly typed numbers), validating and normalising each block with errors that name the file and key, an optional default path versus an explicit -config flag, flags that override a setting, secrets inline or as a mounted *_file, the documented example file, and the tests that pin all of it. Also when choosing between koanf and viper, or reviewing a config change. The team uses koanf, not spf13/viper."
 user-invocable: true
 license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for Go projects that load settings with koanf v2.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # koanf: loading a Go service's settings
@@ -153,6 +153,28 @@ cfg, err := config.Load(files, optional)
 - **Keep koanf's default merge.** Don't set `koanf.Conf{StrictMerge: true}` over the structs defaults: it refuses a value whose Go type differs from the earlier one, and `conn_max_lifetime: 5m` (a string) differs from the default's `time.Duration`; the decoder already refuses wrong types. Don't add `koanf.WithMergeFunc` to append lists: whoever reads the files would have to know about it.
 - **The secrets file is never committed.** The example shows its keys with placeholders.
 - **Tests:** an overlay replaces one key and keeps the rest, replaces a list whole, a typo in the overlay is refused, and a missing second file is an error.
+
+## 4b. The logging block
+
+Every service's settings carry a `logging` block with at least these keys; the example file shows them with these comments:
+
+```yaml
+logging:
+  # Lowest level written: debug, info, warn or error.
+  level: info
+  # json writes one Elastic Common Schema object per line to stdout; console is for reading
+  # in a terminal.
+  format: json
+  probe:
+    # Log the Kubernetes probe requests (/livez, /readyz). Off keeps the kubelet's checks, one
+    # every few seconds per pod, out of the log.
+    enabled: false
+```
+
+- **`level`** is one of `debug`, `info`, `warn`, `error` — checked in the block's `validate`, not a free string.
+- **`format`** is `json` or `console`: `json` writes one [Elastic Common Schema](https://elastic.co/guide/en/ecs/current/index.html) object per line to stdout (what a deployment collects); `console` is for reading in a terminal. The default is `json`.
+- **`probe.enabled`** defaults to `false`: the kubelet calls `/livez` and `/readyz` every few seconds per pod, and those requests belong in the log only while debugging them.
+- The block is a nested struct (`Logging` with a nested `Probe`), its fields typed and defaulted like any other block (section 1), and the logger is built from it once at the root and injected (`go-code-style`, structured logging).
 
 ## 5. Tests
 
