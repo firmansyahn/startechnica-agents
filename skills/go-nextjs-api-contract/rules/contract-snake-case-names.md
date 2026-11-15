@@ -2,7 +2,7 @@
 title: One spelling for every name: snake_case on the wire and in the frontend
 impact: MEDIUM
 tags: naming, json, typescript
-check: review
+check: eslint, test, review
 ---
 
 ## One spelling for every name: snake_case on the wire and in the frontend
@@ -23,4 +23,4 @@ const item = { id: row.id, createdAt: row.created_at, categoryId: row.category_i
 const item: Item = row;                 // created_at, category_id, as the document says
 ```
 
-**How to check:** in review, objects that rename API fields to camelCase, or camelCase properties in the document.
+**How to check:** The OpenAPI document test (`assets/openapi_rules_test.go`) fails a property or query parameter name that isn't snake_case. On the frontend, the kit's `eslint.config.mjs` (`nextjs-new-app/assets`) flags a camelCase key copied from a snake_case field (`createdAt: row.created_at`). It misses renames through destructuring (`const { created_at: createdAt } = row`). Left to review: Go `json` tags that the document doesn't reach.

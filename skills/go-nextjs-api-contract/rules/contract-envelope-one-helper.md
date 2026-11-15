@@ -2,7 +2,7 @@
 title: Every JSON reply uses the envelope, written by one helper
 impact: HIGH
 tags: envelope, go, handlers
-check: review
+check: scan (candidates), test, review
 ---
 
 ## Every JSON reply uses the envelope, written by one helper
@@ -24,4 +24,4 @@ httpx.Page(w, rows, total)                             // {"status":"success","m
 httpx.Fail(w, http.StatusConflict, msg, nil)           // {"status":"failed","message":"..."}
 ```
 
-**How to check:** `grep -rn 'json.NewEncoder(w)' --include=*.go` outside the envelope helper; the reply check fails on a bare body.
+**How to check:** `scripts/scan.sh` lists `json.NewEncoder(w)` and `w.Write(...)` in files that take an `http.ResponseWriter`, outside `ENVELOPE_DIRS` (default `internal/httpx`; add the endpoints that answer outside the envelope: OAuth `/token`, health, metrics, downloads). The reply check (`contract.Check`, references/contract-tests.md) fails on a bare body wherever a handler test exists. In review: a reply written through another writer or helper.

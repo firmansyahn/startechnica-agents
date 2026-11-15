@@ -62,6 +62,19 @@ A short Playwright run against the real backend (seeded test database) on the ma
 
 ## CI order
 
-1. Backend: `go test ./...` (document current, routes documented, replies valid).
+1. Backend: `go test ./...` (document current, routes documented, replies valid; with [assets/openapi_rules_test.go](../assets/openapi_rules_test.go) and [assets/openapi_lists_test.go](../assets/openapi_lists_test.go), the document's own rules and the list limits).
 2. Frontend: `yarn gen:api --check`, `yarn tsc --noEmit`, `yarn vitest run` (fixtures and requests valid).
-3. Optional: an OpenAPI diff against the target branch, failing on an undeprecated breaking change.
+3. Merge requests: [assets/ci/openapi-breaking.sh](../assets/ci/openapi-breaking.sh) compares each document with the target branch's through `oasdiff breaking` and fails on an undeprecated removal, a removed response field, a type change or a changed operation id; accepted breaks go in `api/breaking-ignore.txt`. On GitLab:
+
+```yaml
+api:breaking:
+  stage: test
+  image: golang:<version>
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes: [api/*.openapi.json]
+  script:
+    - go install github.com/oasdiff/oasdiff@<version>
+    - git fetch --depth=1 origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+    - bash ci/openapi-breaking.sh "origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME" api
+```

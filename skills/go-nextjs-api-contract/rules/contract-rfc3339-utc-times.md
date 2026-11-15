@@ -2,7 +2,7 @@
 title: Times are RFC 3339 in UTC
 impact: MEDIUM
 tags: dates, json
-check: review
+check: test, review
 ---
 
 ## Times are RFC 3339 in UTC
@@ -23,4 +23,4 @@ check: review
 
 The frontend formats them for display with the user's locale and time zone; it never sends a local time without an offset.
 
-**How to check:** the document declares every time field `format: date-time`; in review, times sent without an offset.
+**How to check:** `assets/openapi_rules_test.go` fails on a property or query parameter named `*_at`, `*_date`, `*_time`, `expires`, `timestamp`, `date` or `time` that isn't a string with `format: date-time` (or `date`). It misses time fields named outside that convention. In review: times sent without an offset, or a `time.Time` not converted to UTC before it is marshalled.

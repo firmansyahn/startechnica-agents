@@ -2,7 +2,7 @@
 title: Nothing is removed or renamed without a deprecation first
 impact: HIGH
 tags: openapi, versioning, deprecation
-check: review
+check: ci, review
 ---
 
 ## Nothing is removed or renamed without a deprecation first
@@ -25,4 +25,4 @@ Add the new field or endpoint, mark the old one `deprecated: true` with a descri
 "label": { "type": "string" }
 ```
 
-**How to check:** in review, a document diff that removes or renames a field or operation not marked `deprecated: true` in an earlier release.
+**How to check:** `assets/ci/openapi-breaking.sh <target-ref>` in the merge request pipeline runs `oasdiff breaking` on each `api/<surface>.openapi.json` against the target branch's copy. It fails on an operation, path, parameter or request property removed without `deprecated: true` in the base, on any removed response property (oasdiff can't see deprecation on an optional one), on a type change and on a deleted document. A break the team accepts gets a line in `api/breaking-ignore.txt`; in review, check that each new line names something deprecated in an earlier release.
