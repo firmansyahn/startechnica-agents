@@ -1,5 +1,5 @@
 {
   "name": "startechnica-agents",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Agent skills for Go services, Next.js apps, OAuth, git and GitLab: focused skills with rules, review scans and checklists"
 }

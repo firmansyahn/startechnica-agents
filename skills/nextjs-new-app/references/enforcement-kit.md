@@ -56,7 +56,7 @@ Settings at the top of the file: the folder sets, `TRANSPORTS` (the project's tr
 | [nextjs-ui/assets/tests/form-overlay.test.tsx](../../nextjs-ui/assets/tests/form-overlay.test.tsx) | beside the form drawer/dialog composite | `ui-overlay-form-state` |
 | [nextjs-logging/assets/tests/client-error-endpoint.test.ts](../../nextjs-logging/assets/tests/client-error-endpoint.test.ts) | beside the client-error route | `log-client-endpoint-limited` |
 
-**Browser specs and CI** (Playwright runs them; `nextjs-e2e`): [nextjs-security/assets/e2e/security-headers.spec.ts](../../nextjs-security/assets/e2e/security-headers.spec.ts) (headers, CSP, framing, exact origins, the theme script per theme) and [nextjs-e2e/assets/layout.spec.ts](../../nextjs-e2e/assets/layout.spec.ts) (`ui-mobile-first`, `ui-table-scroll-container` at 400 px) → `tests/e2e/`. [nextjs-security/assets/ci/security.gitlab-ci.yml](../../nextjs-security/assets/ci/security.gitlab-ci.yml) adds the framework-advisory and prerendered-nonce-page jobs.
+**Browser specs and CI** (Playwright runs them; `nextjs-e2e`): [nextjs-security/assets/e2e/security-headers.spec.ts](../../nextjs-security/assets/e2e/security-headers.spec.ts) (headers, CSP, framing, exact origins, the theme script per theme) and [nextjs-e2e/assets/layout.spec.ts](../../nextjs-e2e/assets/layout.spec.ts) (`ui-mobile-first`, `ui-table-scroll-container` at 400 px) → `tests/e2e/`. [nextjs-security/assets/ci/security.gitlab-ci.yml](../../nextjs-security/assets/ci/security.gitlab-ci.yml) adds the framework-advisory and prerendered-nonce-page jobs; the deploy pipeline includes it.
 
 ## Install
 

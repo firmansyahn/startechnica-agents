@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Next.js apps.
 metadata:
   author: firmansyahn
-  version: "0.2.0"
+  version: "0.2.1"
 ---
 
 # Next.js data: TanStack Query reads, Server Action writes, Zustand client state
@@ -105,7 +105,7 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 |---|---|---|---|
 | [data-test-fake-fetch](rules/data-test-fake-fetch.md) | Fake the network at fetch, not the code | MEDIUM | scan |
 | [data-test-fresh-query-client](rules/data-test-fresh-query-client.md) | A fresh QueryClient per test, with retry off | MEDIUM | scan, review (the helper's options) |
-| [data-test-fixtures-fit-spec](rules/data-test-fixtures-fit-spec.md) | Fixtures fit the API spec | MEDIUM | review |
+| [data-test-fixtures-fit-spec](rules/data-test-fixtures-fit-spec.md) | Fixtures fit the API spec | MEDIUM | test, review |
 | [data-test-assert-on-call](rules/data-test-assert-on-call.md) | Assert on the call made | MEDIUM | review |
 | [data-test-four-action-cases](rules/data-test-four-action-cases.md) | Every action has four tests | MEDIUM | review |
 | [data-test-list-states-once](rules/data-test-list-states-once.md) | Lists test their loading, empty and error rows once | MEDIUM | review |

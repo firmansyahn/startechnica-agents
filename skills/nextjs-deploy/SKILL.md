@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Next.js apps.
 metadata:
   author: firmansyahn
-  version: "0.1.2"
+  version: "0.1.3"
 ---
 
 # Deploying Next.js
@@ -43,7 +43,7 @@ Related: `nextjs-package-manager` (Yarn 4 from the committed release), `nextjs-b
 | [assets/app/livez/route.ts](assets/app/livez/route.ts), [assets/app/readyz/route.ts](assets/app/readyz/route.ts), [assets/src/libs/health.ts](assets/src/libs/health.ts) | `<app>/app/livez/`, `<app>/app/readyz/`, `<app>/src/libs/` |
 | [assets/src/configs/runtime-config.ts](assets/src/configs/runtime-config.ts) | `<app>/src/configs/` (adapt the settings) |
 | [assets/src/libs/build.ts](assets/src/libs/build.ts) | `<app>/src/libs/` (reads `build.json` for a version page) |
-| [assets/ci/root.gitlab-ci.yml](assets/ci/root.gitlab-ci.yml), [assets/ci/nextjs.gitlab-ci.yml](assets/ci/nextjs.gitlab-ci.yml) | `.gitlab-ci.yml`, `<app>/.gitlab-ci.yml` (fill in `<org>`, `<app>`, the chart path and the runner tag) |
+| [assets/ci/root.gitlab-ci.yml](assets/ci/root.gitlab-ci.yml), [assets/ci/nextjs.gitlab-ci.yml](assets/ci/nextjs.gitlab-ci.yml) | `.gitlab-ci.yml`, `<app>/.gitlab-ci.yml` (fill in `<org>`, `<app>`, the chart path and the runner tag). The app file includes `nextjs-security`'s `assets/ci/security.gitlab-ci.yml` (→ `<app>/`) with its two scripts (→ `<app>/scripts/ci/`) |
 
 ## Rules
 
