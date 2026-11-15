@@ -1,0 +1,159 @@
+[
+  {
+    "id": 1,
+    "name": "mode-unclear-asks",
+    "description": "Tests that the model picks or asks for the mode instead of silently migrating the stack",
+    "prompt": "Our Next.js 12 app (Pages Router, npm, SWR, styled-components, Jest with Enzyme) needs to be on Next 16. Please plan it.",
+    "trap": "Without the skill, the model plans a full modernization (App Router, Yarn or pnpm, TanStack Query, Tailwind) in one go",
+    "assertions": [
+      {"id": "1.1", "text": "Treats the request as upgrade mode (keep the stack) or asks whether the user wants upgrade or migrate mode"},
+      {"id": "1.2", "text": "Keeps npm, SWR and styled-components, and the Pages Router, in upgrade mode"},
+      {"id": "1.3", "text": "Flags Enzyme as a forced change: it has no React 18 adapter, so the test library must change, and asks the user"},
+      {"id": "1.4", "text": "Plans one branch with a checkpoint commit per crossed major (13, 14, 15, 16), after a runtime checkpoint"},
+      {"id": "1.5", "text": "Starts with an inventory and a baseline on the current version before changing anything"}
+    ]
+  },
+  {
+    "id": 2,
+    "name": "direct-jump-checkpoints",
+    "description": "Tests the direct jump with per-major checkpoints rather than one commit or four separate installs by default",
+    "prompt": "I want to go straight from Next 13.4 to the latest Next in one PR. Can I just bump the version in package.json and fix the errors?",
+    "trap": "Without the skill, the model either agrees to one big commit or insists on four separate upgrade PRs",
+    "assertions": [
+      {"id": "2.1", "text": "Says one PR is fine, with the target installed once and the crossed majors' changes applied in order (14, 15, 16)"},
+      {"id": "2.2", "text": "Commits each major's codemods and manual changes separately so a failure points at one version"},
+      {"id": "2.3", "text": "Uses @next/codemod upgrade with a pinned released version, and reads each major's guide from node_modules/next/dist/docs"},
+      {"id": "2.4", "text": "Mentions the stepwise fallback (installing 14.2, 15.5, then the target) when failures can't be traced to one major"},
+      {"id": "2.5", "text": "Takes the latest stable release at least two weeks old, not canary"}
+    ]
+  },
+  {
+    "id": 3,
+    "name": "edge-middleware-not-renamed",
+    "description": "Tests that edge middleware is not blindly renamed to proxy.ts",
+    "prompt": "We upgraded to Next 16 and got a deprecation warning for middleware.ts. Our middleware has `export const config = { runtime: 'edge', matcher: [...] }`. I'll just rename it to proxy.ts, right?",
+    "trap": "Without the skill, the model agrees to rename the file and keeps the runtime option",
+    "assertions": [
+      {"id": "3.1", "text": "Explains that proxy.ts runs only on the Node runtime and its runtime can't be configured"},
+      {"id": "3.2", "text": "Recommends keeping middleware.ts on the edge for the upgrade, as a deprecation to report"},
+      {"id": "3.3", "text": "If the user wants to move it, lists what to check: edge-only APIs and libraries, latency on edge platforms, and deleting the runtime key"},
+      {"id": "3.4", "text": "Notes that with next start on their own servers the edge middleware already runs in the Node process, so moving it doesn't change latency"}
+    ]
+  },
+  {
+    "id": 4,
+    "name": "webpack-hook-turbopack",
+    "description": "Tests the bundler decision when a webpack hook exists",
+    "prompt": "After upgrading to Next 16 our build fails because a webpack configuration was found. Should I just add --turbopack to the build script?",
+    "trap": "Without the skill, the model suggests --turbopack, which silently skips the hook's work",
+    "assertions": [
+      {"id": "4.1", "text": "Explains that --turbopack ignores the webpack hook, so whatever it did is silently skipped"},
+      {"id": "4.2", "text": "Offers the two real options: move the hook's work to turbopack options (rules, resolveAlias) or keep webpack with --webpack"},
+      {"id": "4.3", "text": "Mentions that a plugin may be adding the webpack hook even if the project doesn't define one"},
+      {"id": "4.4", "text": "Asks what the hook does before choosing"}
+    ]
+  },
+  {
+    "id": 5,
+    "name": "no-cache-components-during-upgrade",
+    "description": "Tests that new defaults are not switched on to finish an upgrade",
+    "prompt": "We're on Next 16 now. Since we're upgrading anyway, let's also turn on cacheComponents and the React Compiler in the same PR to get the performance wins.",
+    "trap": "Without the skill, the model enables both in the upgrade PR",
+    "assertions": [
+      {"id": "5.1", "text": "Recommends keeping Cache Components and the React Compiler out of the upgrade PR"},
+      {"id": "5.2", "text": "Explains that they change rendering and caching across the app, which would hide upgrade regressions"},
+      {"id": "5.3", "text": "Suggests a separate change afterwards, with its own guide and baseline"}
+    ]
+  },
+  {
+    "id": 6,
+    "name": "async-request-apis-leftovers",
+    "description": "Tests that codemod markers and sync request API access are resolved",
+    "prompt": "I ran npx @next/codemod next-async-request-api and the build passes on Next 15. Some files now have `as unknown as UnsafeUnwrappedCookies` and @next-codemod-error comments. Can I upgrade to 16 now?",
+    "trap": "Without the skill, the model treats the passing build as done",
+    "assertions": [
+      {"id": "6.1", "text": "Says the UnsafeUnwrapped casts and @next-codemod-error comments are unfinished work and must be resolved first"},
+      {"id": "6.2", "text": "Explains that Next 16 removes synchronous access, so those casts break at request time"},
+      {"id": "6.3", "text": "Shows the fix: await cookies()/headers()/params, or React use() in a Client Component"},
+      {"id": "6.4", "text": "Mentions that metadata image functions and sitemap get their params and id as promises in 16"}
+    ]
+  },
+  {
+    "id": 7,
+    "name": "react-19-removals",
+    "description": "Tests awareness of React 18 and 19 removals for an app coming from Next 12",
+    "prompt": "Upgrading a Next 12 app to 16. Typecheck shows hundreds of errors about children not existing on props, and some components use Component.defaultProps. What's going on?",
+    "trap": "Without the skill, the model blames Next.js rather than the React 17 to 19 jump",
+    "assertions": [
+      {"id": "7.1", "text": "Attributes the children errors to @types/react 18 removing implicit children from React.FC"},
+      {"id": "7.2", "text": "Says defaultProps on function components is removed in React 19 and shows parameter defaults instead"},
+      {"id": "7.3", "text": "Lists other React 19 removals to check: string refs, legacy context, findDOMNode, ReactDOM.render, propTypes, useRef() without an argument, the global JSX namespace"},
+      {"id": "7.4", "text": "Mentions the React 19 codemods run by the upgrade command"}
+    ]
+  },
+  {
+    "id": 8,
+    "name": "caching-defaults-15",
+    "description": "Tests the silent caching change of Next 15",
+    "prompt": "After upgrading from Next 14 to 15 (App Router), our backend team says request volume tripled, but nothing errors and all tests pass. Any idea?",
+    "trap": "Without the skill, the model looks for a bug or a loop instead of the changed defaults",
+    "assertions": [
+      {"id": "8.1", "text": "Identifies that fetch in Server Components is no longer cached by default in 15"},
+      {"id": "8.2", "text": "Mentions GET route handlers are no longer cached and the client router cache no longer reuses page segments"},
+      {"id": "8.3", "text": "Recommends stating the intent per read: cache force-cache, next.revalidate, segment revalidate or dynamic"},
+      {"id": "8.4", "text": "Does not recommend switching on Cache Components to restore caching as part of the upgrade"}
+    ]
+  },
+  {
+    "id": 9,
+    "name": "pages-to-app-one-commit",
+    "description": "Tests the route-by-route router move",
+    "prompt": "We're on Next 16 with the Pages Router (about 60 pages, next-i18next, next-seo, getServerSideProps everywhere). I want to move everything to the App Router this sprint in one PR.",
+    "trap": "Without the skill, the model plans a big-bang move and keeps next-i18next and next-seo",
+    "assertions": [
+      {"id": "9.1", "text": "Recommends moving route by route or section by section with both routers side by side, the root layout first"},
+      {"id": "9.2", "text": "Says each moved route deletes its pages/ file in the same commit, since one path can't be served by both routers"},
+      {"id": "9.3", "text": "Flags next-i18next and next-seo as forced changes (no App Router support / built on next/head) and asks the user"},
+      {"id": "9.4", "text": "Maps getServerSideProps to an async Server Component, next/head to metadata, next/router to next/navigation"},
+      {"id": "9.5", "text": "Says the i18n block in next.config applies only to pages/ and stays until the last Pages Router route has moved"}
+    ]
+  },
+  {
+    "id": 10,
+    "name": "use-client-on-page",
+    "description": "Tests the client boundary during the router move",
+    "prompt": "I moved pages/orders.tsx to app/orders/page.tsx and added 'use client' at the top because it uses useState. Now the build says I can't export metadata from a client component. Should I drop the metadata?",
+    "trap": "Without the skill, the model drops the metadata or moves it into a client-side head hack",
+    "assertions": [
+      {"id": "10.1", "text": "Keeps page.tsx a Server Component that exports metadata"},
+      {"id": "10.2", "text": "Moves the stateful part into a child component file with 'use client'"},
+      {"id": "10.3", "text": "Notes that only serializable props cross from the server page to the client component"}
+    ]
+  },
+  {
+    "id": 11,
+    "name": "migrate-phase-order",
+    "description": "Tests migrate mode's order and one phase per merge request",
+    "prompt": "We want our old Next 13 app (pnpm, Pages Router, Redux, MUI, Formik) moved onto the team's stack. Where do we start?",
+    "trap": "Without the skill, the model starts with the UI or the data layer, or does everything in one branch",
+    "assertions": [
+      {"id": "11.1", "text": "Starts with a map of area, current library, team target and owning skill, confirmed with the user"},
+      {"id": "11.2", "text": "Converts to Yarn 4 first, then the version upgrade, each merged on its own before any stack change"},
+      {"id": "11.3", "text": "Then lint and tests, then the router move, then folders, data, BFF, forms, UI, strings, logging and security, deploy, enforcement"},
+      {"id": "11.4", "text": "Keeps the app green after each phase, one area per merge request"}
+    ]
+  },
+  {
+    "id": 12,
+    "name": "rollout-and-rollback",
+    "description": "Tests the rollout through staging with a rollback image",
+    "prompt": "The Next 16 upgrade PR is green. We'll merge and deploy to production this afternoon. Anything else?",
+    "trap": "Without the skill, the model says it's ready to ship",
+    "assertions": [
+      {"id": "12.1", "text": "Recommends staging first, repeating the baseline comparison there (routes, images, sign-in, error and request rates)"},
+      {"id": "12.2", "text": "Says to write down the current production image tag as the rollback, and that rollback is redeploying it, then reverting the merge"},
+      {"id": "12.3", "text": "Mentions version skew during the rolling update: old pages reload on navigation and their Server Actions fail until reloaded"},
+      {"id": "12.4", "text": "Mentions shared caches (ISR or data cache in Redis) written by the new version, and checking that the runtime image uses the new Node"}
+    ]
+  }
+]
