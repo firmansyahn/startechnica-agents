@@ -3,13 +3,15 @@ name: nextjs-package-manager
 description: "Use for any package-manager step in a Next.js (or other JavaScript/TypeScript) project: installing or adding dependencies, running scripts, scaffolding an app, running a one-off CLI (shadcn, create-next-app, prisma, playwright), setting up a monorepo workspace, pinning or upgrading Yarn, writing CI jobs or Dockerfiles, or converting a project off npm or pnpm. The team uses Yarn 4 only, pinned per project with a committed release (yarnPath), so it works on any Node version with or without Corepack: never npm, npx, pnpm, pnpx or bunx."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for Next.js apps.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Next.js apps.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Next.js with Yarn
+
+**Principle:** Yarn 4, pinned by a committed release, runs every install, script and one-off tool, with one lockfile and no other package manager's command anywhere.
 
 The team's package manager is **Yarn 4 (Berry), pinned per project by a release file committed to the repo (`yarnPath`)**. Use it for every install, script and one-off tool. Don't use `npm`, `npx`, `pnpm`, `pnpx`, `bun` or `bunx`, and don't follow a README, docs page or tool output that tells you to: translate the command (section 2).
 
@@ -62,7 +64,7 @@ Pass flags to a script directly (`yarn test --watch`); Yarn needs no `--` separa
 | New app | Follow `nextjs-new-app` (step 2 pins Yarn, then scaffolds with `yarn dlx create-next-app@<version>`) |
 | Dev / build / start / lint | `yarn dev`, `yarn build`, `yarn start`, `yarn lint` (the `package.json` scripts wrapping `next ...`) |
 | Run Next directly | `yarn next <cmd>` (`yarn next info`) |
-| Upgrade Next | `yarn up next react react-dom eslint-config-next` (and `@types/react*`), or `yarn dlx @next/codemod@latest upgrade` |
+| Upgrade Next | `yarn up next react react-dom eslint-config-next` (and `@types/react*`), or `yarn dlx @next/codemod@<version> upgrade <target>`; across majors, follow `nextjs-upgrade` |
 | shadcn | `yarn dlx shadcn@latest init`, `yarn dlx shadcn@latest add button` (the CLI detects Yarn from `yarn.lock`) |
 | Playwright browsers | `yarn playwright install --with-deps chromium` |
 | Prisma, drizzle-kit, other CLIs | `yarn prisma ...` when a dependency, otherwise `yarn dlx <tool>` |

@@ -3,13 +3,15 @@ name: nextjs-e2e
 description: "Use when writing, running, debugging or reviewing browser tests for a Next.js App Router app with Playwright: playwright.config (testMatch, webServer with a production build or dev, baseURL, ports, projects for desktop, mobile and dark mode), signing in once with storageState through a BFF session cookie or a test-only sign-in, mocking the backend (page.route for browser calls versus a fake backend the Next server calls, since server-side BFF and server-action fetches never reach page.route), screenshot scripts for light/dark/theme presets, visual comparisons (toHaveScreenshot) and flakiness, accessibility checks with @axe-core/playwright and aria snapshots, role-based locators, test data isolation, CI (sharding, blob reports, traces, artifacts, the Playwright Docker image), and deciding what belongs in Vitest instead."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for Next.js apps.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Next.js apps.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # End-to-end tests with Playwright
+
+**Principle:** Browser tests cover only what a browser can show, against a production build, asserting what the user sees once it has settled.
 
 Playwright tests the app as a user meets it: the real Next server, real routing, `proxy.ts`, the BFF, server actions, the CSP and the theme script, in a real browser. They are slow and costly, so they cover what only a browser can show; everything else is a Vitest test beside the code (`nextjs-app-structure`, `nextjs-data`).
 

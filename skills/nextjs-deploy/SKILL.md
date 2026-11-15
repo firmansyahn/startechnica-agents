@@ -3,13 +3,15 @@ name: nextjs-deploy
 description: "Use when building, containerising, deploying or running a Next.js App Router app the way the team does: one image per commit that runs `next start` (not output standalone) with production-only dependencies, every setting injected by Kubernetes at runtime and read per request (no NEXT_PUBLIC_ settings, nothing environment-dependent in next.config), the multi-stage Dockerfile built by kaniko from the repo root (deps, prod-deps, builder, runner, build.json for the version), .dockerignore, /livez and /readyz probes, sessions in Redis across replicas, version skew without deploymentId, server-action limits, and the GitLab pipeline (branch-to-tier rules, install/typecheck/lint/test jobs, the org's kaniko build and chart-repository release templates). Also when asked why not standalone, or what the Helm chart must set."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for Next.js apps.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Next.js apps.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Deploying Next.js
+
+**Principle:** One image per commit runs `next start` in every environment, and every setting arrives when the pod starts, never at build time.
 
 The team runs each Next.js app as a container that starts `next start` on the app's normal build. One image is built per commit by kaniko in GitLab CI and released by bumping a Helm chart in a separate repository. Kubernetes injects every setting when the pod starts.
 

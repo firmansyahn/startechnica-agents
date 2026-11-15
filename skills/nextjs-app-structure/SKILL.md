@@ -3,13 +3,15 @@ name: nextjs-app-structure
 description: "Use when setting up, auditing, reorganising, or adding to a Next.js App Router app, new or existing, at the repo root, in its own folder beside a backend, or as apps/<app-name>/ in a monorepo: where a route, page, component, hook, service, server action, schema, type, util, provider, message file or test belongs, import aliases, migrating an existing tree step by step and enforcing it with a test; and how a page is built: building, porting, refactoring, reviewing or testing an admin/console page, a list, a create/edit form, a settings page, a record's detail page, a shared component or a hook (thin server page + client component, data through TanStack Query and server actions, toasts and in-app confirms, read-only users, next-intl strings, theme tokens, page tests that fake the network, screenshots)."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for Next.js apps.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Next.js apps.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Next.js app structure: folders and page anatomy
+
+**Principle:** Every file has one obvious place and every page one shape: a thin server page, a client component named after it, and strings from the message files.
 
 Where files go, and what goes in them. The layout keeps routing in `app/`, shared React components in `components/`, every other kind of shared code in its own `src/<kind>/` folder, and code beside the one route that uses it until a second one needs it. Every page is a thin server `page.tsx` plus one client component, reading through TanStack Query and writing through server actions.
 
