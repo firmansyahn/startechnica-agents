@@ -3,13 +3,15 @@ name: git-worktree
 description: "Team overlay on the vendored worktree skills: read it with git-using-worktrees (creating a workspace), finishing-a-development-branch (ending the work) and git-resolve-conflicts (merge conflicts) whenever you start branch work, work beside other agent sessions, finish or clean up a branch, or hit a conflict. It sets what those skills leave open: worktrees in .worktrees/<topic> branched from whatever base the work builds on (HEAD or a named ref) with CI-friendly names, the MR targeting that base, every worktree's own dependencies (its own yarn install and Go modules; never a node_modules or vendor link, or a replace/go.work pointing at another checkout), gitignored local files via .worktreeinclude, finishing only through a merge request, removing the worktree and branch once the MR merged (links and processes first, on Linux, macOS and Windows), keeping .worktrees/ out of Docker contexts, indexers and editors, and regenerating generated files during conflicts."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for git repositories hosted on GitLab.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for git repositories hosted on GitLab.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Worktrees: the team's overlay
+
+**Principle:** One worktree per independent piece of work, with a known base and its own dependencies, removed with its branch once the merge request is merged and nothing in it is unsaved.
 
 The workflow comes from established skills, vendored unchanged beside this one (updated as `agent-skills-authoring` describes). Follow them; this file only adds what they leave to the project, and wins where it says something different.
 

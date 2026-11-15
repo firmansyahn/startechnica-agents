@@ -3,13 +3,15 @@ name: oauth-client
 description: "Use when implementing, reviewing or testing the client side of OAuth 2.x / OpenID Connect in any language: signing users in to a web app through a BFF (confidential client), an SPA or a native/mobile app (public client), social sign-in with Google/Apple/Microsoft or any OIDC provider, calling an API with client credentials, storing and refreshing tokens, validating ID tokens, state/nonce/PKCE, logout and revocation."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for OAuth 2.1 authorization servers and clients.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for OAuth 2.1 authorization servers and clients.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # OAuth / OIDC clients
+
+**Principle:** Pick the client shape before the code: tokens stay where the client can keep them secret, and state, nonce and PKCE bind each sign-in to one browser, once.
 
 Pick the client shape first; most mistakes come from using a browser-SPA pattern where a server-side client fits.
 

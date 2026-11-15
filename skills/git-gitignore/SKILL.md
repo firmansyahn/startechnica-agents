@@ -3,13 +3,15 @@ name: git-gitignore
 description: "Use when adding, changing or reviewing a .gitignore, or when a file shows up in git status that shouldn't (or is missing from it): which file a pattern belongs in (the repo's .gitignore, a nested one per app, .git/info/exclude for your own clone, the global excludes file), writing precise patterns (anchoring with a leading slash, a trailing slash for folders, ** and negation, and why a file in an ignored folder can't be re-included), what every repo ignores (dependencies, build output, binaries, caches, local databases, env files with values, local agent settings, test reports, worktree folders, common OS and editor files) and what it never ignores (lockfiles, committed tool releases, .env.example), untracking a file that is already committed, debugging with git check-ignore, and keeping .dockerignore and other tools' ignore files in step. Works on Linux, macOS and Windows."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for any git repository.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for any git repository.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Ignoring files in git
+
+**Principle:** Ignore what the repo's tools generate and what holds secrets, with the narrowest pattern that works, and never a file the project needs to install, build or run.
 
 The reference is git's own documentation, [gitignore(5)](https://git-scm.com/docs/gitignore); starting points for a language's patterns are GitHub's [github/gitignore](https://github.com/github/gitignore) templates (CC0), trimmed to what the repo actually produces. This skill adds where each pattern goes, the shapes that hold up, and the checks. No established agent skill covers this well enough to vendor, so it is the team's own.
 

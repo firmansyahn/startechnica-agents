@@ -3,13 +3,15 @@ name: gitlab-ci
 description: "Team overlay on GitLab's gitlab-ci-skill: read it with that skill when writing, changing, reviewing or debugging a GitLab CI/CD pipeline (.gitlab-ci.yml and its includes). It holds what the generic skill can't know: workflow rules that map the branch to a deployment tier and run merge-request pipelines instead of duplicate branch pipelines, spec:inputs, a monorepo root that includes one child file per app with rules:changes, the org's shared CI templates (kaniko build, chart release) and their traps (job variables replace the template's, needs: [], tag pipelines and the zero BEFORE_SHA rule, trigger forwarding), test suites that run automatically and block the merge, made fast (cache written once, sharding, nightly runs that never deploy), manual optional jobs, caches and artifacts. Also when a pipeline or job failed, didn't start or ran the wrong jobs: reading pipelines and traces with glab, linting the YAML, retrying a runner failure, starting a manual job."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for git repositories hosted on GitLab.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for git repositories hosted on GitLab.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # GitLab CI: the team's overlay
+
+**Principle:** A pipeline runs what the change needs, blocks the merge on its checks, and builds the image only after the checks pass.
 
 **Start from GitLab's official [gitlab-ci-skill](../gitlab-ci-skill/SKILL.md)**, vendored unchanged beside this one (updated as `agent-skills-authoring` describes): CI syntax, the mental model, caching, images, optimising, debugging a failed job, and verifying YAML (`glci lint`, `scripts/verify.sh`). This file adds only the team's pipeline shape, the org's shared templates and their traps, and wins where it says something different (for example, the team includes the org templates rather than CI/CD Catalog components).
 

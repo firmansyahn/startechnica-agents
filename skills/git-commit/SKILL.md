@@ -3,13 +3,15 @@ name: git-commit
 description: "Use when committing in any team repo, or writing or reviewing a commit message: Conventional Commits 1.0.0 (type, scope = the component touched, breaking-change marker, body), staging files by name and never gitignored, credential or local-settings files, LF line endings and the .gitattributes that enforces them (and renormalising a CRLF repo as its own commit), [ci skip] only for commits that change no code, the author identity for public repos, checking the staged diff for internal details before a public push, and merging the target branch into a work branch instead of rebasing pushed history."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for git repositories hosted on GitLab.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for git repositories hosted on GitLab.
 metadata:
   author: firmansyahn
-  version: "0.2.0"
+  version: "0.2.1"
 ---
 
 # Committing
+
+**Principle:** Every commit is small, staged by name, written as a Conventional Commit with LF endings, and safe to publish: nothing internal or secret reaches a public repo.
 
 Every repo, old style or not, uses [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/). That published spec is the reference; this skill adds the team's choices around it. Commits are small, staged by name, LF only, and safe for the repo's visibility.
 

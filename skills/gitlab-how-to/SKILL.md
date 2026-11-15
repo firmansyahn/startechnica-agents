@@ -3,13 +3,15 @@ name: gitlab-how-to
 description: "Use at the start of any GitLab work when it isn't clear which skill applies, or when a task spans several: any glab command, opening, describing, reviewing, checking or merging a merge request, stacked MRs, waiting for a pipeline or nursing a failed one to green, writing or debugging .gitlab-ci.yml, or asking 'what are our rules for GitLab'. Routes to the team overlays (gitlab-mr, gitlab-ci) and GitLab's vendored agent skills they build on (gitlab-glab, gitlab-mr-description, git-mr-adversarial-review, gitlab-pipeline-watch, gitlab-babysit-mr, gitlab-stacked-mrs, gitlab-ci-skill), says when ce-code-review fits, lists the rules they all assume and the hooks that enforce them, and hands branches and commits to git-how-to."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for git repositories hosted on GitLab.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for git repositories hosted on GitLab.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # GitLab: which skill, and the rules they all assume
+
+**Principle:** Route, don't teach: open the one skill the task needs, and let that skill decide.
 
 This skill only routes: open the skill the task needs, and only that one. Each team skill holds its patterns, its rules (one file per rule, with how each is caught), its own `scripts/scan.sh` and a "Reviewing" section.
 

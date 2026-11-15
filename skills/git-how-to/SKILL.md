@@ -3,13 +3,15 @@ name: git-how-to
 description: "Use at the start of any git work when it isn't clear which skill applies, or when a task spans several: starting branch work in an isolated worktree, setting the base, dependencies in a worktree, committing (Conventional Commits, staging by name, line endings, [ci skip], author identity), what to ignore and where, merge conflicts and generated files, finishing a branch and cleaning up after the merge, or asking 'what are our rules for git'. Routes to the team skills (git-worktree, git-commit, git-gitignore) and the vendored upstream skills they build on (git-using-worktrees, finishing-a-development-branch, git-resolve-conflicts), lists the rules they all assume, and hands merge requests and pipelines to gitlab-how-to."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for any git repository.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for any git repository.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Git: which skill, and the rules they all assume
+
+**Principle:** Route, don't teach: open the one skill the task needs, and let that skill decide.
 
 This skill only routes: open the skill the task needs, and only that one. Each team skill holds its patterns, its rules (one file per rule, with how each is caught), its own `scripts/scan.sh` and a "Reviewing" section.
 
