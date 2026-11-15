@@ -51,7 +51,7 @@ const warn = (file, line, check, msg) => warnings.push(`${rel(file)}${line ? ":"
 
 const read = (p) => fs.readFileSync(p, "utf8");
 const exists = (p) => fs.existsSync(p);
-const TEXT = /\.(md|mjs|js|cjs|ts|sh|py|json|ya?ml|txt|bats)$|^(LICENSE|SKILL\.md|post-checkout|worktreeinclude)$/;
+const TEXT = /\.(md|mjs|js|cjs|ts|tsx|go|css|sh|py|json|ya?ml|txt|bats)$|^(LICENSE|SKILL\.md|Dockerfile|dockerignore|gitattributes|post-checkout|commit-msg|pre-commit|worktreeinclude)$/;
 
 function walk(dir) {
   const out = [];

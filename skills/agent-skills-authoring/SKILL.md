@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for any folder of Agent Skills.
 metadata:
   author: firmansyahn
-  version: "0.2.0"
+  version: "0.3.0"
 ---
 
 # Writing and checking the team's skills
