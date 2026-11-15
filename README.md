@@ -37,6 +37,7 @@ Each area has a small router skill that sends a task to the right skill and list
 | git | `git-how-to` | `git-worktree`, `git-commit`, `git-gitignore` |
 | GitLab | `gitlab-how-to` | `gitlab-mr`, `gitlab-ci` |
 | Writing these skills | `agent-skills-authoring` | the rule format, rule prefixes, vendoring upstream skills, the skills lint |
+| Releasing the skills | `agent-skills-release` | the bump kind, the version script, tagging and the GitHub release |
 
 ## Vendored upstream skills
 

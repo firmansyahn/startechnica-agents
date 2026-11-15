@@ -92,6 +92,8 @@ Before publishing the skills outside the organisation, set `SKILLS_INTERNAL_PATT
 SKILLS_INTERNAL_PATTERNS='acme|corp\.example|cluster-a' node <this skill>/scripts/lint-skills.mjs
 ```
 
+Publishing a version of the skills — the bump kind, the version script, tagging and the release — is [agent-skills-release](../agent-skills-release/SKILL.md).
+
 ## Checklist
 
 - [ ] `name` equals the folder; the description says when to use it, within 1024 characters
