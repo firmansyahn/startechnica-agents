@@ -4,9 +4,9 @@ Agent skills for building and shipping Go services and Next.js apps: one focused
 
 Where an established public skill already covers a topic well, it is either included unchanged (vendored) with its licence and an `UPSTREAM.md` naming its source and pinned commit, with a team skill adding what it leaves open, or absorbed into a team skill and edited to agree with the team.
 
-## Install
+## How to use
 
-**[skills](https://skills.sh) CLI** (any Agent Skills tool):
+**Install with the [skills](https://skills.sh) CLI** (works with any [Agent Skills](https://agentskills.io) tool):
 
 ```sh
 npx skills add https://github.com/firmansyahn/startechnica-agents --all
@@ -14,16 +14,78 @@ npx skills add https://github.com/firmansyahn/startechnica-agents --all
 npx skills add https://github.com/firmansyahn/startechnica-agents --skill go-testing
 ```
 
-**Claude Code plugin:**
+**Update** the same way. `update` moves installed skills to the latest release; `add --all` also installs the skills a release adds, and `remove` drops the ones it deletes (see [Updating](#updating)).
+
+```sh
+npx skills update          # -p for the project's skills, -g for the global ones, -y to skip the prompt
+npx skills add https://github.com/firmansyahn/startechnica-agents --all
+```
+
+Skills name each other and the routers expect their siblings beside them, so install them together.
+
+<details>
+<summary>Claude Code</summary>
 
 ```
 /plugin marketplace add firmansyahn/startechnica-agents
 /plugin install startechnica-agents@startechnica
 ```
 
-**Gemini CLI:** `gemini extensions install https://github.com/firmansyahn/startechnica-agents`
+Update, then restart the session:
 
-**By hand:** copy the folders under `skills/` into your tool's skills folder (`~/.claude/skills/`, a project's `.claude/skills/` or `.agents/skills/`, ...). Install them together: the skills name each other and the routers expect their siblings beside them.
+```
+/plugin marketplace update startechnica
+/plugin update startechnica-agents@startechnica
+```
+
+From a terminal: `claude plugin marketplace update startechnica` and `claude plugin update startechnica-agents@startechnica`.
+
+</details>
+
+<details>
+<summary>Gemini CLI</summary>
+
+```sh
+gemini extensions install https://github.com/firmansyahn/startechnica-agents
+```
+
+Update with `gemini extensions update startechnica-agents`.
+
+</details>
+
+<details>
+<summary>Codex, Cursor, OpenCode and other tools that read <code>.agents/skills/</code></summary>
+
+Clone the repository into the shared discovery folder:
+
+```sh
+git clone https://github.com/firmansyahn/startechnica-agents.git ~/.agents/skills/startechnica-agents
+```
+
+Codex, Cursor and OpenCode find skills in `~/.agents/skills/` and in a project's `.agents/skills/`; Cursor also reads `.cursor/skills/`, and OpenCode `.opencode/skills/` and `.claude/skills/`. Update with `cd ~/.agents/skills/startechnica-agents && git pull`, or `git checkout v<version>` to stay on a release.
+
+</details>
+
+<details>
+<summary>By hand, or pinned in a project</summary>
+
+Copy the folders under `skills/` into your tool's skills folder (`~/.claude/skills/`, a project's `.claude/skills/` or `.agents/skills/`, ...).
+
+A project that keeps its copy in the repository (so every contributor and CI sees the same skills) syncs it from a release tag and never edits it: a local difference goes into a skill here and comes back with the next release. The project brings its own sync script, one that clones the tag, replaces `.agents/skills/` and records the release (`agent-skills-release`, step 4). For example:
+
+```sh
+node tools/sync-agent-skills.mjs v1.1.1      # a release tag
+node tools/sync-agent-skills.mjs --check     # fails when the copy differs from its release
+```
+
+</details>
+
+## Updating
+
+Releases are tagged `v<major>.<minor>.<patch>`: a minor release adds skills or rules, a patch fixes or rewords, a major one removes or renames skills. Read the [release notes](https://github.com/firmansyahn/startechnica-agents/releases) before a major update.
+
+- **v1.0.0** replaced the `golang-*` skills with `go-<topic>` skills (the mapping is in the first rule of `go-how-to`). After updating, remove any `golang-*` skill that came from this repository (`npx skills list`, then `npx skills remove <name>`), or both versions load. Skills installed from samber's own repository are separate: leave them.
+- **v1.1.0** moved the Next.js checks into a kit you copy into an app (`nextjs-new-app`, `references/enforcement-kit.md`). Updating the skills doesn't change an app's copied files: re-copy the lint config and rule tests, and add the dev dependencies the kit names.
 
 ## Where to start
 
