@@ -95,7 +95,7 @@
     "id": 5,
     "name": "no-else-after-return",
     "description": "No else after return; default-then-override for simple assignments",
-    "prompt": "Write a Go function GetUserRole in package `auth` that takes a user struct with IsAdmin bool, IsModerator bool, and IsVerified bool fields. Return a role string: if admin return 'admin', else if moderator return 'moderator', else if verified return 'member', else return 'guest'. Also write a function SetLogLevel that takes a verbose bool and a debug bool, and sets the log level appropriately using slog.",
+    "prompt": "Write a Go function GetUserRole in package `auth` that takes a user struct with IsAdmin bool, IsModerator bool, and IsVerified bool fields. Return a role string: if admin return 'admin', else if moderator return 'moderator', else if verified return 'member', else return 'guest'. Also write a function SetLogLevel that takes a verbose bool and a debug bool, and sets the log level appropriately using zap (a zapcore.Level).",
     "trap": "Model uses else-if chains after return statements, adding unnecessary indentation and cognitive load",
     "assertions": [
       {
@@ -246,7 +246,7 @@
     "id": 12,
     "name": "line-breaks-at-semantic-boundaries",
     "description": "Function calls with 4+ arguments broken at argument boundaries; no line over ~120 chars",
-    "prompt": "Write a Go function RegisterRoutes in package `router` that takes an *http.ServeMux and registers 6 API routes. Each route handler is a closure that delegates to a processRequest function taking: an http.ResponseWriter, an *http.Request, a serviceName string constant 'com.example.platform.api', a *Config, a *slog.Logger, and an authMiddleware func. Write idiomatic Go.",
+    "prompt": "Write a Go function RegisterRoutes in package `router` that takes an *http.ServeMux and registers 6 API routes. Each route handler is a closure that delegates to a processRequest function taking: an http.ResponseWriter, an *http.Request, a serviceName string constant 'com.example.platform.api', a *Config, a *zap.Logger, and an authMiddleware func. Write idiomatic Go.",
     "trap": "Model writes each mux.HandleFunc and inner processRequest call as a single long line since that is the most compact and natural first draft",
     "assertions": [
       {

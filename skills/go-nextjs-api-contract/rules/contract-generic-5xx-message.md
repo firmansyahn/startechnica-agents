@@ -18,8 +18,8 @@ httpx.Fail(w, 500, err.Error(), nil)   // "pq: duplicate key value violates uniq
 **Correct:**
 
 ```go
-log.ErrorContext(ctx, "patch item", slog.Any("error", err))   // request id from the context
-httpx.Fail(w, 500, "Something went wrong", nil)              // X-Request-Id is on the reply
+log.Error("patch item", zap.String("http.request.id", requestID(ctx)), zap.Error(err)) // the id the middleware stored
+httpx.Fail(w, 500, "Something went wrong", nil) // X-Request-Id is on the reply
 ```
 
 **How to check:** `grep -rn 'Fail(w, 5[0-9][0-9], err.Error()' --include=*.go`; in review, any 5xx reply built from an error's text.

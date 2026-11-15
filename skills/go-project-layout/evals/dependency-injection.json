@@ -1,0 +1,156 @@
+[
+  {
+    "id": 1,
+    "name": "constructor-injection-not-globals",
+    "description": "Tests that dependencies are injected via constructors, not global variables or init()",
+    "prompt": "I have a UserService that needs a database connection and a logger. What's the best way to set this up in Go? I was thinking of using a package-level var for the database.",
+    "trap": "Without the skill, the model may accept the global variable approach or use init() for setup. The skill explicitly forbids globals and init() for service setup.",
+    "assertions": [
+      {"id": "1.1", "text": "Uses constructor injection (NewUserService taking dependencies as parameters)"},
+      {"id": "1.2", "text": "Explicitly advises against package-level variables for service dependencies"},
+      {"id": "1.3", "text": "Explains why globals are problematic (untestable, hidden dependencies, or coupling)"},
+      {"id": "1.4", "text": "Does NOT use init() for service initialization"},
+      {"id": "1.5", "text": "Returns a concrete struct pointer from the constructor, not an interface"}
+    ]
+  },
+  {
+    "id": 2,
+    "name": "interface-defined-at-consumer",
+    "description": "Tests that interfaces are defined where consumed, not where implemented",
+    "prompt": "I'm building a Go service that uses a UserStore. Should I define the UserStore interface in the same package as the PostgreSQL implementation or somewhere else? Show me the correct pattern.",
+    "trap": "Without the skill, the model often defines the interface in the implementation package (next to the struct). The skill requires interfaces to be defined at the consumption site.",
+    "assertions": [
+      {"id": "2.1", "text": "Defines the interface in the consuming package (e.g. service package), not the implementation package"},
+      {"id": "2.2", "text": "Explains the principle: accept interfaces, return structs"},
+      {"id": "2.3", "text": "The implementation package returns a concrete struct pointer"},
+      {"id": "2.4", "text": "The consumer depends on its own locally-defined interface"},
+      {"id": "2.5", "text": "Does NOT have the implementation package import the consumer's interface"}
+    ]
+  },
+  {
+    "id": 3,
+    "name": "container-not-passed-as-dependency",
+    "description": "Tests that no container or registry is passed as a dependency (service locator anti-pattern) and that the wiring is by hand",
+    "prompt": "I'm thinking of using samber/do for DI in my Go project. My UserService needs a Database and a Mailer. Should I pass the do.Injector to UserService so it can look up what it needs?",
+    "trap": "Without the skill, the model may accept passing the injector/container as a dependency, or set up samber/do. The skill forbids the service locator and the team adopts no DI container.",
+    "assertions": [
+      {"id": "3.1", "text": "Advises against passing the injector/container as a dependency"},
+      {"id": "3.2", "text": "Identifies this as the service locator anti-pattern"},
+      {"id": "3.3", "text": "Says the team doesn't adopt samber/do (or any DI container) and wires dependencies by hand"},
+      {"id": "3.4", "text": "Shows UserService receiving Database and Mailer directly as constructor parameters"},
+      {"id": "3.5", "text": "Shows the wiring only at the composition root (main/run() or internal/app), with no do.Provide or do.MustInvoke"}
+    ]
+  },
+  {
+    "id": 4,
+    "name": "manual-di-at-every-size",
+    "description": "Tests that dependencies are wired by hand, not with a library",
+    "prompt": "I'm building a small Go REST API with about 5 services: config, database, user repository, user service, and HTTP handler. What DI approach should I use?",
+    "trap": "Without the skill, the model may recommend a DI library like Wire or Fx, or say one becomes worthwhile as the project grows. The team wires dependencies by hand through constructors at every size.",
+    "assertions": [
+      {"id": "4.1", "text": "Recommends manual constructor injection"},
+      {"id": "4.2", "text": "Does NOT recommend a DI library, now or as the project grows"},
+      {"id": "4.3", "text": "Shows wiring in main()/run() with explicit constructor calls in dependency order"},
+      {"id": "4.4", "text": "Initializes infrastructure first, then repositories, then services, then transport"},
+      {"id": "4.5", "text": "Says a growing service moves the wiring to internal/app or uses deps structs, not a DI library"}
+    ]
+  },
+  {
+    "id": 5,
+    "name": "large-service-still-wired-by-hand",
+    "description": "Tests that a large service with lifecycle needs is still wired by hand",
+    "prompt": "I'm building a large Go microservice with 40+ services, complex lifecycle management (health checks, graceful shutdown), and I want compile-time type safety. My team is comfortable with Go generics. Which DI library should I use?",
+    "trap": "Without the skill, the model may recommend samber/do, uber-go/fx or google/wire. The team adopts no DI library: the wiring stays in constructors, moved to internal/app, with lifecycle written in the composition root.",
+    "assertions": [
+      {"id": "5.1", "text": "Says the team doesn't adopt a DI library (samber/do, uber-go/fx, google/wire) and recommends none"},
+      {"id": "5.2", "text": "Keeps compile-time type safety through plain constructor calls (a missing argument is a compile error)"},
+      {"id": "5.3", "text": "Moves the wiring to a composition root such as internal/app, grouping inputs in deps structs"},
+      {"id": "5.4", "text": "Writes health checks and graceful shutdown in the composition root, stopping services in order"},
+      {"id": "5.5", "text": "Does NOT show do.Provide, fx.Provide or wire.Build code"}
+    ]
+  },
+  {
+    "id": 6,
+    "name": "wire-request-answered-by-hand",
+    "description": "Tests that a request to set up google/wire gets hand-written constructor wiring",
+    "prompt": "Set up google/wire for a Go application with Config, Database, UserStore, and UserService. Show the wire.go file and explain what happens when I run wire.",
+    "trap": "Without the skill, the model sets up wire with provider sets and a wireinject build constraint. The team doesn't adopt wire; the constructor calls wire would generate are written by hand.",
+    "assertions": [
+      {"id": "6.1", "text": "Says the team doesn't adopt google/wire and wires dependencies by hand instead"},
+      {"id": "6.2", "text": "Explains that wire only generates the plain constructor calls, which can be written directly"},
+      {"id": "6.3", "text": "Shows the hand-written wiring: Config, then Database, then UserStore, then UserService, in a run() or internal/app function"},
+      {"id": "6.4", "text": "Returns errors from the wiring function wrapped with fmt.Errorf and %w instead of exiting there"},
+      {"id": "6.5", "text": "Does NOT add a wire.go file, a //go:build wireinject constraint or a wire_gen.go"}
+    ]
+  },
+  {
+    "id": 7,
+    "name": "lifecycle-without-fx",
+    "description": "Tests that startup and shutdown of a database connection are written by hand, not with fx hooks",
+    "prompt": "Set up a database connection using uber-go/fx that connects on startup and cleanly closes on shutdown.",
+    "trap": "Without the skill, the model writes fx.Lifecycle OnStart/OnStop hooks. The team doesn't adopt fx: the composition root connects, defers the close and owns the shutdown order.",
+    "assertions": [
+      {"id": "7.1", "text": "Says the team doesn't adopt uber-go/fx and does the lifecycle by hand"},
+      {"id": "7.2", "text": "Connects to the database in run() (or internal/app) at startup and returns a wrapped error if it fails"},
+      {"id": "7.3", "text": "Closes the connection on shutdown with defer, after the server that uses it has stopped"},
+      {"id": "7.4", "text": "Passes the connection to the services that need it through their constructors"},
+      {"id": "7.5", "text": "Does NOT use fx.Lifecycle, fx.Hook or fx.New"}
+    ]
+  },
+  {
+    "id": 8,
+    "name": "testing-with-di-mock-injection",
+    "description": "Tests that DI enables testing by injecting mocks at the interface boundary",
+    "prompt": "Write a test for a UserService that depends on a UserStore interface. The test should verify that GetUser returns the correct user when found and an error when not found. Don't use any DI library.",
+    "trap": "Without the skill, the model may test with a real database or skip the mock pattern. The skill requires mocking at the interface boundary.",
+    "assertions": [
+      {"id": "8.1", "text": "Creates a mock implementation of the UserStore interface"},
+      {"id": "8.2", "text": "Injects the mock into UserService via the constructor (NewUserService)"},
+      {"id": "8.3", "text": "Tests both the success path (user found) and the error path (not found)"},
+      {"id": "8.4", "text": "Does NOT use a real database connection in the test"},
+      {"id": "8.5", "text": "The mock is defined in the test file, not as a package-level or global variable"}
+    ]
+  },
+  {
+    "id": 9,
+    "name": "shallow-dependency-graph",
+    "description": "Tests that deep dependency chains are flagged as a design problem",
+    "prompt": "My Go application has this dependency chain: Config -> Database -> UserRepo -> UserService -> NotificationService -> OrderService -> PaymentService -> APIHandler. Is this a good architecture?",
+    "trap": "Without the skill, the model may accept this deep chain as normal layered architecture. The skill says deep chains signal design problems and recommends flattening.",
+    "assertions": [
+      {"id": "9.1", "text": "Identifies the deep dependency chain as a design problem"},
+      {"id": "9.2", "text": "Recommends flattening the dependency graph"},
+      {"id": "9.3", "text": "Suggests that most services should depend on repositories and config directly, not transitively through other services"},
+      {"id": "9.4", "text": "Explains the negative consequences of deep chains (fragility, hard to test, or hard to maintain)"},
+      {"id": "9.5", "text": "Proposes a concrete restructuring where OrderService and PaymentService don't depend on each other transitively"}
+    ]
+  },
+  {
+    "id": 10,
+    "name": "services-built-once-not-per-request",
+    "description": "Tests that the service graph is built once per application, not per request",
+    "prompt": "I'm building a Go HTTP API with samber/do. In each HTTP handler, I'm creating a new do.New() injector, providing all services, then invoking the one I need. This way each request gets fresh services. Is this correct?",
+    "trap": "Without the skill, the model may accept the per-request container pattern, or fix it while keeping samber/do. The team builds the services once at startup, by hand, and adopts no DI container.",
+    "assertions": [
+      {"id": "10.1", "text": "Identifies building the services (a new container) per request as a mistake"},
+      {"id": "10.2", "text": "Recommends building the services once at startup in the composition root"},
+      {"id": "10.3", "text": "Explains the performance or correctness problem with per-request construction (recreating stateful services, no connection reuse)"},
+      {"id": "10.4", "text": "Says the team doesn't adopt samber/do and replaces it with constructor injection"},
+      {"id": "10.5", "text": "Shows the services built once in main()/run() and injected into handlers through constructors, with request-scoped values passed as arguments or in the request context"}
+    ]
+  },
+  {
+    "id": 11,
+    "name": "startup-order-and-shared-state",
+    "description": "Tests startup construction in layer order, stateful services built once, and lazy creation without a container",
+    "prompt": "Should all my Go services be created at application startup? I have a database pool, a cache client, and some request processing services.",
+    "trap": "Without the skill, the model may recommend a DI container for lazy loading. The team wires by hand: build in layer order at startup, construct stateful services once and share them, and make an expensive client lazy inside the service that owns it.",
+    "assertions": [
+      {"id": "11.1", "text": "Recommends building services at startup in layer order, so a broken dependency fails the start"},
+      {"id": "11.2", "text": "Recommends constructing stateful services like the database pool and cache client once and sharing them"},
+      {"id": "11.3", "text": "Says stateless request processing services can be cheap to construct and need no special lifetime"},
+      {"id": "11.4", "text": "If lazy creation is needed, puts it inside the owning service (for example sync.OnceValues), not in a container"},
+      {"id": "11.5", "text": "Does NOT recommend a DI library (samber/do, fx, wire) for lazy loading"}
+    ]
+  }
+]

@@ -79,7 +79,7 @@ package reaper
 
 type Reaper struct {
 	db       *database.DB
-	log      *slog.Logger
+	log      *zap.Logger
 	interval time.Duration
 	now      func() time.Time
 
@@ -87,7 +87,7 @@ type Reaper struct {
 	done chan struct{}
 }
 
-func New(db *database.DB, log *slog.Logger, interval time.Duration) *Reaper {
+func New(db *database.DB, log *zap.Logger, interval time.Duration) *Reaper {
 	return &Reaper{db: db, log: log, interval: interval, now: time.Now}
 }
 
@@ -107,7 +107,7 @@ func (r *Reaper) Start(ctx context.Context) {
 				return
 			case <-t.C:
 				if err := r.sweep(ctx); err != nil {
-					r.log.Warn("reap stale sessions", "error", err)
+					r.log.Warn("reap stale sessions", zap.Error(err))
 				}
 			}
 		}

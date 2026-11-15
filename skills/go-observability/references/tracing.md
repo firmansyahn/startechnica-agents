@@ -149,7 +149,7 @@ if err != nil {
 
 Standard Go errors lose critical debugging information: there's no stack trace, no structured context, and no way to attach request-scoped metadata. When an error surfaces in a trace, you see `"connection refused"` but not where it originated or which user/tenant was affected.
 
-[`samber/oops`](https://github.com/samber/oops) is a drop-in error library that fills these gaps. Every `oops` error carries a stack trace, structured attributes, and integrates naturally with both OpenTelemetry spans and `slog`:
+[`samber/oops`](https://github.com/samber/oops) is a drop-in error library that fills these gaps. Every `oops` error carries a stack trace, structured attributes, and integrates naturally with OpenTelemetry spans and structured loggers:
 
 ```go
 import "github.com/samber/oops"
@@ -175,7 +175,7 @@ func (s *OrderService) Create(ctx context.Context, req CreateOrderRequest) (*Ord
 
 When this error is logged or recorded on a span, you get the full stack trace, the domain (`order-service`), an error code (`order_insert_failed`), and structured attributes (`order_id`, `user_id`) — all machine-parseable and searchable in your observability platform.
 
-`oops` errors work with `span.RecordError()`, `errors.Is`/`errors.As`, and `slog` — see the `samber/cc-skills-golang@golang-error-handling` and `samber/cc-skills-golang@golang-samber-oops` skills for full usage patterns.
+`oops` errors work with `span.RecordError()` and `errors.Is`/`errors.As` — see the `samber/cc-skills-golang@golang-error-handling` and `samber/cc-skills-golang@golang-samber-oops` skills for full usage patterns.
 
 ## Trace Sampling
 

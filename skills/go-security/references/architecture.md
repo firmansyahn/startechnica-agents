@@ -132,10 +132,10 @@ func ZeroTrustMiddleware(next http.Handler) http.Handler {
         }
         // 3. Audit log
         logger.Info("access_granted",
-            "user", claims.Subject,
-            "method", r.Method,
-            "path", r.URL.Path,
-            "ip", r.RemoteAddr,
+            zap.String("user", claims.Subject),
+            zap.String("method", r.Method),
+            zap.String("path", r.URL.Path),
+            zap.String("ip", r.RemoteAddr),
         )
         ctx := context.WithValue(r.Context(), userClaimsKey, claims)
         next.ServeHTTP(w, r.WithContext(ctx))

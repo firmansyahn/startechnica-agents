@@ -68,14 +68,14 @@ import "github.com/posthog/posthog-go"
 
 var posthogClient posthog.Client
 
-func initPostHog() {
+func initPostHog(log *zap.Logger) {
     var err error
     posthogClient, err = posthog.NewWithConfig(
         os.Getenv("POSTHOG_API_KEY"),
         posthog.Config{Endpoint: os.Getenv("POSTHOG_HOST")},
     )
     if err != nil {
-        slog.Error("failed to init PostHog", "error", err)
+        log.Error("failed to init PostHog", zap.Error(err))
     }
 }
 
@@ -197,25 +197,26 @@ GDPR and CCPA require you to let users access, export, and delete their data. Im
 func (h *PrivacyHandler) HandleDataDeletion(w http.ResponseWriter, r *http.Request) {
     ctx := r.Context()
     userID := chi.URLParam(r, "id")
+    log := logging.WithTrace(ctx, h.log)
 
     // 1. Delete from your database
     if err := h.userRepo.DeleteAllData(ctx, userID); err != nil {
-        slog.ErrorContext(ctx, "failed to delete user data", "user_id", userID, "error", err)
+        log.Error("failed to delete user data", zap.String("user_id", userID), zap.Error(err))
         http.Error(w, "internal error", http.StatusInternalServerError)
         return
     }
 
     // 2. Delete from analytics platform
     if err := h.posthog.DeleteUser(ctx, userID); err != nil {
-        slog.ErrorContext(ctx, "failed to delete analytics data", "user_id", userID, "error", err)
+        log.Error("failed to delete analytics data", zap.String("user_id", userID), zap.Error(err))
     }
 
     // 3. Delete from CDP
     if err := h.segment.DeleteUser(ctx, userID); err != nil {
-        slog.ErrorContext(ctx, "failed to delete CDP data", "user_id", userID, "error", err)
+        log.Error("failed to delete CDP data", zap.String("user_id", userID), zap.Error(err))
     }
 
-    slog.InfoContext(ctx, "user data deletion completed", "user_id", userID)
+    log.Info("user data deletion completed", zap.String("user_id", userID))
     w.WriteHeader(http.StatusNoContent)
 }
 
@@ -226,7 +227,7 @@ func (h *PrivacyHandler) HandleDataExport(w http.ResponseWriter, r *http.Request
 
     export, err := h.userRepo.ExportAllData(ctx, userID)
     if err != nil {
-        slog.ErrorContext(ctx, "failed to export user data", "user_id", userID, "error", err)
+        logging.WithTrace(ctx, h.log).Error("failed to export user data", zap.String("user_id", userID), zap.Error(err))
         http.Error(w, "internal error", http.StatusInternalServerError)
         return
     }

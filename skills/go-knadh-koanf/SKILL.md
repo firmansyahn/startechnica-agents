@@ -3,13 +3,15 @@ name: go-knadh-koanf
 description: "Use when a Go service's settings are loaded, added, changed, validated or tested with koanf (github.com/knadh/koanf/v2): the one config package and its Config struct with koanf tags, defaults from a Defaults() struct through the structs provider, the YAML settings file through the file provider, several YAML files layered in order (a repeatable -config flag, a base plus a secrets file, a conf.d directory), the logging block every service carries (level, ECS json or console format, probe logging off by default), strict decoding (unknown keys refused, durations like 5m, weakly typed numbers), validating and normalising each block with errors that name the file and key, an optional default path versus an explicit -config flag, flags that override a setting, secrets inline or as a mounted *_file, the documented example file, and the tests that pin all of it. Also when choosing between koanf and viper, or reviewing a config change. The team uses koanf, not spf13/viper."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for Go projects that load settings with koanf v2.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go projects that load settings with koanf v2.
 metadata:
   author: firmansyahn
-  version: "0.2.0"
+  version: "0.2.1"
 ---
 
 # koanf: loading a Go service's settings
+
+**Principle:** Settings come from one typed Config loaded by koanf, with defaults in code, strict decoding, and errors that name the file and the key.
 
 The team loads settings with [koanf](https://github.com/knadh/koanf) v2, not `spf13/viper`: keys keep their case, each provider and parser is its own module (no dependency tree pulled in for formats you don't use), and decoding goes through `mapstructure`, which can refuse unknown keys. This skill is the team's pattern for it. No established public koanf skill exists to vendor; the samber `golang-spf13-viper` skill is about viper and isn't vendored (`go-how-to`, rule 9).
 

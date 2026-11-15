@@ -3,13 +3,15 @@ name: go-error-handling
 description: "Use when creating, wrapping, returning, matching or logging errors in a Go server, or reviewing a Go diff for error handling: the handle-once rule (wrap and return, or log and degrade), %w wrapping with short context, sentinel errors and ...Error types matched with errors.Is/As, comma-ok assertions, no panic in request or worker paths, os.Exit and log.Fatal only in main. Absorbs samber/cc-skills-golang@golang-error-handling, adapted to the team (no samber/oops, lo or mo). Holds the err-* rules."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for Go server projects.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Go error handling (team)
+
+**Principle:** Every error is handled once: wrapped with context and returned, or logged and degraded, never ignored and never both.
 
 > **Absorbed.** This skill includes `samber/cc-skills-golang@golang-error-handling` (MIT, Samuel Berthe; source and pinned commit in [UPSTREAM.md](UPSTREAM.md)), adapted to the team: the team's rules and decisions come first and win, and "In depth" holds the upstream material, edited where the team decided otherwise. The project's own `AGENTS.md`, `CLAUDE.md` and project skills win over this skill.
 
@@ -33,8 +35,8 @@ Related: [go-code-style](../go-code-style/SKILL.md) (the structured logger), [go
 ## Team decisions
 
 1. **No `samber/oops`** (nor `samber/lo`, `samber/mo` or the other `samber/*` libraries): errors are wrapped with `fmt.Errorf("...: %w", err)` (`err-wrap-with-w`), and attributes go on the log line, not into the error.
-2. **Logging goes through the project's injected logger** (`*slog.Logger`, or the one the project uses, such as `*zap.Logger`), not a package-level `slog` default (`style-structured-logger`).
-3. Links to skills that aren't vendored (`golang-samber-oops`, `golang-samber-slog`) are skipped.
+2. **Logging goes through the injected `*zap.Logger`** (the team logs with zap, not slog; [go-observability](../go-observability/SKILL.md)), never `zap.L()` or another package-level default (`style-structured-logger`). Upstream's `slog` examples are written with zap: the error is `zap.Error(err)`, the other attributes typed fields.
+3. Links to upstream skills that aren't absorbed (`golang-samber-oops`, `golang-samber-slog`) are skipped.
 
 ## Rules
 
@@ -67,11 +69,11 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 
 ## In depth
 
-The material below is `samber/cc-skills-golang@golang-error-handling`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: the ones absorbed are now team skills (`go-how-to` maps the names), the rest are vendored as `golang-*` or not adopted.
+The material below is `samber/cc-skills-golang@golang-error-handling`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: each one the team uses is absorbed into a team skill (`go-how-to`, rule 1, maps the names), and the rest are not adopted.
 
 **Persona:** You are a Go reliability engineer. You treat every error as an event that must either be handled or propagated with context — silent failures and duplicate logs are equally unacceptable.
 
-**Orchestration mode:** Fan out the five category sub-agents described in the "Parallelizing Error Handling Audits" section (creation, wrapping, single-handling rule, panic/recover, structured logging) for auditing error handling across a large codebase, and consolidate their findings. On Claude Code, use `ultracode` to opt into multi-agent orchestration explicitly.
+**Orchestration mode:** Fan out the five category sub-agents described in the "Parallelizing Error Handling Audits" section (creation, wrapping, single-handling rule, panic/recover, structured logging) for auditing error handling across a large codebase, and consolidate their findings. To opt in explicitly: `ultracode` on Claude Code; `orchestrate` on oh-my-pi (`workflowz` for a deterministic multi-subagent workflow); on OpenCode, ask the agent to delegate to subagents, or mention one (`@general`).
 
 **Modes:**
 
@@ -92,7 +94,7 @@ This skill guides the creation of robust, idiomatic error handling in Go applica
 7. **Errors MUST be either logged OR returned**, NEVER both (single handling rule)
 8. **Use sentinel errors** for expected conditions, custom types for carrying data
 9. **NEVER use `panic` for expected error conditions** — reserve for truly unrecoverable states
-10. **Log through the injected structured logger** (`*slog.Logger`, or the project's choice) — not `fmt.Println` or `log.Printf`
+10. **Log through the injected `*zap.Logger`** with `zap.Error(err)` and typed fields — not `fmt.Println` or `log.Printf`
 11. **Put context on the log line, not in an error library:** tenant, user and IDs go on the handler's log line as structured attributes; the error itself is wrapped with `fmt.Errorf` (`samber/oops` is not adopted)
 12. **Log HTTP requests** with structured middleware capturing method, path, status, and duration
 13. **Use log levels** to indicate error severity
@@ -105,7 +107,7 @@ This skill guides the creation of robust, idiomatic error handling in Go applica
 
 - **[Error Wrapping and Inspection](./references/error-wrapping.md)** — Why `fmt.Errorf("{context}: %w", err)` beats `fmt.Errorf("{context}: %v", err)` (chains vs concatenation). How to inspect chains with `errors.Is`, `errors.As`, and Go 1.26+ `errors.AsType` for type-safe error handling, and `errors.Join` for combining independent errors.
 
-- **[Error Handling Patterns and Logging](./references/error-handling.md)** — The single handling rule: errors are either logged OR returned, NEVER both (prevents duplicate logs cluttering aggregators). Panic/recover design, and `slog` structured logging integration for APM tools. (Its `samber/oops` section is not adopted.)
+- **[Error Handling Patterns and Logging](./references/error-handling.md)** — The single handling rule: errors are either logged OR returned, NEVER both (prevents duplicate logs cluttering aggregators). Panic/recover design, and logging the error with zap for APM tools. (Its `samber/oops` section is not adopted.)
 
 ### Parallelizing Error Handling Audits
 
@@ -115,15 +117,14 @@ When auditing error handling across a large codebase, use up to 5 parallel sub-a
 - Sub-agent 2: Error wrapping — audit `%w` vs `%v`, verify `errors.Is`/`errors.As` patterns
 - Sub-agent 3: Single handling rule — find log-and-return violations, swallowed errors, discarded errors (`_`)
 - Sub-agent 4: Panic/recover — audit `panic` usage, verify recovery at goroutine boundaries
-- Sub-agent 5: Structured logging — verify `slog` usage at error sites, check for PII in error messages
+- Sub-agent 5: Structured logging — verify the injected zap logger and `zap.Error(err)` at error sites, check for PII in error messages
 
 ### Cross-References
 
 - → [go-observability](../go-observability/SKILL.md) for structured logging setup, log levels, and request logging middleware ([go-code-style](../go-code-style/SKILL.md) for the team's logging rules)
-- → [golang-safety](../golang-safety/SKILL.md) for the nil interface trap and nil error comparison pitfalls
-- → [golang-naming](../golang-naming/SKILL.md) for error naming conventions (ErrNotFound, PathError)
+- → [go-safety](../go-safety/SKILL.md) for the nil interface trap and nil error comparison pitfalls
+- → [`go-code-style` references/naming.md](../go-code-style/references/naming.md) for error naming conventions (ErrNotFound, PathError)
 
 ### References
 
-- [lmittmann/tint](https://github.com/lmittmann/tint)
-- [log/slog package](https://pkg.go.dev/log/slog)
+- [go.uber.org/zap package](https://pkg.go.dev/go.uber.org/zap)

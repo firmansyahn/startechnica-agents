@@ -101,7 +101,7 @@ fmt.Errorf("error in %s at line %d of the csv", csvPath, line)
 // ✓ Good (stdlib) — static error, structured attributes at the log site
 err := errors.New("csv parsing error")
 // ... later, at the logging boundary:
-slog.Error("csv parsing failed", "error", err, "csv_file_path", csvPath, "csv_file_line", line)
+log.Error("csv parsing failed", zap.Error(err), zap.String("csv_file_path", csvPath), zap.Int("csv_file_line", line))
 ```
 
 The team uses the stdlib approach (`samber/oops` is not adopted). When the code that logs no longer has the variable data, wrap with a static prefix and return a custom error type that carries the fields the handler needs, rather than formatting them into the message.

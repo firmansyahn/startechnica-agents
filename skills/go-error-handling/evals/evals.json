@@ -7,7 +7,7 @@
       "prompt": "Write a Go HTTP middleware chain with 3 middlewares: LoggingMiddleware, AuthMiddleware, RateLimitMiddleware. Each wraps the next handler. Each middleware should log what it's doing at each step and propagate errors properly up the chain. The final handler processes a request. Include detailed logging at each layer so we can trace the request flow.",
       "trap": "\"log at each step\" tempts log+return violations and high-cardinality error messages with interpolated IPs/limits",
       "assertions": [
-        { "id": "1.1", "text": "Uses slog (not log.Printf)" },
+        { "id": "1.1", "text": "Uses the injected zap logger (not log.Printf)" },
         {
           "id": "1.2",
           "text": "Low-cardinality error messages (no IPs/limits interpolated)"
@@ -16,7 +16,7 @@
           "id": "1.3",
           "text": "Structured error context (attributes on the log line, not in the error string)"
         },
-        { "id": "1.4", "text": "Structured slog key-value log entries" },
+        { "id": "1.4", "text": "Typed zap fields on log entries" },
         { "id": "1.5", "text": "Error strings lowercase" }
       ]
     },
@@ -32,7 +32,7 @@
         },
         {
           "id": "2.2",
-          "text": "Variable data as structured attributes (slog)"
+          "text": "Variable data as typed zap fields"
         },
         { "id": "2.3", "text": "Uses errors.Join to collect all order errors" },
         { "id": "2.4", "text": "Error strings lowercase" },
@@ -54,7 +54,7 @@
         },
         {
           "id": "3.2",
-          "text": "Row/column data as structured attributes (slog)"
+          "text": "Row/column data as typed zap fields"
         },
         {
           "id": "3.3",
@@ -91,7 +91,7 @@
       "assertions": [
         { "id": "5.1", "text": "Errors wrapped with service context" },
         { "id": "5.2", "text": "Low-cardinality error messages" },
-        { "id": "5.3", "text": "Uses structured attributes (slog)" },
+        { "id": "5.3", "text": "Uses typed zap fields" },
         { "id": "5.4", "text": "Error strings lowercase" },
         { "id": "5.5", "text": "Each service identifiable by context prefix" }
       ]
@@ -128,11 +128,11 @@
         },
         {
           "id": "7.3",
-          "text": "Uses slog (not log.Printf) with structured key-value attributes"
+          "text": "Uses the injected zap logger (not log.Printf) with typed fields"
         },
         {
           "id": "7.4",
-          "text": "Moves jobID and other variable data to structured slog attributes, not string interpolation"
+          "text": "Moves jobID and other variable data to typed zap fields, not string interpolation"
         },
         {
           "id": "7.5",
@@ -179,8 +179,8 @@
           "id": "10.1",
           "text": "Does not log AND return final error (single handling rule)"
         },
-        { "id": "10.2", "text": "Structured slog attributes" },
-        { "id": "10.3", "text": "Uses slog (not log.Printf)" },
+        { "id": "10.2", "text": "Typed zap fields" },
+        { "id": "10.3", "text": "Uses the injected zap logger (not log.Printf)" },
         { "id": "10.4", "text": "Low-cardinality log messages" },
         { "id": "10.5", "text": "Wraps final error with context" }
       ]
@@ -197,7 +197,7 @@
         },
         {
           "id": "11.2",
-          "text": "Event details as structured attributes (slog)"
+          "text": "Event details as typed zap fields"
         },
         {
           "id": "11.3",

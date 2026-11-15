@@ -9,7 +9,7 @@ check: scan
 
 **Impact: LOW** (`log.Printf` and `fmt.Println` lines lack levels, fields and the request id, so they can't be searched or alerted on, and they bypass redaction)
 
-Library code logs through the logger it was given (`*slog.Logger`, `*zap.Logger`, or the project's choice) with typed fields and a constant message, using the project's field names (ECS, OpenTelemetry). The standard `log` package and `fmt.Print*` are for `package main` and command-line tools only.
+Library code logs through the `*zap.Logger` it was given (the team's logger; a project whose `AGENTS.md` settles on another keeps it) with typed fields and a constant message, using the project's field names (ECS, OpenTelemetry). Not `zap.L()`, `zap.S()` or a `SugaredLogger`: the global hides the dependency, and the sugared key-value pairs are untyped. The standard `log` package and `fmt.Print*` are for `package main` and command-line tools only.
 
 **Incorrect:**
 

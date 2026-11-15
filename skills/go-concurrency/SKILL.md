@@ -1,17 +1,19 @@
 ---
 name: go-concurrency
-description: "Use when a Go server starts goroutines, runs background workers, passes or creates a context.Context, sets deadlines on outbound calls or queries, guards state with a mutex, sizes a channel, or shuts down; and when reviewing a Go diff for goroutine leaks, lost cancellation or races. Every goroutine has an owner (a stop signal and a wait), contexts flow from the caller, root contexts only at the root, shutdown in reverse order of start. Absorbs samber/cc-skills-golang@golang-concurrency, adapted to the team; the vendored golang-context stays the depth for contexts, and this skill wins where they differ. Holds the conc-* rules."
+description: "Use when a Go server starts goroutines, runs background workers, passes or creates a context.Context, sets deadlines on outbound calls or queries, guards state with a mutex, sizes a channel, or shuts down; and when reviewing a Go diff for goroutine leaks, lost cancellation or races. Every goroutine has an owner (a stop signal and a wait), contexts flow from the caller, root contexts only at the root, shutdown in reverse order of start. Absorbs samber/cc-skills-golang@golang-concurrency, adapted to the team, and golang-context as its contexts reference. Holds the conc-* rules."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for Go server projects.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Go concurrency and lifecycle (team)
 
-> **Absorbed.** This skill includes `samber/cc-skills-golang@golang-concurrency` (MIT, Samuel Berthe; source and pinned commit in [UPSTREAM.md](UPSTREAM.md)), adapted to the team: the team's rules and decisions come first and win, and "In depth" holds the upstream material, edited where the team decided otherwise. For depth on the neighbouring topics read the vendored [golang-context](../golang-context/SKILL.md); this skill wins where they differ. The project's own `AGENTS.md`, `CLAUDE.md` and project skills win over this skill.
+**Principle:** Every goroutine has an owner, a stop signal and a wait, and every blocking call has a context or a timeout.
+
+> **Absorbed.** This skill includes `samber/cc-skills-golang@golang-concurrency` (MIT, Samuel Berthe; source and pinned commit in [UPSTREAM.md](UPSTREAM.md)), adapted to the team: the team's rules and decisions come first and win, and "In depth" holds the upstream material, edited where the team decided otherwise. It also absorbs `samber/cc-skills-golang@golang-context`: each is a reference of this skill, listed at the start of "In depth", and this skill wins where they differ. The project's own `AGENTS.md`, `CLAUDE.md` and project skills win over this skill.
 
 Related: [go-project-layout](../go-project-layout/SKILL.md) (the worker and `main` shapes in its references/module-layout.md), [go-database](../go-database/SKILL.md) (`db-context-on-queries`), [go-testing](../go-testing/SKILL.md) (`test-race-and-parallel`, `test-no-sleep`), [go-how-to](../go-how-to/SKILL.md) (the Go skills and the rules they all assume).
 
@@ -36,7 +38,8 @@ Related: [go-project-layout](../go-project-layout/SKILL.md) (the worker and `mai
 
 1. **Lifecycle is hand-wired**, not through a DI container's hooks (`uber-go/fx` and the like are not adopted; [go-project-layout](../go-project-layout/SKILL.md)).
 2. **Tests prove goroutines exit** with the package's own stop-and-wait test; `goleak` is fine where the project already has it, not added as a side effect.
-3. Links to skills that aren't vendored (`golang-samber-*`) are skipped.
+3. **The logger is never a context value:** it is injected, and request fields come from `WithTrace(ctx, log)` (`go-observability`).
+4. Links to upstream skills that aren't absorbed (`golang-samber-*`) are skipped.
 
 ## Rules
 
@@ -68,11 +71,15 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 
 ## In depth
 
-The material below is `samber/cc-skills-golang@golang-concurrency`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: the ones absorbed are now team skills (`go-how-to` maps the names), the rest are vendored as `golang-*` or not adopted.
+The material below is `samber/cc-skills-golang@golang-concurrency`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: each one the team uses is absorbed into a team skill (`go-how-to`, rule 1, maps the names), and the rest are not adopted.
+
+Also absorbed, one reference each (their own references, assets and evals sit in a folder of the same name):
+
+- [references/context.md](references/context.md) (`golang-context`): propagation, cancellation, deadlines, request-scoped values, WithoutCancel
 
 **Persona:** You are a Go concurrency engineer. You assume every goroutine is a liability until proven necessary — correctness and leak-freedom come before performance.
 
-**Orchestration mode:** Fan out the five sub-agents described in the "Parallelizing Concurrency Audits" section for auditing concurrent code across a large codebase, and consolidate their findings into one report. On Claude Code, use `ultracode` to opt into multi-agent orchestration explicitly.
+**Orchestration mode:** Fan out the five sub-agents described in the "Parallelizing Concurrency Audits" section for auditing concurrent code across a large codebase, and consolidate their findings into one report. To opt in explicitly: `ultracode` on Claude Code; `orchestrate` on oh-my-pi (`workflowz` for a deterministic multi-subagent workflow); on OpenCode, ask the agent to delegate to subagents, or mention one (`@general`).
 
 **Modes:**
 
@@ -172,11 +179,11 @@ When auditing concurrency across a large codebase, use up to 5 parallel sub-agen
 
 ### Cross-References
 
-- → See `golang-performance` skill for false sharing, cache-line padding, `sync.Pool` hot-path patterns
-- → See `golang-context` skill for cancellation propagation and timeout patterns
-- → See `golang-safety` skill for concurrent map access and race condition prevention
-- → See `golang-troubleshooting` skill for debugging goroutine leaks and deadlocks
-- → See `golang-design-patterns` skill for graceful shutdown patterns
+- → See `go-performance` skill for false sharing, cache-line padding, `sync.Pool` hot-path patterns
+- → See [references/context.md](references/context.md) for cancellation propagation and timeout patterns
+- → See `go-safety` skill for concurrent map access and race condition prevention
+- → See `go-troubleshooting` skill for debugging goroutine leaks and deadlocks
+- → See `go-project-layout` references/design-patterns.md for graceful shutdown patterns
 
 #### Goroutine leak profile
 
