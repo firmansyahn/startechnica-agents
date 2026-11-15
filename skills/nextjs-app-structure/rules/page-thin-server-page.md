@@ -2,7 +2,7 @@
 title: page.tsx is a thin server component
 impact: MEDIUM
 tags: pages
-check: review
+check: eslint, review
 ---
 
 ## page.tsx is a thin server component
@@ -31,3 +31,5 @@ export async function generateMetadata() {
 }
 export default function Page() { return <ItemsClient />; }
 ```
+
+**How to check:** The kit's `eslint.config.mjs` (nextjs-new-app) reports a `"use client"` directive in `app/**/page.tsx`. State, queries and handlers in a server `page.tsx` aren't reported (next-intl hooks work in server components), so review what the page does.

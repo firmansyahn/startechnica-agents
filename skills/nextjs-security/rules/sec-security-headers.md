@@ -28,4 +28,4 @@ const nextConfig = {
 };
 ```
 
-**How to check:** an end-to-end test requests a page, a route handler and a static asset of the production build and asserts the headers (and that `x-powered-by` is absent). In review, check the `source` pattern covers every path.
+**How to check:** `assets/e2e/security-headers.spec.ts` (copy it to `tests/e2e/`), an end-to-end test, requests a page, a route handler and a static asset of the production build and asserts the headers (and that `x-powered-by` is absent). In review, check the `source` pattern covers every path.

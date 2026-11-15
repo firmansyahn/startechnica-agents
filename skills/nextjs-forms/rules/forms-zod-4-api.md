@@ -2,7 +2,7 @@
 title: Use the zod 4 API
 impact: MEDIUM
 tags: validation
-check: review
+check: eslint, review
 ---
 
 ## Use the zod 4 API
@@ -22,3 +22,5 @@ email: z.string().email({ message: "Enter a valid email" }),
 ```ts
 email: z.email({ error: "Enter a valid email" }).optional().or(z.literal("")),
 ```
+
+**How to check:** the kit's `eslint.config.mjs` (`nextjs-new-app/assets`) flags zod 3 string formats on `z.string()` (`.email()`, `.url()`, `.uuid()`, `.datetime()`, `.ip()`...), a `{ message }` option passed to a zod call, and `err.flatten()`. Other deprecated zod 3 APIs need type information: `@typescript-eslint/no-deprecated` with `parserOptions.projectService` finds every one, at the cost of a typed lint. Left to review: deprecated APIs outside those shapes.

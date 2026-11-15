@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Next.js apps.
 metadata:
   author: firmansyahn
-  version: "0.1.1"
+  version: "0.2.0"
 ---
 
 # Next.js as a Backend-for-Frontend
@@ -32,14 +32,14 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
 | [sec-no-tokens-in-browser](rules/sec-no-tokens-in-browser.md) | Keep tokens and secrets out of the browser | CRITICAL | scan |
-| [bff-opaque-session-cookie](rules/bff-opaque-session-cookie.md) | The session cookie is opaque, HttpOnly, Secure and SameSite=Strict | CRITICAL | review |
-| [bff-store-keyed-by-hash](rules/bff-store-keyed-by-hash.md) | The store is keyed by a hash of the cookie id | CRITICAL | review |
+| [bff-opaque-session-cookie](rules/bff-opaque-session-cookie.md) | The session cookie is opaque, HttpOnly, Secure and SameSite=Strict | CRITICAL | test, scan (candidates), review |
+| [bff-store-keyed-by-hash](rules/bff-store-keyed-by-hash.md) | The store is keyed by a hash of the cookie id | CRITICAL | test, scan (candidates), review |
 | [bff-shared-store](rules/bff-shared-store.md) | The store is shared by every replica | CRITICAL | review |
-| [bff-idle-and-absolute-limit](rules/bff-idle-and-absolute-limit.md) | The session has an idle and an absolute limit | CRITICAL | review |
-| [bff-refresh-ahead-and-on-401](rules/bff-refresh-ahead-and-on-401.md) | Refresh ahead of expiry, and once after a guard 401 | CRITICAL | review |
-| [bff-refresh-lock](rules/bff-refresh-lock.md) | One refresh at a time per session, across replicas | CRITICAL | review |
-| [bff-retry-buffered-body-only](rules/bff-retry-buffered-body-only.md) | Only a buffered body is retried after a refresh | CRITICAL | review |
-| [bff-sign-out-server-side](rules/bff-sign-out-server-side.md) | Sign-out ends the session on the server too | CRITICAL | review |
+| [bff-idle-and-absolute-limit](rules/bff-idle-and-absolute-limit.md) | The session has an idle and an absolute limit | CRITICAL | test, review |
+| [bff-refresh-ahead-and-on-401](rules/bff-refresh-ahead-and-on-401.md) | Refresh ahead of expiry, and once after a guard 401 | CRITICAL | test, scan (candidates), review |
+| [bff-refresh-lock](rules/bff-refresh-lock.md) | One refresh at a time per session, across replicas | CRITICAL | test, scan (candidates), review |
+| [bff-retry-buffered-body-only](rules/bff-retry-buffered-body-only.md) | Only a buffered body is retried after a refresh | CRITICAL | test, review |
+| [bff-sign-out-server-side](rules/bff-sign-out-server-side.md) | Sign-out ends the session on the server too | CRITICAL | test, review |
 | [struct-server-only](rules/struct-server-only.md) | Mark server code server-only | HIGH | test + eslint: kit; scan |
 
 ### Reads proxy
@@ -48,26 +48,26 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 |---|---|---|---|
 | [sec-proxy-raw-path-allowlist](rules/sec-proxy-raw-path-allowlist.md) | Check the raw path against an allow-list before proxying | CRITICAL | test |
 | [sec-proxy-strip-headers](rules/sec-proxy-strip-headers.md) | Forward allow-listed headers only, and strip Set-Cookie from replies | CRITICAL | test |
-| [bff-refuse-cross-site](rules/bff-refuse-cross-site.md) | Refuse cross-site calls | CRITICAL | review |
-| [bff-writes-405](rules/bff-writes-405.md) | Writes answer 405, except allow-listed uploads | CRITICAL | review |
-| [bff-writes-via-apiaction](rules/bff-writes-via-apiaction.md) | Writes go through apiAction and return a Result | CRITICAL | review |
-| [bff-validate-replies](rules/bff-validate-replies.md) | Validate replies against the OpenAPI document | CRITICAL | review |
-| [bff-no-backend-error-leaks](rules/bff-no-backend-error-leaks.md) | Errors don't leak the backend | CRITICAL | review |
-| [bff-no-self-fetch](rules/bff-no-self-fetch.md) | Server Components don't fetch their own route handlers | CRITICAL | review |
+| [bff-refuse-cross-site](rules/bff-refuse-cross-site.md) | Refuse cross-site calls | CRITICAL | test, scan, review |
+| [bff-writes-405](rules/bff-writes-405.md) | Writes answer 405, except allow-listed uploads | CRITICAL | scan, test, review |
+| [bff-writes-via-apiaction](rules/bff-writes-via-apiaction.md) | Writes go through apiAction and return a Result | CRITICAL | eslint, test, review |
+| [bff-validate-replies](rules/bff-validate-replies.md) | Validate replies against the OpenAPI document | CRITICAL | ci, test, scan (candidates), review |
+| [bff-no-backend-error-leaks](rules/bff-no-backend-error-leaks.md) | Errors don't leak the backend | CRITICAL | test, scan (candidates), review |
+| [bff-no-self-fetch](rules/bff-no-self-fetch.md) | Server Components don't fetch their own route handlers | CRITICAL | eslint, scan (candidates), review |
 
 ### Config and proxy.ts
 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
 | [bff-config-per-call](rules/bff-config-per-call.md) | Read configuration per call, never at module load | HIGH | review |
-| [bff-no-env-in-next-config](rules/bff-no-env-in-next-config.md) | next.config stays free of environment reads | HIGH | review |
+| [bff-no-env-in-next-config](rules/bff-no-env-in-next-config.md) | next.config stays free of environment reads | HIGH | eslint, review |
 | [bff-public-urls-from-config](rules/bff-public-urls-from-config.md) | Public URLs come from configuration, not from Host | HIGH | review |
-| [bff-rewrite-backend-paths](rules/bff-rewrite-backend-paths.md) | proxy.ts rewrites the backend's public paths from the environment | HIGH | review |
-| [bff-matcher-matches-prefixes](rules/bff-matcher-matches-prefixes.md) | The matcher is a literal, kept in step with the prefix list | HIGH | review |
+| [bff-rewrite-backend-paths](rules/bff-rewrite-backend-paths.md) | proxy.ts rewrites the backend's public paths from the environment | HIGH | scan (candidates), test, review |
+| [bff-matcher-matches-prefixes](rules/bff-matcher-matches-prefixes.md) | The matcher is a literal, kept in step with the prefix list | HIGH | eslint, review |
 | [bff-gating-is-convenience](rules/bff-gating-is-convenience.md) | Page gating is a convenience; the backend is the check | HIGH | review |
 | [bff-gating-next-same-site](rules/bff-gating-next-same-site.md) | Return-to URLs are same-site paths | HIGH | review |
-| [bff-hide-backend-console-api](rules/bff-hide-backend-console-api.md) | The backend's console API is hidden from the browser | HIGH | review |
-| [bff-request-id-forwarded](rules/bff-request-id-forwarded.md) | Request ids are set once and forwarded | HIGH | review |
+| [bff-hide-backend-console-api](rules/bff-hide-backend-console-api.md) | The backend's console API is hidden from the browser | HIGH | test, review |
+| [bff-request-id-forwarded](rules/bff-request-id-forwarded.md) | Request ids are set once and forwarded | HIGH | test, scan (candidates), review |
 
 ### Testing
 
@@ -81,7 +81,7 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 | [bff-test-one-refresh](rules/bff-test-one-refresh.md) | Concurrent requests near expiry cause one refresh | MEDIUM | review |
 | [bff-test-signed-out](rules/bff-test-signed-out.md) | A signed-out request clears the cookie | MEDIUM | review |
 | [bff-test-apiaction-results](rules/bff-test-apiaction-results.md) | apiAction returns a Result for every outcome | MEDIUM | review |
-| [bff-test-matcher-prefixes](rules/bff-test-matcher-prefixes.md) | The matcher matches the prefix list | MEDIUM | review |
+| [bff-test-matcher-prefixes](rules/bff-test-matcher-prefixes.md) | The matcher matches the prefix list | MEDIUM | scan, review |
 | [bff-test-config-per-call](rules/bff-test-config-per-call.md) | Configuration is read per call | MEDIUM | review |
 
 ## 1. Files (`src/api/`, server-only)
@@ -156,7 +156,7 @@ Same forwarding, but the session id comes from `headers()`, the reply is validat
 ## Reviewing
 
 1. **Scope.** The diff (`git diff <base>...HEAD`), a merge request's files or the whole app, read for what this skill covers: `src/api/`, the reads proxy route, `proxy.ts` and the session code.
-2. **Scan.** `bash <this skill>/scripts/scan.sh <app-root>` lists candidates for the rules whose check includes `scan`. On a diff, keep only findings in changed lines or files. Every line is a candidate: open the rule and confirm it before reporting.
+2. **Scan.** `bash <this skill>/scripts/scan.sh <app-root>` lists candidates for the rules whose check includes `scan`. On a diff, keep only findings in changed lines or files. Every line is a candidate: open the rule and confirm it before reporting. Most rules here are checked by the project's own tests of `src/api/` and `proxy.ts` (the `bff-test-*` rules say which); the scan only points at the code shapes those tests guard.
 3. **Read** the changed code against the Rules above. Open each rule you cite and match its "Incorrect" shape, not just its title.
 4. **Report** each finding in the format of `agent-skills-authoring` ("Scan scripts and findings"): impact, rule ID, file and line, what to change citing the rule's "Correct" shape; ordered by impact. Raise the impact one level on an authentication, payment or deletion path.
 5. **Say what's not covered:** rules whose check is `test` or `eslint` but the project has no such test or lint rule. `kit` in the Check column means a ready-to-copy check exists (`nextjs-new-app`, references/enforcement-kit.md).

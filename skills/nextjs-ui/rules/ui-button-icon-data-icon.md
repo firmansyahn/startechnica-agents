@@ -2,7 +2,7 @@
 title: Icons in buttons use data-icon, no size classes
 impact: LOW
 tags: icons, buttons
-check: review
+check: eslint, review
 ---
 
 ## Icons in buttons use `data-icon`, no size classes
@@ -24,4 +24,4 @@ The button sizes and spaces its icon. Mark the position with `data-icon="inline-
 <Button variant="ghost">{t("next")}<ArrowRightIcon data-icon="inline-end" /></Button>
 ```
 
-**How to check:** look for icons inside `Button` with `mr-*`, `ml-*`, `h-*`, `w-*` or `size-*` and no `data-icon`.
+**How to check:** The kit's `eslint.config.mjs` (nextjs-new-app) reports `size-*`, `h-*`, `w-*` and margin classes on an `*Icon` inside a `Button*` component, directly or inside a `{...}` expression. Icons imported without the `Icon` suffix and a missing `data-icon` aren't reported; review those.

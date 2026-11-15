@@ -73,7 +73,7 @@ e2e-report:
 
 ## Flaky tests
 
-- Retries in CI make a flaky test pass and show as "flaky" in the report; treat that as a failing test with a ticket, not as green. `failOnFlakyTests: true` makes CI strict once the suite is clean.
+- Retries in CI make a flaky test pass and show as "flaky" in the report; treat that as a failing test with a ticket, not as green. The asset config sets `failOnFlakyTests: CI`, so a test that passes only on retry fails the CI run; while an older suite is being cleaned up, mark the known flaky tests `test.fixme()` with an issue link rather than turning it off.
 - Reproduce with `--repeat-each=20 --workers=4` and read the trace of the failing run.
 - Usual causes, in order: a fixed wait or a non-retrying assertion; shared data between tests; a race with a background refetch (assert on the final state, not an intermediate one); time and animation; a third-party request.
 - Quarantine with `test.fixme()` and an issue link only while fixing it; never delete the assertion that fails.

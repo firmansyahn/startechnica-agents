@@ -2,7 +2,7 @@
 title: Persist only per-device preferences, and hydrate after mount
 impact: MEDIUM
 tags: client-state
-check: review
+check: test, review (whether a value is a preference)
 ---
 
 ## Persist only per-device preferences, and hydrate after mount
@@ -25,3 +25,5 @@ persist((set) => ({ density: "comfortable", setDensity: (density) => set({ densi
 ```
 
 Related: `sec-no-tokens-in-browser`.
+
+**How to check:** `assets/tests/stores.test.ts` fails on a `persist(` from `zustand/middleware` whose options lack `skipHydration: true`, a `version` or a `partialize`, whose `partialize` spreads the state, or whose saved keys name a token, secret, password, session or email. It misses options built in a variable first. Whether each saved value is a per-device preference, and not one the server must apply, stays review.

@@ -2,7 +2,7 @@
 title: Mock where the request is made
 impact: MEDIUM
 tags: data-and-auth
-check: review
+check: scan, review
 ---
 
 ## Mock where the request is made
@@ -22,3 +22,5 @@ await page.route("**/app/items", (route) => route.fulfill({ body: "0:{...}" }));
 ```ts
 await fakeBackend.answer(testInfo, "PATCH items/42", { status: 200, body: { data: item({ id: "42", name: "North" }) } });
 ```
+
+**How to check:** `scripts/scan.sh` lists a server action or Flight reply forged in the browser: a `route.fulfill(` with an RSC row (`"0:{...`) or the `text/x-component` type, and the `Next-Action` or `RSC` header, in the specs and their helpers. Using `page.route` for a call the Next server makes, which never reaches it, stays review.

@@ -2,7 +2,7 @@
 title: Optimistic updates only where they pay, with a rollback
 impact: HIGH
 tags: mutations
-check: review
+check: test (the shape), review (where an optimistic update pays)
 ---
 
 ## Optimistic updates only where they pay, with a rollback
@@ -26,3 +26,5 @@ useMutation({
   onSettled: () => queryClient.invalidateQueries({ queryKey: items.key(scope) }),
 });
 ```
+
+**How to check:** `assets/tests/optimistic-updates.test.ts` fails on a mutation (`useMutation`, the project's `use...Mutation` wrappers, `mutationOptions`) whose `onMutate` calls `setQueryData` without also calling `cancelQueries` there, having an `onError`, and invalidating in `onSettled`. It misses options built in a variable first, and doesn't check that `onError` restores the right snapshot. Whether the update should be optimistic at all (a toggle, not a create) stays review.

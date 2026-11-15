@@ -2,7 +2,7 @@
 title: Bind callback controls with Controller
 impact: MEDIUM
 tags: fields
-check: review
+check: eslint, review
 ---
 
 ## Bind callback controls with Controller
@@ -24,3 +24,5 @@ Base UI controls report values through callbacks (`onValueChange`, `onCheckedCha
   <Switch id="enabled" checked={field.value} onCheckedChange={field.onChange} />
 )} />
 ```
+
+**How to check:** the kit's `eslint.config.mjs` (`nextjs-new-app/assets`) flags `{...register(...)}` spread onto `Switch`, `Checkbox`, `Select`, `RadioGroup`, `Slider`, `Combobox` or `NumberField`. Left to review: `field.onBlur` wired to the trigger, a wrapper under another name, and `Controller` for every field in a mixed form.

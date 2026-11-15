@@ -2,7 +2,7 @@
 title: Buttons show pending state through disabled and a spinner, not a prop
 impact: MEDIUM
 tags: buttons, mutations, loading
-check: review
+check: eslint, review
 ---
 
 ## Buttons show pending state through `disabled` and a spinner, not a prop
@@ -26,4 +26,4 @@ Primitives have no `isLoading`. Disable while the mutation is pending and show t
 </Button>
 ```
 
-**How to check:** search for `isLoading` or `loading` props on `Button`, and for submit buttons not disabled by `isPending`.
+**How to check:** The kit's `eslint.config.mjs` (nextjs-new-app) reports `isLoading` and `loading` props on `*Button*` components. Whether a submit button is disabled by `isPending` stays review.

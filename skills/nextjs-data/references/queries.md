@@ -41,7 +41,7 @@ export const items = {
       queryFn: () => readPage<Item>("items", { scope, query: params }),
     }),
   get: (scope: string | null, id: string) =>
-    queryOptions({ queryKey: [...items.key(scope), "by-id", id], queryFn: () => read<Item>(`items/${id}`, { scope }) }),
+    queryOptions({ queryKey: [...items.key(scope), "by-id", id], queryFn: () => read<Item>(`items/${encodeURIComponent(id)}`, { scope }) }),
 };
 ```
 

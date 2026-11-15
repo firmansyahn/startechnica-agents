@@ -2,7 +2,7 @@
 title: onRequestError logs every uncaught server error
 impact: MEDIUM
 tags: errors
-check: review
+check: scan, review
 ---
 
 ## onRequestError logs every uncaught server error
@@ -20,3 +20,5 @@ export const onRequestError: Instrumentation.onRequestError = async (err, reques
   logger.error({ err, digest, "url.path": request.path.split("?")[0], "next.route": context.routePath, "next.route_type": context.routeType }, "request failed");
 };
 ```
+
+**How to check:** `scripts/scan.sh` flags an app with no `instrumentation.ts`/`.js` (at the root or in `src/`), one that exports no `onRequestError` (`export const`, `export function` or `export async function`), and an `onRequestError` file that never mentions `digest`. Review the other fields it logs (path without query, route, route type, request id) and that async reporting is awaited.

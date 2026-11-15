@@ -2,7 +2,7 @@
 title: Mask dynamic regions instead of raising thresholds
 impact: LOW
 tags: visual
-check: review
+check: eslint
 ---
 
 ## Mask dynamic regions instead of raising thresholds
@@ -22,3 +22,5 @@ await expect(page).toHaveScreenshot("dashboard.png", { maxDiffPixelRatio: 0.15 }
 ```ts
 await expect(page).toHaveScreenshot("dashboard.png", { mask: [page.getByTestId("live-sessions")] });
 ```
+
+**How to check:** the kit's `eslint.config.mjs` (`nextjs-new-app/assets`) flags, in `tests/**/*.spec.ts` and `playwright.config.*`, a `maxDiffPixelRatio` above 0.01, a `maxDiffPixels` of 100 or more and a `threshold` above 0.2 (the limits are the team's, set in the selector). It misses a threshold passed through a variable.

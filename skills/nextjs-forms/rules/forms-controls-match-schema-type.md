@@ -2,7 +2,7 @@
 title: Controls produce the schema's type
 impact: MEDIUM
 tags: fields
-check: review
+check: eslint, review
 ---
 
 ## Controls produce the schema's type
@@ -22,3 +22,5 @@ A number field gives `number | null` for `z.number().nullable()`; a date picker 
 ```tsx
 <Input type="number" value={field.value ?? ""} onChange={(e) => field.onChange(e.target.value === "" ? null : e.target.valueAsNumber)} />
 ```
+
+**How to check:** the kit's `eslint.config.mjs` (`nextjs-new-app/assets`) flags `z.coerce` anywhere in app code (a search-params parser that needs it takes a disable comment with the reason) and `{...field}` spread onto a `type="number"` element that has no `onChange` of its own. Left to review: date pickers and other controls whose value type the schema fixes.

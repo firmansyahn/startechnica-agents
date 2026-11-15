@@ -2,7 +2,7 @@
 title: Error pages show the digest, never the server's message
 impact: MEDIUM
 tags: errors
-check: review
+check: scan, review
 ---
 
 ## Error pages show the digest, never the server's message
@@ -22,3 +22,5 @@ return <p>{error.message}</p>;
 ```tsx
 return <ErrorState title={t("somethingWentWrong")} reference={error.digest} onRetry={reset} />;
 ```
+
+**How to check:** `scripts/scan.sh` flags each `error.*`/`global-error.*` under `app/` or `src/app/` that renders `error.message` (or `err.message`), and each that never mentions `digest`. A client report sending `error.message` from the boundary is flagged too: confirm each line. Review that the page doesn't log server errors itself.

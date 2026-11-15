@@ -2,7 +2,7 @@
 title: Field arrays are keyed by field.id
 impact: MEDIUM
 tags: fields
-check: review
+check: eslint, review
 ---
 
 ## Field arrays are keyed by field.id
@@ -22,3 +22,5 @@ check: review
 ```tsx
 {fields.map((f, i) => <RuleRow key={f.id} index={i} onRemove={() => remove(i)} />)}
 ```
+
+**How to check:** the kit's `eslint.config.mjs` (`nextjs-new-app/assets`) turns on `react/no-array-index-key` in app code (the shadcn primitives and tests excepted). It also fires on other index keys; a static list that never reorders, such as skeleton rows, takes a disable comment with the reason. Left to review: the `` `rules.${index}.name` `` paths and array errors read from `errors.rules?.root`.

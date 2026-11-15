@@ -2,7 +2,7 @@
 title: Everything works with the keyboard
 impact: HIGH
 tags: accessibility, keyboard
-check: review
+check: eslint, review
 ---
 
 ## Everything works with the keyboard
@@ -23,4 +23,4 @@ Every action reachable by mouse is reachable with Tab, Enter/Space and arrow key
 <Button variant="ghost" onClick={open}>{t("open")}</Button>
 ```
 
-**How to check:** search for `onClick` on `div`, `span` and `tr`, and tab through the page.
+**How to check:** The kit's `eslint.config.mjs` (nextjs-new-app) reports `onClick` on `div`, `span`, `li`, `td` and `TableCell` (on rows: ui-table-row-actions), and with jsx-a11y (`click-events-have-key-events`, `no-static-element-interactions`, `no-noninteractive-element-interactions`) click handlers on other HTML elements without a role and key handler. Stopped key events and the focus order stay review: tab through the page.

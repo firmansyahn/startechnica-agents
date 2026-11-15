@@ -127,7 +127,17 @@ The specific aliases come before `@/*`. Point shadcn's `components.json` aliases
 
 ## Enforce it
 
-Copy [`templates/src-layout.test.ts`](../templates/src-layout.test.ts) into `<app-root>/tests/` (each app in a monorepo gets its own copy). It fails when a hook lands in `src/libs`, when `src/utils` imports React or does I/O, and when a top-level twin of a `src/` folder appears, each with the move to make. Add to ESLint:
+Copy [`templates/src-layout.test.ts`](../templates/src-layout.test.ts) into `<app-root>/tests/` (each app in a monorepo gets its own copy). It fails when a hook lands in `src/libs`, when `src/utils` imports React or does I/O, when a top-level twin of a `src/` folder appears, when `components/` holds a `.ts` file or a hook, and when a `src/` folder has no README, each with the move to make. The other templates go beside it:
+
+| Template | Rules |
+|---|---|
+| [`templates/test-layout.test.ts`](../templates/test-layout.test.ts) | `page-test-beside-code`, `page-test-suffix-environment` |
+| [`templates/page-tests.test.ts`](../templates/page-tests.test.ts) | `page-test-every-page`, `page-test-second-locale`, and the axe call for `ui-heading-hierarchy` (`nextjs-ui`) |
+| [`templates/metadata-translated.test.ts`](../templates/metadata-translated.test.ts) | `i18n-metadata-translated` |
+| [`templates/access-map.test.ts`](../templates/access-map.test.ts) | `page-central-access-map` (set the map's module and export at the top) |
+| [`templates/locale-parity.test.ts`](../templates/locale-parity.test.ts) | `i18n-key-in-every-locale` |
+
+Add to ESLint:
 - `no-restricted-imports` for the abandoned primitives path and for `@/src/api/*` from client components.
 - A rule or test against `useEffect` fetches if the project uses TanStack Query.
 

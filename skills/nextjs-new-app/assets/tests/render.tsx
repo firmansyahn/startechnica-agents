@@ -6,12 +6,14 @@ import { NextIntlClientProvider } from "next-intl";
 import messages from "@/src/messages/en.json";
 
 // A fresh QueryClient per test, retries off, cache kept for the whole test (`nextjs-data` Testing rules).
-export function renderWithQuery(ui: ReactElement, { locale = "en", msgs = messages }: { locale?: string; msgs?: object } = {}) {
+// A second locale needs its own messages: renderWithQuery(ui, { locale: "de", msgs: de }).
+export function renderWithQuery(ui: ReactElement, { locale = "en", msgs }: { locale?: string; msgs?: object } = {}) {
+  if (locale !== "en" && !msgs) throw new Error(`renderWithQuery: pass the "${locale}" messages as msgs; the default is en.json`);
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity }, mutations: { retry: false } } });
   function Wrapper({ children }: { children: ReactNode }) {
     return (
       <QueryClientProvider client={client}>
-        <NextIntlClientProvider locale={locale} messages={msgs} timeZone="UTC">
+        <NextIntlClientProvider locale={locale} messages={msgs ?? messages} timeZone="UTC">
           {children}
         </NextIntlClientProvider>
       </QueryClientProvider>

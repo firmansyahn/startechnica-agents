@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Next.js apps.
 metadata:
   author: firmansyahn
-  version: "0.1.1"
+  version: "0.2.0"
 ---
 
 # Next.js security
@@ -35,6 +35,7 @@ Related: `nextjs-how-to` (which skill covers what), `nextjs-new-app` (the enforc
 | Keep data and secrets on the server: Data Access Layer, DTOs, `server-only`, taint, env vars, error output | [references/data-and-secrets.md](references/data-and-secrets.md) |
 | Route handlers (auth, CSRF), redirects, server-side fetches to user-given URLs, uploads, rate limits | [references/requests.md](references/requests.md) |
 | Audits, Renovate, lockfile review, install scripts, CI gates | [references/dependencies.md](references/dependencies.md) |
+| Check the headers and CSP in a browser, the route handlers' session and origin checks in Vitest, framework advisories and prerendered nonce pages in CI | [assets/e2e/security-headers.spec.ts](assets/e2e/security-headers.spec.ts) (to `tests/e2e/`), [assets/tests/route-handlers.test.ts](assets/tests/route-handlers.test.ts) (to `tests/`), [assets/ci/security.gitlab-ci.yml](assets/ci/security.gitlab-ci.yml) with [framework-advisories.mjs](assets/ci/framework-advisories.mjs) and [prerendered-pages.mjs](assets/ci/prerendered-pages.mjs) (to `scripts/ci/`) |
 
 ## Rules
 
@@ -45,13 +46,13 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
 | [sec-csp-nonce](rules/sec-csp-nonce.md) | Allow scripts by a per-request nonce or a hash, never by 'unsafe-inline' | HIGH | test |
-| [sec-nonce-pages-dynamic](rules/sec-nonce-pages-dynamic.md) | Nonce pages render dynamically | HIGH | review |
+| [sec-nonce-pages-dynamic](rules/sec-nonce-pages-dynamic.md) | Nonce pages render dynamically | HIGH | ci |
 | [sec-unsafe-eval-dev-only](rules/sec-unsafe-eval-dev-only.md) | 'unsafe-eval' only in development | HIGH | test (the `sec-csp-nonce` end-to-end test) |
-| [sec-theme-script-csp](rules/sec-theme-script-csp.md) | The theme script passes the CSP by nonce or hash | HIGH | review |
-| [sec-exact-third-party-origins](rules/sec-exact-third-party-origins.md) | Third-party origins are exact, and few | HIGH | review |
+| [sec-theme-script-csp](rules/sec-theme-script-csp.md) | The theme script passes the CSP by nonce or hash | HIGH | test, scan (candidates) |
+| [sec-exact-third-party-origins](rules/sec-exact-third-party-origins.md) | Third-party origins are exact, and few | HIGH | test, review |
 | [sec-csp-report-only-first](rules/sec-csp-report-only-first.md) | New policies go out report-only first | HIGH | review |
 | [sec-security-headers](rules/sec-security-headers.md) | Send the security headers on every response, with x-powered-by off | MEDIUM | test |
-| [sec-deny-framing](rules/sec-deny-framing.md) | Framing is denied unless a page is meant to be embedded | HIGH | review |
+| [sec-deny-framing](rules/sec-deny-framing.md) | Framing is denied unless a page is meant to be embedded | HIGH | test, review |
 
 ### Data and secrets
 
@@ -59,10 +60,10 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 |---|---|---|---|
 | [sec-dto-to-client](rules/sec-dto-to-client.md) | Pass client components DTOs, never records | HIGH | review |
 | [sec-data-layer-checks-caller](rules/sec-data-layer-checks-caller.md) | Data access is server-only and checks the caller | HIGH | review |
-| [sec-env-access-limited](rules/sec-env-access-limited.md) | Only the data layer and the config reader touch process.env | HIGH | review |
+| [sec-env-access-limited](rules/sec-env-access-limited.md) | Only the data layer and the config reader touch process.env | HIGH | eslint, review |
 | [sec-no-public-secrets](rules/sec-no-public-secrets.md) | Never put a secret in NEXT_PUBLIC_ variables or next.config env | CRITICAL | scan |
 | [sec-config-per-request](rules/sec-config-per-request.md) | Runtime config is read per request | HIGH | review |
-| [sec-no-committed-env-values](rules/sec-no-committed-env-values.md) | .env files with real values are never committed | HIGH | review |
+| [sec-no-committed-env-values](rules/sec-no-committed-env-values.md) | .env files with real values are never committed | HIGH | scan, review |
 | [sec-error-replies-generic](rules/sec-error-replies-generic.md) | Error replies are generic | HIGH | review |
 | [sec-taint-not-boundary](rules/sec-taint-not-boundary.md) | Taint is a seatbelt, not the boundary | HIGH | review |
 
@@ -70,23 +71,23 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
-| [sec-route-handler-auth-origin](rules/sec-route-handler-auth-origin.md) | Authenticate and authorize in every route handler, check the origin on writes, and never change state on GET | CRITICAL | review |
+| [sec-route-handler-auth-origin](rules/sec-route-handler-auth-origin.md) | Authenticate and authorize in every route handler, check the origin on writes, and never change state on GET | CRITICAL | test, review |
 | [sec-no-cors-reflection](rules/sec-no-cors-reflection.md) | No credentialed CORS by reflection | CRITICAL | review |
 | [sec-public-urls-from-config](rules/sec-public-urls-from-config.md) | Public URLs come from configuration, not Host | CRITICAL | review |
 | [sec-ssrf-allowlist](rules/sec-ssrf-allowlist.md) | Allow-list server fetches to user-supplied URLs | HIGH | review |
 | [sec-upload-handling](rules/sec-upload-handling.md) | Cap, sniff and store uploads under random names, and serve them as attachments | HIGH | review |
 | [sec-rate-limit-endpoints](rules/sec-rate-limit-endpoints.md) | Expensive and guessable endpoints are rate-limited | CRITICAL | review |
-| [sec-client-ip-from-trusted-proxy](rules/sec-client-ip-from-trusted-proxy.md) | The client IP comes from the trusted proxy only | CRITICAL | review |
+| [sec-client-ip-from-trusted-proxy](rules/sec-client-ip-from-trusted-proxy.md) | The client IP comes from the trusted proxy only | CRITICAL | scan, review |
 
 ### Dependencies
 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
 | [tool-dependency-audit](rules/tool-dependency-audit.md) | Audit production dependencies in CI, and write down accepted advisories | LOW | scan |
-| [deps-framework-patches-fast](rules/deps-framework-patches-fast.md) | Framework security releases go in within days | MEDIUM | review |
-| [deps-update-bot](rules/deps-update-bot.md) | A bot opens updates, and lockfile maintenance runs weekly | MEDIUM | review |
+| [deps-framework-patches-fast](rules/deps-framework-patches-fast.md) | Framework security releases go in within days | MEDIUM | ci |
+| [deps-update-bot](rules/deps-update-bot.md) | A bot opens updates, and lockfile maintenance runs weekly | MEDIUM | scan, review |
 | [deps-review-lockfile-diffs](rules/deps-review-lockfile-diffs.md) | Lockfile diffs are reviewed like code | MEDIUM | review |
-| [deps-immutable-installs](rules/deps-immutable-installs.md) | Installs are immutable, with one lockfile | MEDIUM | review |
+| [deps-immutable-installs](rules/deps-immutable-installs.md) | Installs are immutable, with one lockfile | MEDIUM | scan |
 | [deps-limit-install-scripts](rules/deps-limit-install-scripts.md) | Install scripts run only where needed | MEDIUM | review |
 | [deps-new-dependency-decision](rules/deps-new-dependency-decision.md) | A new dependency is a decision, not a reflex | MEDIUM | review |
 
@@ -106,7 +107,7 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 ## Reviewing
 
 1. **Scope.** The diff (`git diff <base>...HEAD`), a merge request's files or the whole app, read for what this skill covers: `proxy.ts`, `next.config`, env files, route handlers, uploads and the CI audit step.
-2. **Scan.** `bash <this skill>/scripts/scan.sh <app-root>` lists candidates for the rules whose check includes `scan`. On a diff, keep only findings in changed lines or files. Every line is a candidate: open the rule and confirm it before reporting.
+2. **Scan.** `bash <this skill>/scripts/scan.sh <app-root>` lists candidates for the rules whose check includes `scan`. On a diff, keep only findings in changed lines or files. Every line is a candidate: open the rule and confirm it before reporting. The rules whose check is `test` or `ci` are enforced by the assets above where the app has copied them: the headers spec, the route-handler test and the two CI jobs.
 3. **Read** the changed code against the Rules above. Open each rule you cite and match its "Incorrect" shape, not just its title.
 4. **Report** each finding in the format of `agent-skills-authoring` ("Scan scripts and findings"): impact, rule ID, file and line, what to change citing the rule's "Correct" shape; ordered by impact. Raise the impact one level on an authentication, payment or deletion path.
 5. **Say what's not covered:** rules whose check is `test` or `eslint` but the project has no such test or lint rule. `kit` in the Check column means a ready-to-copy check exists (`nextjs-new-app`, references/enforcement-kit.md).
@@ -122,4 +123,4 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 - [ ] Redirect targets validated; server fetches allow-listed; uploads capped, sniffed, stored safely
 - [ ] Rate limits on sign-in and other expensive endpoints
 - [ ] `yarn npm audit` in CI; Renovate on; lockfile diffs reviewed; install scripts allow-listed
-- [ ] A browser test checks the CSP and headers on a real page (`nextjs-e2e`)
+- [ ] A browser test checks the CSP and headers on a real page, in each theme (`assets/e2e/security-headers.spec.ts`, run by `nextjs-e2e`)

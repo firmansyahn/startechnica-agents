@@ -2,7 +2,7 @@
 title: Every page starts with the page title component
 impact: LOW
 tags: layout, pages
-check: review
+check: eslint, review
 ---
 
 ## Every page starts with the page title component
@@ -23,4 +23,4 @@ The shared page-title component (title, optional description, breadcrumb, primar
 <PageTitle title={t("customers")} description={t("customersHint")} action={<ButtonWrite onClick={openCreate}>{t("addCustomer")}</ButtonWrite>} />
 ```
 
-**How to check:** look for hand-built `h1` + button rows at the top of a page.
+**How to check:** The kit's `eslint.config.mjs` (nextjs-new-app) reports an `h1` in `app/` (the page-title component in `components/` renders the page's one `h1`); error, not-found, forbidden and unauthorized pages and the kit's starter page are exempt, and a landing page is added to the config's `APP_OWN_HEADING` list. A hand-built title row without an `h1` stays review.

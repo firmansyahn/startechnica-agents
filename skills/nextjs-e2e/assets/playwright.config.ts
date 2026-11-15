@@ -16,6 +16,8 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: CI,
   retries: CI ? 2 : 0,
+  // A test that passes only on a retry fails the run; the retry still records its trace.
+  failOnFlakyTests: CI,
   workers: CI ? "50%" : 2,
   reporter: CI ? [["blob"], ["list"]] : [["list"], ["html", { open: "never" }]],
 

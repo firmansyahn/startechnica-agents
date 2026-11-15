@@ -2,7 +2,7 @@
 title: Query options come from the services registry
 impact: HIGH
 tags: queries
-check: review
+check: eslint
 ---
 
 ## Query options come from the services registry
@@ -22,3 +22,5 @@ useQuery({ queryKey: ["items", scope], queryFn: () => read<Item[]>("items", { sc
 ```tsx
 useQuery({ ...items.list(scope, params), placeholderData: keepPreviousData });
 ```
+
+**How to check:** the kit's `eslint.config.mjs` (`nextjs-new-app/assets`) flags any `queryFn` in pages, components, hooks and providers; the registry in `src/services/` is outside, and `mutationFn` isn't matched.

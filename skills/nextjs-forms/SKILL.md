@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Next.js apps.
 metadata:
   author: firmansyahn
-  version: "0.1.1"
+  version: "0.2.0"
 ---
 
 # Forms in Next.js
@@ -28,14 +28,14 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
 | [forms-react-hook-form-zod](rules/forms-react-hook-form-zod.md) | Build forms on react-hook-form with the shared zod schema | MEDIUM | review |
-| [forms-default-values](rules/forms-default-values.md) | Give every field a default value | MEDIUM | review |
+| [forms-default-values](rules/forms-default-values.md) | Give every field a default value | MEDIUM | eslint, review |
 | [forms-labelled-controls](rules/forms-labelled-controls.md) | Label every control and mark invalid ones | MEDIUM | test |
 | [forms-placeholder-not-label](rules/forms-placeholder-not-label.md) | Placeholders are examples, not labels | MEDIUM | review |
-| [forms-controller-for-callback-controls](rules/forms-controller-for-callback-controls.md) | Bind callback controls with Controller | MEDIUM | review |
-| [forms-controls-match-schema-type](rules/forms-controls-match-schema-type.md) | Controls produce the schema's type | MEDIUM | review |
-| [forms-select-items-labels](rules/forms-select-items-labels.md) | Select shows labels through items | MEDIUM | review |
+| [forms-controller-for-callback-controls](rules/forms-controller-for-callback-controls.md) | Bind callback controls with Controller | MEDIUM | eslint, review |
+| [forms-controls-match-schema-type](rules/forms-controls-match-schema-type.md) | Controls produce the schema's type | MEDIUM | eslint, review |
+| [forms-select-items-labels](rules/forms-select-items-labels.md) | Select shows labels through items | MEDIUM | eslint, review |
 | [forms-options-from-lookup-hook](rules/forms-options-from-lookup-hook.md) | Options come from a shared lookup hook | MEDIUM | review |
-| [forms-field-array-keys](rules/forms-field-array-keys.md) | Field arrays are keyed by field.id | MEDIUM | review |
+| [forms-field-array-keys](rules/forms-field-array-keys.md) | Field arrays are keyed by field.id | MEDIUM | eslint, review |
 | [forms-dependent-fields-usewatch](rules/forms-dependent-fields-usewatch.md) | Dependent fields read with useWatch and reset explicitly | MEDIUM | review |
 | [forms-autocomplete-hints](rules/forms-autocomplete-hints.md) | Personal fields carry autocomplete hints | MEDIUM | review |
 | [forms-read-only-disabled](rules/forms-read-only-disabled.md) | Read-only users get disabled controls | MEDIUM | review |
@@ -45,10 +45,10 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
 | [forms-schema-outside-use-server](rules/forms-schema-outside-use-server.md) | The schema lives outside the "use server" file | MEDIUM | test: kit (`use-server-exports.test.ts`) |
-| [forms-zod-4-api](rules/forms-zod-4-api.md) | Use the zod 4 API | MEDIUM | review |
+| [forms-zod-4-api](rules/forms-zod-4-api.md) | Use the zod 4 API | MEDIUM | eslint, review |
 | [forms-extend-shared-schema](rules/forms-extend-shared-schema.md) | Form-only rules extend the shared schema | MEDIUM | review |
-| [forms-validate-on-touch](rules/forms-validate-on-touch.md) | Validate on touch, and let zod be the only validator | MEDIUM | review |
-| [forms-submit-enabled-when-invalid](rules/forms-submit-enabled-when-invalid.md) | Submit stays enabled while the form is invalid | MEDIUM | review |
+| [forms-validate-on-touch](rules/forms-validate-on-touch.md) | Validate on touch, and let zod be the only validator | MEDIUM | eslint, review |
+| [forms-submit-enabled-when-invalid](rules/forms-submit-enabled-when-invalid.md) | Submit stays enabled while the form is invalid | MEDIUM | eslint |
 | [forms-server-errors-on-fields](rules/forms-server-errors-on-fields.md) | Show server field errors on their fields and keep the form open | MEDIUM | test |
 | [forms-refusals-inside-form](rules/forms-refusals-inside-form.md) | Other refusals show inside the form, and the form stays open | MEDIUM | review |
 | [forms-messages-translated](rules/forms-messages-translated.md) | Validation messages are translated | MEDIUM | review |
@@ -61,7 +61,7 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 | [forms-patch-dirty-only](rules/forms-patch-dirty-only.md) | Send only changed fields when editing | MEDIUM | test |
 | [forms-reset-after-save](rules/forms-reset-after-save.md) | Reset to the saved row after a successful save | MEDIUM | review |
 | [forms-load-states-not-blank](rules/forms-load-states-not-blank.md) | Loading and load errors aren't an empty form | MEDIUM | review |
-| [forms-submit-via-mutation](rules/forms-submit-via-mutation.md) | Submit through the mutation, and disable Save while pending | MEDIUM | review |
+| [forms-submit-via-mutation](rules/forms-submit-via-mutation.md) | Submit through the mutation, and disable Save while pending | MEDIUM | test, review (Save and Cancel disabled while pending) |
 | [forms-stay-open-on-failure](rules/forms-stay-open-on-failure.md) | A drawer keeps its form open on failure and ignores close while pending | MEDIUM | review |
 | [forms-fresh-on-open](rules/forms-fresh-on-open.md) | Every open starts from a fresh form state | MEDIUM | review |
 | [forms-confirm-unsaved-close](rules/forms-confirm-unsaved-close.md) | Closing with unsaved changes asks first | MEDIUM | review |
@@ -73,7 +73,7 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
-| [forms-test-like-a-user](rules/forms-test-like-a-user.md) | Drive the form like a user | LOW | review |
+| [forms-test-like-a-user](rules/forms-test-like-a-user.md) | Drive the form like a user | LOW | eslint, review |
 | [forms-test-required-message](rules/forms-test-required-message.md) | An empty required field shows its message and sends nothing | LOW | review |
 | [forms-test-valid-submit-call](rules/forms-test-valid-submit-call.md) | A valid submit sends one call with the expected body | LOW | review |
 | [forms-test-dirty-only-body](rules/forms-test-dirty-only-body.md) | An edit sends only the changed fields | LOW | review |

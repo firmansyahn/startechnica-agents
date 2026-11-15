@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# scan.sh — read-only scan of a Next.js app for the nextjs-ui rules a script can detect (ui-theme-tokens-only, ui-one-primitives-folder, ui-base-ui-composition, ui-third-party-follows-mode).
+# scan.sh — read-only scan of a Next.js app for the nextjs-ui rules a script can detect (ui-theme-tokens-only, ui-one-primitives-folder, ui-base-ui-composition, ui-third-party-follows-mode, ui-focus-visible).
 # Prints one finding per line: <rule-id>\t<file>:<line> <text>, then a count per rule.
 # Findings are candidates: confirm each against this skill's rules/<rule-id>.md before reporting it.
 #
@@ -50,6 +50,10 @@ fi
 # ui-third-party-follows-mode
 g '<Toaster[^>]*theme=["'"'"']' "${DIRS[@]}" | emit ui-third-party-follows-mode
 g 'hsl\(var\(--chart' "${DIRS[@]}" | emit ui-third-party-follows-mode
+
+# ui-focus-visible: the outline removed with no focus-visible: replacement on the same line (the primitives keep theirs)
+g '(^|[ "'"'"'`:])outline-(none|hidden)([ "'"'"'`]|$)' "${DIRS[@]}" --exclude-dir=shadcn-ui | grep -v 'focus-visible:' | emit ui-focus-visible
+g 'outline[[:space:]]*:[[:space:]]*["'"'"']?(none|0)([^[:alnum:]]|$)' "${DIRS[@]}" --include='*.css' --exclude-dir=shadcn-ui | grep -v 'focus-visible' | emit ui-focus-visible
 
 if [ ! -s "$OUT" ]; then echo "no findings"; exit 0; fi
 sort -u "$OUT"

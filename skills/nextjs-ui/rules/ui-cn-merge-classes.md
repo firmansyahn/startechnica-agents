@@ -2,7 +2,7 @@
 title: cn() for conditional and overridable classes
 impact: LOW
 tags: tailwind, classes
-check: review
+check: eslint, review
 ---
 
 ## `cn()` for conditional and overridable classes
@@ -23,4 +23,4 @@ Merge with `cn()` (clsx + tailwind-merge), with the caller's `className` last so
 <div className={cn("rounded-md border", active && "bg-accent", className)}>
 ```
 
-**How to check:** look for `className` built with `+`, template strings or `.join(" ")` instead of `cn()`, and for `className` not passed last.
+**How to check:** The kit's `eslint.config.mjs` (nextjs-new-app) reports a `className` built with `+`, with a template string that interpolates (next/font's `${font.variable}` classes pass), or with `.join()`. Whether the caller's `className` is passed last to `cn()` stays review.

@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Next.js apps.
 metadata:
   author: firmansyahn
-  version: "0.1.1"
+  version: "0.2.0"
 ---
 
 # End-to-end tests with Playwright
@@ -30,6 +30,7 @@ Related: `nextjs-app-structure` (where specs live: `tests/e2e/` or `tests/<area>
 | Sign in once and reuse it; mock or fake the backend; seed and isolate data | [references/auth-and-backend.md](references/auth-and-backend.md) |
 | Screenshot pages in light/dark/presets, compare screenshots, keep them stable | [references/screenshots-and-visual.md](references/screenshots-and-visual.md) + [assets/shots.mjs](assets/shots.mjs), [assets/screenshots.spec.ts](assets/screenshots.spec.ts) |
 | Accessibility scans, aria snapshots, CI jobs, sharding, traces, flaky tests | [references/accessibility-and-ci.md](references/accessibility-and-ci.md) |
+| Check the config, the CI job and the baselines' code owners in Vitest; check headers and CSP, and layout at phone width, in the browser | [assets/tests/e2e-setup.test.ts](assets/tests/e2e-setup.test.ts) (to `<app-root>/tests/`), `nextjs-security` assets/e2e/security-headers.spec.ts, [assets/layout.spec.ts](assets/layout.spec.ts) (to `tests/e2e/`) |
 
 ## Rules
 
@@ -42,9 +43,9 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 | [test-e2e-role-locators](rules/test-e2e-role-locators.md) | Locate elements by role and accessible name in end-to-end tests, not by CSS or XPath | LOW | scan |
 | [e2e-labels-and-text-locators](rules/e2e-labels-and-text-locators.md) | Labels for fields, text for static content, test ids last | LOW | review |
 | [e2e-scope-locators](rules/e2e-scope-locators.md) | Scope locators to a region before picking inside it | LOW | review |
-| [e2e-web-first-assertions](rules/e2e-web-first-assertions.md) | Assert with web-first expect, not with values read out | LOW | review |
+| [e2e-web-first-assertions](rules/e2e-web-first-assertions.md) | Assert with web-first expect, not with values read out | LOW | eslint |
 | [e2e-assert-what-users-see](rules/e2e-assert-what-users-see.md) | Assert on what the user sees, not on implementation | LOW | review |
-| [e2e-one-locator-one-element](rules/e2e-one-locator-one-element.md) | One locator, one element | LOW | review |
+| [e2e-one-locator-one-element](rules/e2e-one-locator-one-element.md) | One locator, one element | LOW | eslint |
 
 ### Stability
 
@@ -55,15 +56,15 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 | [e2e-assert-url-after-navigation](rules/e2e-assert-url-after-navigation.md) | Wait for navigation by asserting the URL | LOW | review |
 | [e2e-assert-final-state](rules/e2e-assert-final-state.md) | Assert the final state, not an intermediate one | LOW | review |
 | [e2e-independent-tests](rules/e2e-independent-tests.md) | Tests don't depend on order or on each other | LOW | review |
-| [e2e-flaky-is-failing](rules/e2e-flaky-is-failing.md) | A flaky test is a failing test | LOW | review |
+| [e2e-flaky-is-failing](rules/e2e-flaky-is-failing.md) | A flaky test is a failing test | LOW | test, scan (candidates), review |
 
 ### Data and auth
 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
 | [e2e-sign-in-once-per-role](rules/e2e-sign-in-once-per-role.md) | Sign in once per role, in a setup project | MEDIUM | review |
-| [e2e-test-sign-in-not-in-prod](rules/e2e-test-sign-in-not-in-prod.md) | Test-only sign-in can't be enabled in production | MEDIUM | review |
-| [e2e-mock-where-requested](rules/e2e-mock-where-requested.md) | Mock where the request is made | MEDIUM | review |
+| [e2e-test-sign-in-not-in-prod](rules/e2e-test-sign-in-not-in-prod.md) | Test-only sign-in can't be enabled in production | MEDIUM | test, scan (candidates), review |
+| [e2e-mock-where-requested](rules/e2e-mock-where-requested.md) | Mock where the request is made | MEDIUM | scan, review |
 | [e2e-mocks-fit-spec](rules/e2e-mocks-fit-spec.md) | Mocked answers fit the API spec | MEDIUM | review |
 | [e2e-own-test-data](rules/e2e-own-test-data.md) | Each test creates its own data, with a unique name | MEDIUM | review |
 | [e2e-isolate-workers](rules/e2e-isolate-workers.md) | Shared backends are isolated per worker | MEDIUM | review |
@@ -76,10 +77,10 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 | [e2e-look-light-and-dark](rules/e2e-look-light-and-dark.md) | Every visual change is looked at in light and dark | LOW | review |
 | [e2e-set-theme-like-app](rules/e2e-set-theme-like-app.md) | Set the theme the way the app stores it | LOW | review |
 | [e2e-check-first-paint](rules/e2e-check-first-paint.md) | Check the first paint, not only the settled page | LOW | review |
-| [e2e-freeze-motion](rules/e2e-freeze-motion.md) | Freeze what moves before a screenshot | LOW | review |
-| [e2e-mask-dynamic-regions](rules/e2e-mask-dynamic-regions.md) | Mask dynamic regions instead of raising thresholds | LOW | review |
+| [e2e-freeze-motion](rules/e2e-freeze-motion.md) | Freeze what moves before a screenshot | LOW | test, review |
+| [e2e-mask-dynamic-regions](rules/e2e-mask-dynamic-regions.md) | Mask dynamic regions instead of raising thresholds | LOW | eslint |
 | [e2e-baselines-from-ci](rules/e2e-baselines-from-ci.md) | Baselines come from the CI image | LOW | review |
-| [e2e-review-baseline-updates](rules/e2e-review-baseline-updates.md) | A baseline update is reviewed like code | LOW | review |
+| [e2e-review-baseline-updates](rules/e2e-review-baseline-updates.md) | A baseline update is reviewed like code | LOW | test (CODEOWNERS), review |
 | [e2e-few-visual-baselines](rules/e2e-few-visual-baselines.md) | Compare a few key pages, not all of them | LOW | review |
 
 ### Scope and CI
@@ -87,14 +88,14 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
 | [e2e-browser-only-scope](rules/e2e-browser-only-scope.md) | E2E covers what only a browser can show | MEDIUM | review |
-| [e2e-spec-suffix](rules/e2e-spec-suffix.md) | Specs are .spec.ts, unit tests .test.ts(x) | MEDIUM | review |
-| [e2e-ci-production-build](rules/e2e-ci-production-build.md) | CI tests a production build | MEDIUM | review |
-| [e2e-health-route-ready](rules/e2e-health-route-ready.md) | The server is ready on a health route, on its own port | MEDIUM | review |
+| [e2e-spec-suffix](rules/e2e-spec-suffix.md) | Specs are .spec.ts, unit tests .test.ts(x) | MEDIUM | eslint, review |
+| [e2e-ci-production-build](rules/e2e-ci-production-build.md) | CI tests a production build | MEDIUM | test, review |
+| [e2e-health-route-ready](rules/e2e-health-route-ready.md) | The server is ready on a health route, on its own port | MEDIUM | test, review |
 | [e2e-axe-every-page](rules/e2e-axe-every-page.md) | Every visited page gets an accessibility scan | MEDIUM | review |
 | [e2e-keyboard-paths](rules/e2e-keyboard-paths.md) | Keyboard paths are tested explicitly | MEDIUM | review |
-| [e2e-check-headers-csp](rules/e2e-check-headers-csp.md) | Headers and CSP are checked on a real page | MEDIUM | review |
-| [e2e-keep-traces](rules/e2e-keep-traces.md) | CI keeps traces and reports | MEDIUM | review |
-| [e2e-image-matches-playwright](rules/e2e-image-matches-playwright.md) | The browser image matches the Playwright version | MEDIUM | review |
+| [e2e-check-headers-csp](rules/e2e-check-headers-csp.md) | Headers and CSP are checked on a real page | MEDIUM | scan, review |
+| [e2e-keep-traces](rules/e2e-keep-traces.md) | CI keeps traces and reports | MEDIUM | test, review |
+| [e2e-image-matches-playwright](rules/e2e-image-matches-playwright.md) | The browser image matches the Playwright version | MEDIUM | test |
 
 ## Rules that hold everywhere
 
@@ -126,3 +127,4 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 - [ ] Screenshots: light and dark (and presets when tokens change), stable settings, baselines from the CI image
 - [ ] Axe scan on each visited page with no new violations
 - [ ] CI: production build, browsers from the matching Docker image or `yarn playwright install --with-deps`, sharded when slow, traces and report kept
+- [ ] `tests/e2e-setup.test.ts` from the asset passes in the unit tests; `security-headers.spec.ts` (from `nextjs-security`) and `layout.spec.ts` list the app's pages
