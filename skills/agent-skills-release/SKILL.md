@@ -1,12 +1,12 @@
 ---
 name: agent-skills-release
-description: "Use when publishing a new version of this library of agent skills: choosing the bump (minor for a new skill or rule, patch for fixes and wording), setting the version in every plugin manifest through the version script, merging the pull request with the lint green, tagging the merge commit, creating the GitHub release with gh, and how downstream projects sync their copy to the new tag."
+description: "Use when publishing a new version of this library of agent skills: choosing the bump (minor for a new skill or rule, patch for fixes and wording), setting the version in every plugin manifest through the version script, merging the pull request with the lint green, tagging the merge commit, creating the GitHub release with gh, how downstream projects sync their copy to the new tag, and staging a team skill for the Skillshare registry (skills.omp.sh) without the frontmatter field its packer rejects."
 user-invocable: true
 license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for this repository.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Releasing the skills
@@ -62,6 +62,17 @@ node tools/sync-agent-skills.mjs v<version>
 
 A downstream copy is never edited by hand; a local difference goes into a skill here and comes back with the next release.
 
+## 5. Skillshare (skills.omp.sh)
+
+The omp agent installs skills from the Skillshare registry. omp's packer rejects the `user-invocable` frontmatter field the team's skills carry for Claude Code, so a skill is staged without that field first — the repository copy is never touched:
+
+```sh
+bash <this skill>/scripts/pack-for-skillshare.sh <skill-name> --keep
+omp skill publish <staging-dir> --dry-run   # validate; then remove the staging directory
+```
+
+Publishing needs a Skillshare token (`omp skill token`), and the published name is `@<scope>/<skill-name>@<version>`; the version comes from the skill's `metadata.version`. Publish only team skills (`go-*`, `nextjs-*`, `git-*`, `gitlab-*`, `oauth-*`, `agent-skills-*`), never vendored ones: their licence and `UPSTREAM.md` name their source, and they are published by their own authors.
+
 ## Checklist
 
 - [ ] The change is merged with the lint green
@@ -70,3 +81,4 @@ A downstream copy is never edited by hand; a local difference goes into a skill 
 - [ ] Every touched skill's `metadata.version` is bumped; a new skill starts at `0.1.0`
 - [ ] The merge commit is tagged `v<version>` and the GitHub release is published with notes
 - [ ] Downstream projects are told to sync to the new tag
+- [ ] Skillshare: only team skills, staged without `user-invocable`, dry-run validated before publishing
