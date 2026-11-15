@@ -85,7 +85,7 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 | [ui-icon-no-size-in-primitives](rules/ui-icon-no-size-in-primitives.md) | No size classes on icons inside primitives | LOW | review |
 | [ui-dialog-title](rules/ui-dialog-title.md) | Title every dialog and name every icon button | MEDIUM | test |
 | [ui-icon-decorative-hidden](rules/ui-icon-decorative-hidden.md) | Decorative icons stay hidden from screen readers | LOW | review |
-| [ui-icon-color-from-text](rules/ui-icon-color-from-text.md) | Icon color comes from the text token | LOW | review |
+| [ui-icon-color-from-text](rules/ui-icon-color-from-text.md) | Icon color comes from the text token | LOW | test: kit (`theme-tokens.test.ts`), eslint (palette warning), review |
 | [ui-status-not-color-alone](rules/ui-status-not-color-alone.md) | Status is never shown by icon or color alone | MEDIUM | review |
 
 ### Overlays

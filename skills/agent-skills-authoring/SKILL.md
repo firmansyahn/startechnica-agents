@@ -43,10 +43,10 @@ Details: [references/rule-prefixes.md](references/rule-prefixes.md) (every rule 
 ## 2. Rules
 
 - **One rule per file** in the skill that teaches the pattern: copy its `rules/_template.md` to `rules/<prefix>-<slug>.md`. The file name is the rule ID; IDs are unique across all skills, and each prefix belongs to one skill ([references/rule-prefixes.md](references/rule-prefixes.md); a new prefix gets a row there and in the skill's `rules/_sections.md`).
-- **Frontmatter:** `title` (imperative), `impact`, `tags`, `check` (what catches a violation today: `scan`, `lint`, `eslint`, `test`, `hook`, `review`, with a note in brackets).
+- **Frontmatter:** `title` (imperative), `impact`, `tags`, `check` (what catches a violation today: `scan`, `lint`, `vet`, `eslint`, `test`, `hook`, `ci`, `dry-run`, `review`, each with an optional note in brackets; several are joined with commas, and `review` stays in the list when part of the rule needs a person).
 - **Body:** the title as a heading, `**Impact: X** (what goes wrong)`, two or three sentences, the smallest **Incorrect** and **Correct** pair, and **How to check**.
-- **Indexed:** a row in the skill's Rules table (`| ID | Rule | Impact | Check |`), grouped by its sections.
-- **Caught where possible:** `check: scan` gets a check in the skill's `scripts/scan.sh`; `test`/`eslint`/`hook` names the file, in the skill's `assets/` when it is generic.
+- **Indexed:** a row in the skill's Rules table (`| ID | Rule | Impact | Check |`), grouped by its sections. The Check column names the same mechanisms as the frontmatter `check` (the notes may differ); the lint compares them.
+- **Caught where possible:** `check: scan` gets a check in the skill's `scripts/scan.sh`; `test`/`eslint`/`hook`/`ci` names the file (the test, the config block, the hook script, the CI job), in the skill's `assets/` when it is generic.
 - **IDs are permanent once cited:** rename only with a note in the old file pointing to the new ID.
 
 ### Impact
@@ -91,7 +91,7 @@ Before committing a change to the skills, run [scripts/lint-skills.mjs](scripts/
 node <this skill>/scripts/lint-skills.mjs [skills-dir]   # default: the folder that holds this skill
 ```
 
-It checks every skill's frontmatter (name equals the folder, description within 1024 characters, licence and version on team skills), the opening principle and the absence of role lines in team skills, `LICENSE` and `UPSTREAM.md`, relative links and their anchors, rule files (frontmatter, unique IDs, indexed, prefix registered), that every skill is named by another team skill, that no team skill hard-codes where skills are installed, and LF line endings. It exits 1 on an error.
+It checks every skill's frontmatter (name equals the folder, description within 1024 characters, licence and version on team skills), the opening principle and the absence of role lines in team skills, `LICENSE` and `UPSTREAM.md`, relative links and their anchors, rule files (frontmatter, unique IDs, indexed, prefix registered, `check` naming known mechanisms and matching the Rules table), that every skill is named by another team skill, that no team skill hard-codes where skills are installed, and LF line endings. It exits 1 on an error.
 
 Before publishing the skills outside the organisation, set `SKILLS_INTERNAL_PATTERNS` to a regex of the organisation's own names (projects, hosts, domains, clusters, customers; kept in CI variables, never in the skills): any line matching it is an error, and private IPv4 addresses are warned about.
 

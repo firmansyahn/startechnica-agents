@@ -48,7 +48,7 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 | [data-no-fetch-in-components](rules/data-no-fetch-in-components.md) | Go through the services registry, not fetch, in pages and components | HIGH | eslint: kit; scan |
 | [data-query-options-from-registry](rules/data-query-options-from-registry.md) | Query options come from the services registry | HIGH | review |
 | [data-query-key-factory](rules/data-query-key-factory.md) | Build query keys from the registry's factory | MEDIUM | review |
-| [data-wait-with-enabled](rules/data-wait-with-enabled.md) | Wait for inputs with enabled, not with an early return | HIGH | review |
+| [data-wait-with-enabled](rules/data-wait-with-enabled.md) | Wait for inputs with enabled, not with an early return | HIGH | eslint: `react-hooks/rules-of-hooks` (eslint-config-next) |
 | [data-keep-previous-page](rules/data-keep-previous-page.md) | Keep the previous page while the next one loads | HIGH | review |
 | [data-poll-with-refetchinterval](rules/data-poll-with-refetchinterval.md) | Poll with refetchInterval, not setInterval | HIGH | review |
 | [data-shared-lookup-hook](rules/data-shared-lookup-hook.md) | Lookup lists are one shared query and a hook | HIGH | review |
@@ -74,7 +74,7 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
 | [action-use-server-exports](rules/action-use-server-exports.md) | Export only async functions from "use server" files | HIGH | test: kit; scan |
-| [action-file-per-domain](rules/action-file-per-domain.md) | Actions live in the domain's actions file, never inline in components | HIGH | review |
+| [action-file-per-domain](rules/action-file-per-domain.md) | Actions live in the domain's actions file, never inline in components | HIGH | test: kit (`use-server-exports.test.ts`), scan, review (file name) |
 | [sec-action-validate-unknown](rules/sec-action-validate-unknown.md) | Parse action input from unknown with the shared schema | CRITICAL | review |
 | [sec-action-identity-from-session](rules/sec-action-identity-from-session.md) | Take identity from the session, never from action arguments | CRITICAL | review |
 | [action-authorize-on-server](rules/action-authorize-on-server.md) | Authorization is on the server, not in the UI | HIGH | review |

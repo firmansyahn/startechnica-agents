@@ -86,7 +86,7 @@ Team rules on top of the upstream skills. One file per rule in `rules/`; the fil
 |---|---|---|---|
 | [wt-no-switch-in-shared-checkout](rules/wt-no-switch-in-shared-checkout.md) | Don't switch branches in a checkout someone else is using | HIGH | review |
 | [wt-know-the-base](rules/wt-know-the-base.md) | Know the branch's base, and target the MR at it | MEDIUM | review (`git log --oneline origin/<target>..HEAD`) |
-| [wt-own-dependencies](rules/wt-own-dependencies.md) | Give each worktree its own dependency install | HIGH | scan (`node_modules`/`vendor` links, `replace`/`go.work` paths, `.worktrees/` not ignored), hook |
+| [wt-own-dependencies](rules/wt-own-dependencies.md) | Give each worktree its own dependency install | HIGH | scan (`node_modules`/`vendor` links, `replace`/`go.work` paths, `.worktrees/` not ignored), hook, review |
 | [wt-unlink-before-remove](rules/wt-unlink-before-remove.md) | Remove links alone, and check, before removing the worktree | CRITICAL | hook (`guard-worktree-remove.mjs`) |
 | [wt-stop-processes-before-remove](rules/wt-stop-processes-before-remove.md) | Stop processes running from the worktree before removing it | MEDIUM | review |
 | [wt-remove-after-merge](rules/wt-remove-after-merge.md) | Remove the worktree and its branch once the MR merged | LOW | scan (worktree folders that are gone), review (`git worktree list`) |

@@ -2,7 +2,7 @@
 title: Keep internal details out of public MRs
 impact: CRITICAL
 tags: security, public, disclosure
-check: review
+check: scan, review
 ---
 
 ## Keep internal details out of public MRs

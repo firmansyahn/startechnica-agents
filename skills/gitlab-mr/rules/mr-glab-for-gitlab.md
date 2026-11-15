@@ -2,7 +2,7 @@
 title: Reach GitLab through glab, never a pasted token
 impact: MEDIUM
 tags: glab, credentials
-check: review
+check: scan, review
 ---
 
 ## Reach GitLab through glab, never a pasted token

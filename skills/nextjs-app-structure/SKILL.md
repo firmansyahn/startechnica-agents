@@ -46,7 +46,7 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 |---|---|---|---|
 | [struct-colocate-until-shared](rules/struct-colocate-until-shared.md) | Keep code beside its one route until a second route needs it | LOW | review |
 | [struct-src-folder-kinds](rules/struct-src-folder-kinds.md) | Put shared code in the src folder for its kind | LOW | test: nextjs-app-structure template |
-| [struct-no-top-level-twins](rules/struct-no-top-level-twins.md) | No top-level twins of src folders | LOW | review |
+| [struct-no-top-level-twins](rules/struct-no-top-level-twins.md) | No top-level twins of src folders | LOW | test: `templates/src-layout.test.ts` |
 | [struct-components-only-react](rules/struct-components-only-react.md) | components/ holds React components only | LOW | review |
 | [struct-use-aliases](rules/struct-use-aliases.md) | Imports use the aliases, not long relative paths | LOW | review |
 | [struct-no-cross-app-imports](rules/struct-no-cross-app-imports.md) | Apps never import each other | LOW | review |
@@ -72,7 +72,7 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 |---|---|---|---|
 | [i18n-strings-from-messages](rules/i18n-strings-from-messages.md) | Every visible string comes from the message files | MEDIUM | review |
 | [i18n-keys-by-route](rules/i18n-keys-by-route.md) | Keys are namespaced by route | MEDIUM | review |
-| [i18n-key-in-every-locale](rules/i18n-key-in-every-locale.md) | Every key exists in every locale | MEDIUM | review |
+| [i18n-key-in-every-locale](rules/i18n-key-in-every-locale.md) | Every key exists in every locale | MEDIUM | test: `templates/locale-parity.test.ts` |
 | [i18n-metadata-translated](rules/i18n-metadata-translated.md) | Metadata comes from translations | MEDIUM | review |
 | [i18n-no-mixed-strings](rules/i18n-no-mixed-strings.md) | Never mix translated and hard-coded strings in one page | MEDIUM | review |
 | [i18n-variables-not-concatenation](rules/i18n-variables-not-concatenation.md) | Messages carry variables, not concatenation | MEDIUM | review |
@@ -91,7 +91,7 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 | [page-test-read-only-user](rules/page-test-read-only-user.md) | The read-only user is tested | LOW | review |
 | [page-test-second-locale](rules/page-test-second-locale.md) | A second locale renders | LOW | review |
 | [page-test-screenshots-light-dark](rules/page-test-screenshots-light-dark.md) | Visual changes are looked at in light and dark | LOW | review |
-| [page-test-run-related](rules/page-test-run-related.md) | Run the related tests while working, the suite before merging | LOW | review |
+| [page-test-run-related](rules/page-test-run-related.md) | Run the related tests while working, the suite before merging | LOW | ci (`nextjs-deploy` pipeline: typecheck, lint, `yarn test` on every MR), review |
 
 ## The tree, short
 

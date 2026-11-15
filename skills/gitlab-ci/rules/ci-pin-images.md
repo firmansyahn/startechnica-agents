@@ -2,7 +2,7 @@
 title: Pin job images, pull them through the mirror, and use maintained tools
 impact: LOW
 tags: images, reproducibility, kaniko
-check: review
+check: scan, review
 ---
 
 ## Pin job images, pull them through the mirror, and use maintained tools

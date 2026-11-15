@@ -44,7 +44,7 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
-| [forms-schema-outside-use-server](rules/forms-schema-outside-use-server.md) | The schema lives outside the "use server" file | MEDIUM | review |
+| [forms-schema-outside-use-server](rules/forms-schema-outside-use-server.md) | The schema lives outside the "use server" file | MEDIUM | test: kit (`use-server-exports.test.ts`) |
 | [forms-zod-4-api](rules/forms-zod-4-api.md) | Use the zod 4 API | MEDIUM | review |
 | [forms-extend-shared-schema](rules/forms-extend-shared-schema.md) | Form-only rules extend the shared schema | MEDIUM | review |
 | [forms-validate-on-touch](rules/forms-validate-on-touch.md) | Validate on touch, and let zod be the only validator | MEDIUM | review |

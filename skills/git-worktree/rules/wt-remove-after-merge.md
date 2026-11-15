@@ -2,7 +2,7 @@
 title: Remove the worktree and its branch once the MR merged
 impact: LOW
 tags: worktree, cleanup, merge
-check: review
+check: scan, review
 ---
 
 ## Remove the worktree and its branch once the MR merged

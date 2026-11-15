@@ -2,7 +2,7 @@
 title: Mark server code server-only
 impact: HIGH
 tags: structure, security, bundling
-check: test
+check: scan, eslint, test
 ---
 
 ## Mark server code server-only

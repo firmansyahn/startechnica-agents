@@ -2,7 +2,7 @@
 title: Commit to public repos with a noreply identity
 impact: MEDIUM
 tags: identity, public, privacy
-check: review
+check: scan, review
 ---
 
 ## Commit to public repos with a noreply identity

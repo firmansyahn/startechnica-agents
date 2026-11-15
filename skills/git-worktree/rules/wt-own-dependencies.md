@@ -2,7 +2,7 @@
 title: Give each worktree its own dependencies
 impact: HIGH
 tags: worktree, dependencies, node_modules, go-modules, symlink
-check: hook, review
+check: scan, hook, review
 ---
 
 ## Give each worktree its own dependencies

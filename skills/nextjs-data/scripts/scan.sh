@@ -43,12 +43,13 @@ for f in $(grep -rlE --include='*.tsx' "${SKIP[@]}" 'useEffect' "${DIRS[@]}" 2>/
 done
 
 # action-use-server-exports
-for f in $(gl "^[[:space:]]*['\"]use server['\"]" "${DIRS[@]}"); do
+# (a directive on its own line, or opening a one-line body: { "use server"; ... })
+for f in $(gl "(^|[{;])[[:space:]]*['\"]use server['\"]" "${DIRS[@]}"); do
   first="$(grep -vE '^[[:space:]]*(//.*)?$' "$f" | head -1)"
   if printf '%s' "$first" | grep -qE "^[[:space:]]*['\"]use server['\"]"; then
     grep -nE '^export (const|let|var|class|enum|default [^a]|function )' "$f" | sed "s#^#$f:#" | emit action-use-server-exports
   else
-    grep -nE "^[[:space:]]+['\"]use server['\"]" "$f" | sed "s#^#$f:#" | emit action-use-server-exports
+    grep -nE "(^[[:space:]]+|[{;][[:space:]]*)['\"]use server['\"]" "$f" | sed "s#^#$f:#" | emit action-use-server-exports
   fi
 done
 

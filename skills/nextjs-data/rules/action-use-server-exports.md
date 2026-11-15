@@ -2,7 +2,7 @@
 title: Export only async functions from "use server" files
 impact: HIGH
 tags: server-actions, build
-check: test
+check: scan, test
 ---
 
 ## Export only async functions from "use server" files

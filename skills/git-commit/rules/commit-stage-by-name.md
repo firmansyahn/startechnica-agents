@@ -2,7 +2,7 @@
 title: Stage files by name; never commit ignored or secret files
 impact: HIGH
 tags: staging, secrets, shared-checkout
-check: review
+check: scan, review
 ---
 
 ## Stage files by name; never commit ignored or secret files

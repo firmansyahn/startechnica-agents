@@ -2,7 +2,7 @@
 title: Give manual jobs in rules allow_failure: true
 impact: MEDIUM
 tags: rules, manual, merge
-check: review
+check: scan, review
 ---
 
 ## Give manual jobs in rules allow_failure: true

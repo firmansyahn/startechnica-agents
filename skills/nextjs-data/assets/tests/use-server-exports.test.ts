@@ -63,8 +63,9 @@ function balancedBraces(source: string, open: number): string {
   return source.slice(open);
 }
 
-/** Whether a module has a "use server" directive anywhere but its top: an inline server function. */
-const inlineDirective = (src: string) => !FILE_DIRECTIVE.test(src) && /^\s+["']use server["'];?\s*$/m.test(src);
+/** Whether a module has a "use server" directive anywhere but its top: an inline server function,
+ * on its own line or opening a one-line body (`{ "use server"; ... }`). */
+const inlineDirective = (src: string) => !FILE_DIRECTIVE.test(src) && /(^\s+|[{;]\s*)["']use server["']\s*(;|$)/m.test(src);
 
 describe('"use server" files export only async functions (rule action-use-server-exports)', () => {
   it("tells async function exports from the rest", () => {
@@ -87,6 +88,8 @@ export { other } from "./other";`;
     ]);
     expect(inlineDirective(`export function Page() {\n  async function go() {\n    "use server";\n  }\n}`)).toBe(true);
     expect(inlineDirective(`"use server";\nexport async function a() {}`)).toBe(false);
+    expect(inlineDirective(`export function Page() {\n  async function go() { "use server"; await save(); }\n}`)).toBe(true);
+    expect(inlineDirective(`const label = "use server";`)).toBe(false);
   });
 
   const files = DIRS.flatMap(sources).map((file) => ({ file, src: fs.readFileSync(path.join(root, file), "utf8") }));

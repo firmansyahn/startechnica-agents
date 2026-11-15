@@ -2,7 +2,7 @@
 title: Write Conventional Commits with the component as scope
 impact: LOW
 tags: commit-message, conventional-commits
-check: review
+check: scan, review
 ---
 
 ## Write Conventional Commits with the component as scope

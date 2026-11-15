@@ -2,7 +2,7 @@
 title: Commit LF line endings, enforced by .gitattributes
 impact: LOW
 tags: line-endings, windows, gitattributes
-check: review
+check: scan, review
 ---
 
 ## Commit LF line endings, enforced by .gitattributes

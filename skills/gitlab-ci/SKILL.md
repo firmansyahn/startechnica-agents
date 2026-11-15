@@ -77,7 +77,7 @@ One file per rule in `rules/`; the file name is the rule ID. Sections and impact
 | [ci-manual-allow-failure](rules/ci-manual-allow-failure.md) | Give manual jobs in rules allow_failure: true | MEDIUM | scan (jobs made manual with no `allow_failure` of their own), review |
 | [ci-tag-before-sha](rules/ci-tag-before-sha.md) | Don't let a zero BEFORE_SHA rule block tag releases | HIGH | review |
 | [ci-forward-pipeline-variables](rules/ci-forward-pipeline-variables.md) | Forward workflow-set variables to the triggered pipeline | HIGH | review |
-| [ci-pin-images](rules/ci-pin-images.md) | Pin job images, pull them through the mirror, and use maintained tools | LOW | scan (`:latest`, bare `:debug`, untagged, `gcr.io/kaniko-project`) |
+| [ci-pin-images](rules/ci-pin-images.md) | Pin job images, pull them through the mirror, and use maintained tools | LOW | scan (`:latest`, bare `:debug`, untagged, `gcr.io/kaniko-project`), review |
 
 ## Reviewing
 

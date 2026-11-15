@@ -41,7 +41,7 @@ describe("src layout", () => {
   });
 
   it("has no top-level twin of a src folder", () => {
-    const twins = ["constants", "hooks", "utils", "types", "services", "schemas", "providers", "stores", "libs"].filter((d) =>
+    const twins = ["constants", "hooks", "utils", "types", "services", "schemas", "providers", "stores", "libs", "lib"].filter((d) =>
       fs.existsSync(path.join(root, d)),
     );
     expect(twins, "these belong under src/").toEqual([]);

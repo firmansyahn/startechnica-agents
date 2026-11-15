@@ -46,7 +46,7 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 |---|---|---|---|
 | [sec-csp-nonce](rules/sec-csp-nonce.md) | Allow scripts by a per-request nonce or a hash, never by 'unsafe-inline' | HIGH | test |
 | [sec-nonce-pages-dynamic](rules/sec-nonce-pages-dynamic.md) | Nonce pages render dynamically | HIGH | review |
-| [sec-unsafe-eval-dev-only](rules/sec-unsafe-eval-dev-only.md) | 'unsafe-eval' only in development | HIGH | review |
+| [sec-unsafe-eval-dev-only](rules/sec-unsafe-eval-dev-only.md) | 'unsafe-eval' only in development | HIGH | test (the `sec-csp-nonce` end-to-end test) |
 | [sec-theme-script-csp](rules/sec-theme-script-csp.md) | The theme script passes the CSP by nonce or hash | HIGH | review |
 | [sec-exact-third-party-origins](rules/sec-exact-third-party-origins.md) | Third-party origins are exact, and few | HIGH | review |
 | [sec-csp-report-only-first](rules/sec-csp-report-only-first.md) | New policies go out report-only first | HIGH | review |

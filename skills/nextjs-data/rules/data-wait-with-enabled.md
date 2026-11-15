@@ -2,7 +2,7 @@
 title: Wait for inputs with enabled, not with an early return
 impact: HIGH
 tags: queries
-check: review
+check: eslint (react-hooks/rules-of-hooks)
 ---
 
 ## Wait for inputs with enabled, not with an early return
@@ -23,3 +23,5 @@ const list = useQuery(items.list(scope, params));
 ```tsx
 const list = useQuery({ ...items.list(scope, params), enabled: scope !== null });
 ```
+
+**How to check:** `react-hooks/rules-of-hooks`, an error in eslint-config-next and so in the kit's config, reports a hook called after an early return.

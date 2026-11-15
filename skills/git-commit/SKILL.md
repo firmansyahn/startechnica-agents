@@ -80,11 +80,11 @@ One file per rule in `rules/`; the file name is the rule ID. Sections and impact
 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
-| [commit-conventional](rules/commit-conventional.md) | Write Conventional Commits with the component as scope | LOW | scan |
-| [commit-stage-by-name](rules/commit-stage-by-name.md) | Stage files by name; never commit ignored or secret files | HIGH | scan (secret and local files added in the range) |
-| [commit-lf-endings](rules/commit-lf-endings.md) | Commit LF line endings, enforced by .gitattributes | LOW | scan (`.gitattributes`, `git ls-files --eol`) |
-| [commit-ci-skip-without-code](rules/commit-ci-skip-without-code.md) | Use [ci skip] only on commits without code | MEDIUM | scan |
-| [commit-identity-public](rules/commit-identity-public.md) | Commit to public repos with a noreply identity | MEDIUM | scan (`REPO_PUBLIC=1`) |
+| [commit-conventional](rules/commit-conventional.md) | Write Conventional Commits with the component as scope | LOW | scan, review |
+| [commit-stage-by-name](rules/commit-stage-by-name.md) | Stage files by name; never commit ignored or secret files | HIGH | scan (secret and local files added in the range), review |
+| [commit-lf-endings](rules/commit-lf-endings.md) | Commit LF line endings, enforced by .gitattributes | LOW | scan (`.gitattributes`, `git ls-files --eol`), review |
+| [commit-ci-skip-without-code](rules/commit-ci-skip-without-code.md) | Use [ci skip] only on commits without code | MEDIUM | scan, review |
+| [commit-identity-public](rules/commit-identity-public.md) | Commit to public repos with a noreply identity | MEDIUM | scan (`REPO_PUBLIC=1`), review |
 | [commit-no-backslash-escaped-backticks](rules/commit-no-backslash-escaped-backticks.md) | Do not backslash-escape backticks in text passed through PowerShell | MEDIUM | scan |
 
 ## Reviewing
