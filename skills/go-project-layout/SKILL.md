@@ -1,17 +1,19 @@
 ---
 name: go-project-layout
-description: "Use when starting a Go service, adding, moving, renaming or splitting a package, deciding where code belongs, wiring dependencies, or reviewing a Go diff for layering: the official Go server-project layout (cmd/<binary>, internal/, one go.mod, no pkg/ or util packages), layers with imports pointing one way (Root, Surface, Domain, Platform, Kernel) and an architecture test that enforces them, thin main with run() error, dependencies passed to constructors by hand, no init() side effects, no replace or go.work to another checkout. Absorbs samber/cc-skills-golang@golang-project-layout, adapted to the team (no DI containers, no pkg/); the vendored golang-dependency-injection, golang-dependency-management and golang-design-patterns stay the depth for their topics, and this skill wins where they differ. Holds the layer-* rules."
+description: "Use when starting a Go service, adding, moving, renaming or splitting a package, deciding where code belongs, wiring dependencies, or reviewing a Go diff for layering: the official Go server-project layout (cmd/<binary>, internal/, one go.mod, no pkg/ or util packages), layers with imports pointing one way (Root, Surface, Domain, Platform, Kernel) and an architecture test that enforces them, thin main with run() error, dependencies passed to constructors by hand, no init() side effects, no replace or go.work to another checkout. Absorbs samber/cc-skills-golang@golang-project-layout, adapted to the team (no DI containers, no pkg/), and golang-dependency-injection, golang-dependency-management and golang-design-patterns as its references. Holds the layer-* rules."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for Go server projects.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Go project layout and layers (team)
 
-> **Absorbed.** This skill includes `samber/cc-skills-golang@golang-project-layout` (MIT, Samuel Berthe; source and pinned commit in [UPSTREAM.md](UPSTREAM.md)), adapted to the team: the team's rules and decisions come first and win, and "In depth" holds the upstream material, edited where the team decided otherwise. For depth on the neighbouring topics read the vendored [golang-dependency-injection](../golang-dependency-injection/SKILL.md), [golang-dependency-management](../golang-dependency-management/SKILL.md) and [golang-design-patterns](../golang-design-patterns/SKILL.md); this skill wins where they differ. The project's own `AGENTS.md`, `CLAUDE.md` and project skills win over this skill.
+**Principle:** Dependencies point down through the layers and arrive through constructors: `cmd/` stays thin, logic lives in `internal/`, and nothing mutable is global.
+
+> **Absorbed.** This skill includes `samber/cc-skills-golang@golang-project-layout` (MIT, Samuel Berthe; source and pinned commit in [UPSTREAM.md](UPSTREAM.md)), adapted to the team: the team's rules and decisions come first and win, and "In depth" holds the upstream material, edited where the team decided otherwise. It also absorbs `samber/cc-skills-golang@golang-dependency-injection`, `samber/cc-skills-golang@golang-dependency-management`, `samber/cc-skills-golang@golang-design-patterns`: each is a reference of this skill, listed at the start of "In depth", and this skill wins where they differ. The project's own `AGENTS.md`, `CLAUDE.md` and project skills win over this skill.
 
 Sources, in this order of authority:
 
@@ -60,17 +62,17 @@ Root → Surface → Domain → Platform → Kernel. A package may import its ow
 
 ## 3. Wiring and lifecycle
 
-- **No mutable package globals.** Constructors take dependencies explicitly: `NewService(db *database.DB, log *slog.Logger) *Service`. Inject clocks (`now func() time.Time`) instead of patching globals in tests.
+- **No mutable package globals.** Constructors take dependencies explicitly: `NewService(db *database.DB, log *zap.Logger) *Service`. Inject clocks (`now func() time.Time`) instead of patching globals in tests.
 - Past about four dependencies, or with optional ones, use a deps struct or functional options instead of a longer parameter list.
 - **No `init()` with I/O, env reads or goroutines.**
 - **`main` calls `run() error`** and is the only place that exits ([go-error-handling](../go-error-handling/SKILL.md)); shutdown order is in [go-concurrency](../go-concurrency/SKILL.md).
 
 ## Team decisions
 
-1. **No DI containers.** Dependencies are passed to constructors by hand (`layer-inject-dependencies`); `google/wire`, `uber-go/dig`, `uber-go/fx` and `samber/do` are not adopted, whatever golang-dependency-injection recommends.
+1. **No DI containers.** Dependencies are passed to constructors by hand (`layer-inject-dependencies`); lazy creation lives in the service that owns the dependency, and tests call the real constructors with fakes, never clone a container; `google/wire`, `uber-go/dig`, `uber-go/fx` and `samber/do` are not adopted, whatever [references/dependency-injection.md](references/dependency-injection.md) recommends.
 2. **No `pkg/`.** These are server projects: golang-project-layout's "library" and "CLI with optional `pkg/`" shapes don't apply (`layer-logic-in-internal`).
-3. **No `replace` or `go.work` pointing at another checkout** (a sibling repo or another worktree); golang-dependency-management's `replace` advice is for a fork published as its own module (`git-worktree`, `wt-own-dependencies`).
-4. **Dependency upgrades** follow golang-dependency-management, but CI is GitLab CI (`gitlab-ci`): Dependabot and Renovate-on-GitHub advice doesn't apply.
+3. **No `replace` or `go.work` pointing at another checkout** (a sibling repo or another worktree); [references/dependency-management.md](references/dependency-management.md)'s `replace` advice is for a fork published as its own module (`git-worktree`, `wt-own-dependencies`).
+4. **Dependency upgrades** follow [references/dependency-management.md](references/dependency-management.md), but CI is GitLab CI (`gitlab-ci`): Dependabot and Renovate-on-GitHub advice doesn't apply.
 
 ## Rules
 
@@ -101,7 +103,13 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 
 ## In depth
 
-The material below is `samber/cc-skills-golang@golang-project-layout`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: the ones absorbed are now team skills (`go-how-to` maps the names), the rest are vendored as `golang-*` or not adopted.
+The material below is `samber/cc-skills-golang@golang-project-layout`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: each one the team uses is absorbed into a team skill (`go-how-to`, rule 1, maps the names), and the rest are not adopted.
+
+Also absorbed, one reference each (their own references, assets and evals sit in a folder of the same name):
+
+- [references/dependency-injection.md](references/dependency-injection.md) (`golang-dependency-injection`): constructor injection; the DI library comparison is for reading existing code
+- [references/dependency-management.md](references/dependency-management.md) (`golang-dependency-management`): go.mod, upgrades, conflicts, govulncheck, workspaces
+- [references/design-patterns.md](references/design-patterns.md) (`golang-design-patterns`): functional options, constructors, lifecycle and shutdown, resilience, architecture styles
 
 **Persona:** You are a Go project architect. You follow the team's server layout and layers (sections 1-3 above) and right-size within them — no empty directories "for the layout", no package until there is code for it.
 
@@ -111,11 +119,11 @@ The material below is `samber/cc-skills-golang@golang-project-layout`, absorbed 
 
 The architecture is the team's: the official Go server-project layout (`cmd/<binary>/`, all logic in `internal/`, one `go.mod`) with the layers Root, Surface, Domain, Platform and Kernel, imports pointing down only (section 2). Don't ask the developer to choose between clean architecture, hexagonal, DDD or a flat structure, and don't impose a different one. If the project's own architecture doc or architecture test says more, follow it.
 
-→ See `golang-design-patterns` skill for detailed architecture guides with file trees and code examples; where they differ from the layers above, the layers win.
+→ See [references/design-patterns.md](references/design-patterns.md) for detailed architecture guides with file trees and code examples; where they differ from the layers above, the layers win.
 
 ### Dependency Injection: By Hand
 
-Dependencies are wired by hand: constructors take them explicitly, and `cmd/<binary>` (or `internal/app` in a larger service) builds them in order and owns lifecycle (health checks, graceful shutdown) (section 3, `layer-inject-dependencies`). No DI library: `samber/do`, `google/wire`, `uber-go/dig` and `uber-go/fx` are not adopted, so don't offer them as a choice. See the `golang-dependency-injection` skill for constructor-injection patterns; its library comparison doesn't apply.
+Dependencies are wired by hand: constructors take them explicitly, and `cmd/<binary>` (or `internal/app` in a larger service) builds them in order and owns lifecycle (health checks, graceful shutdown) (section 3, `layer-inject-dependencies`). No DI library: `samber/do`, `google/wire`, `uber-go/dig` and `uber-go/fx` are not adopted, so don't offer them as a choice. See the [references/dependency-injection.md](references/dependency-injection.md) for constructor-injection patterns; its library comparison doesn't apply.
 
 ### 12-Factor App
 
@@ -156,7 +164,7 @@ module utils
 
 #### Package Naming
 
-Packages MUST be lowercase, singular, and match their directory name. → See `golang-naming` skill for complete package naming conventions and examples.
+Packages MUST be lowercase, singular, and match their directory name. → See `go-code-style` references/naming.md for complete package naming conventions and examples.
 
 ### Directory Layout
 
@@ -170,7 +178,7 @@ A Go project usually has at the module root:
 
 - **Makefile** — build automation (upstream's template isn't vendored; follow the project's existing build entry point)
 - **.gitignore** — git ignore patterns
-- **.golangci.yml** — linter config. Don't add one, or change it, as a side effect of other work; if the project has none, propose one (see the `golang-lint` skill for the recommended configuration)
+- **.golangci.yml** — linter config. Don't add one, or change it, as a side effect of other work; if the project has none, propose one (see the `go-code-style` references/lint.md for the recommended configuration)
 
 Settings are loaded with koanf by one `internal/config` package, not Cobra + Viper in `cmd/` (`go-knadh-koanf`); [config reference](references/config.md) keeps upstream's Viper notes for reading a project that already uses Viper.
 
@@ -187,7 +195,7 @@ A team project is one module, so it has no `go.work`; never point `go.work` (or 
 When starting a new Go project:
 
 - [ ] Follow the team's server layout and layers (sections 1-3); the architecture is not a question for the developer
-- [ ] Wire dependencies by hand through constructors; no DI library — see `golang-dependency-injection` skill for the constructor patterns
+- [ ] Wire dependencies by hand through constructors; no DI library — see [references/dependency-injection.md](references/dependency-injection.md) for the constructor patterns
 - [ ] One service per module; extra tools are more `cmd/{name}/` binaries in it
 - [ ] Right-size the structure to the project scope (no empty directories)
 - [ ] Choose module name (matches repo URL, lowercase, hyphens)
@@ -201,7 +209,7 @@ When starting a new Go project:
 
 ### Related Skills
 
-- → See `golang-dependency-injection` skill for constructor-injection patterns and wiring (by hand; its DI libraries are not adopted).
-- → See `golang-lint` skill for golangci-lint configuration (propose a config; don't add one as a side effect).
-- → See `golang-design-patterns` skill for architectural patterns.
-- → See `golang-refactoring` skill for safely moving or splitting existing code into the layout above via type-alias gradual code repair and staged PRs, without a big-bang break.
+- → See [references/dependency-injection.md](references/dependency-injection.md) for constructor-injection patterns and wiring (by hand; its DI libraries are not adopted).
+- → See `go-code-style` references/lint.md for golangci-lint configuration (propose a config; don't add one as a side effect).
+- → See [references/design-patterns.md](references/design-patterns.md) for architectural patterns.
+- → See `go-refactoring` for safely moving or splitting existing code into the layout above via type-alias gradual code repair and staged PRs, without a big-bang break.

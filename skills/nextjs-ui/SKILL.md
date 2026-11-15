@@ -3,13 +3,15 @@ name: nextjs-ui
 description: "Use for the visual layer of a Next.js App Router app built on Tailwind CSS v4 and shadcn/ui: setting up Tailwind (CSS-first config, @theme inline tokens), choosing classes and colors, adding or customizing shadcn components (components.json, primitives vs composites, forms, dialogs, tables, toasts, accessibility), Base UI primitives (@base-ui/react: render prop, nativeButton, data-* state styling, animations, events, migrating from Radix asChild), and runtime theming (light/dark/system mode, color presets, white-label or per-tenant branding, fonts, a theme picker, painting without a flash, migrating hard-coded colors onto tokens, color audits, contrast checks)."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for Next.js apps.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Next.js apps.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Next.js UI: Tailwind, shadcn, Base UI and themes
+
+**Principle:** Colors come only from semantic theme tokens and primitives only from the shadcn folder, and nothing is done until it has been looked at in light and dark.
 
 One system with three layers:
 

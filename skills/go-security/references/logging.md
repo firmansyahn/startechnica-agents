@@ -39,12 +39,12 @@ func logUserLogin(user *User) {
 **Good:**
 
 ```go
-import "log/slog"
+import "go.uber.org/zap"
 
-func logUserLogin(logger *slog.Logger, user *User) {
+func logUserLogin(logger *zap.Logger, user *User) {
     logger.Info("user_login",
-        "user_id", user.ID,
-        "username", user.Username,
+        zap.String("user_id", user.ID),
+        zap.String("username", user.Username),
         // Don't log: password, token
     )
 }
@@ -65,7 +65,7 @@ log.Printf("User logged in: %s\n", username)  // DON'T: No sanitization
 **Good:**
 
 ```go
-import "log/slog"
+import "go.uber.org/zap"
 
 // Sanitize user input before logging
 func sanitizeLogInput(input string) string {
@@ -79,9 +79,9 @@ func sanitizeLogInput(input string) string {
     return result.String()
 }
 
-func logUsername(logger *slog.Logger, username string) {
+func logUsername(logger *zap.Logger, username string) {
     sanitized := sanitizeLogInput(username)
-    logger.Info("user_login", "username", sanitized)
+    logger.Info("user_login", zap.String("username", sanitized))
 }
 ```
 
@@ -104,15 +104,15 @@ func dbErrorToHTTP(err error) {
 **Good:**
 
 ```go
-func handleDatabaseError(logger *slog.Logger, err error) error {
+func handleDatabaseError(logger *zap.Logger, err error) error {
     // Log detailed error for debugging
-    logger.Error("database_error", "error", err.Error())
+    logger.Error("database_error", zap.Error(err))
     // Return generic message to client
     return errors.New("database operation failed")
 }
 
-func dbErrorToHTTP(w http.ResponseWriter, logger *slog.Logger, err error) {
-    logger.Error("database_error", "error", err.Error())
+func dbErrorToHTTP(w http.ResponseWriter, logger *zap.Logger, err error) {
+    logger.Error("database_error", zap.Error(err))
     http.Error(w, "Internal server error", http.StatusInternalServerError)
 }
 ```
@@ -132,17 +132,19 @@ fmt.Printf("DEBUG: %+v\n", data)  // DON'T: Raw data
 **Good:**
 
 ```go
-import "log/slog"
+import (
+    "go.elastic.co/ecszap"
+    "go.uber.org/zap"
+    "go.uber.org/zap/zapcore"
+)
 
-handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-    Level:     slog.LevelInfo,
-    AddSource: false,
-})
-logger := slog.New(handler)
+// json (ECS) to stdout at info, built once in main and injected
+core := ecszap.NewCore(ecszap.NewDefaultEncoderConfig(), zapcore.Lock(os.Stdout), zapcore.InfoLevel)
+logger := zap.New(core)
 
 logger.Info("user_login",
-    "user_id", userID,
-    "ip_address", request.RemoteIP,
+    zap.String("user_id", userID),
+    zap.String("ip_address", request.RemoteIP),
 )
 ```
 

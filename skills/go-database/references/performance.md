@@ -53,12 +53,12 @@ Check pool stats in production to detect exhaustion:
 
 ```go
 stats := pool.Stat()
-slog.Info("db pool",
-    "open", stats.TotalConns(),
-    "in_use", stats.AcquiredConns(),
-    "idle", stats.IdleConns(),
-    "empty_acquire_count", stats.EmptyAcquireCount(), // acquires that had to wait for a connection
-    "acquire_duration", stats.AcquireDuration(),      // total time spent acquiring
+log.Info("db pool",
+    zap.Int32("open", stats.TotalConns()),
+    zap.Int32("in_use", stats.AcquiredConns()),
+    zap.Int32("idle", stats.IdleConns()),
+    zap.Int64("empty_acquire_count", stats.EmptyAcquireCount()), // acquires that had to wait for a connection
+    zap.Duration("acquire_duration", stats.AcquireDuration()),   // total time spent acquiring
 )
 ```
 

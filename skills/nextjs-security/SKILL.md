@@ -3,13 +3,15 @@ name: nextjs-security
 description: "Use when hardening, reviewing or auditing the security of a Next.js App Router app beyond its auth flow: Content-Security-Policy with per-request nonces in proxy.ts (strict-dynamic, dynamic rendering, inline theme scripts, third-party scripts, report-only rollout, SRI), security headers (HSTS, frame-ancestors/X-Frame-Options, Referrer-Policy, Permissions-Policy, X-Content-Type-Options, COOP/CORP), the data-security model (Data Access Layer, DTOs, server-only, React taint APIs), environment variables and secrets (NEXT_PUBLIC_ is public, next.config env inlining), route handler auth and CSRF outside server actions, open redirects, SSRF in server-side fetches, file uploads, rate limiting, and dependency hygiene (yarn npm audit, Renovate, lockfile review, install scripts)."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for Next.js apps.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Next.js apps.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Next.js security
+
+**Principle:** Every request, header, upload and dependency is hostile until checked, data access stays on the server, and new policies go out report-only first.
 
 The auth flow, the session and the server-action rules have their own skills; this one covers what sits around them. Start from the map, read the reference for the task, and check the rules before you call a change done.
 

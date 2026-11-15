@@ -56,10 +56,10 @@ if !hmac.Equal(signature, expected) {
 ```go
 // Check: Are all security-relevant actions logged with structured data?
 logger.Info("action_performed",
-    "user_id", userID,
-    "action", "delete_account",
-    "ip", r.RemoteAddr,
-    "timestamp", time.Now().UTC(),
+    zap.String("user_id", userID),
+    zap.String("action", "delete_account"),
+    zap.String("ip", r.RemoteAddr),
+    zap.Time("timestamp", time.Now().UTC()),
 )
 ```
 
@@ -172,7 +172,7 @@ Every arrow crossing the trust boundary needs:
 | A06 | Vulnerable Components | All | `govulncheck` in the project's GitLab CI, regular dependency updates, `go.sum` verification |
 | A07 | Authentication Failures | S, E | Argon2id/bcrypt, JWT validation (algorithm pinning), MFA |
 | A08 | Software/Data Integrity | T | Module checksums (`go.sum`), signed releases, CI verification |
-| A09 | Logging Failures | R | Structured logging (`log/slog`), audit trails, no PII |
+| A09 | Logging Failures | R | Structured logging (`zap`), audit trails, no PII |
 | A10 | SSRF | I, T | URL allowlists, block internal IPs and metadata endpoints |
 
 ---

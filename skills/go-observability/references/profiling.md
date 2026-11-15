@@ -21,7 +21,7 @@ On-demand profiling requires you to be there when the problem happens. Continuou
 ```go
 import "github.com/grafana/pyroscope-go"
 
-func setupContinuousProfiling() {
+func setupContinuousProfiling(log *zap.Logger) {
     if os.Getenv("PROFILING_ENABLED") != "true" {
         return
     }
@@ -43,9 +43,9 @@ func setupContinuousProfiling() {
         },
     })
     if err != nil {
-        slog.Error("failed to start pyroscope", "error", err)
+        log.Error("failed to start pyroscope", zap.Error(err))
     } else {
-        slog.Info("continuous profiling enabled", "server", os.Getenv("PYROSCOPE_URL"))
+        log.Info("continuous profiling enabled")
     }
 }
 ```

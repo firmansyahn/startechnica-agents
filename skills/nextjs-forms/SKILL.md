@@ -3,13 +3,15 @@ name: nextjs-forms
 description: "Use when building, reviewing or testing a form in a Next.js App Router app: create/edit forms, settings forms, filters, wizards; react-hook-form + zod schemas shared with the server action, shadcn Field components on Base UI controls (inputs, selects, checkboxes, switches, radios, comboboxes, number and date fields, file inputs), showing server field errors from a 422, submit and pending states, edit forms that only PATCH changed fields, field arrays, dependent fields, unsaved-changes guards, and form tests."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for Next.js apps.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Next.js apps.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Forms in Next.js
+
+**Principle:** Every form uses one stack: a zod schema shared with its server action, react-hook-form for state, shadcn `Field` for the UI, and server errors shown on their fields.
 
 One stack for every form: **react-hook-form** holds the state, **zod** defines the rules (one schema, shared by the form and its server action), **shadcn `Field` components** render label, control, description and error, **Base UI** provides the controls, and the submit goes through **`useMutation` → server action → `Result`**.
 

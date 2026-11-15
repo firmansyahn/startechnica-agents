@@ -3,13 +3,15 @@ name: agent-skills-release
 description: "Use when publishing a new version of this library of agent skills: choosing the bump (minor for a new skill or rule, patch for fixes and wording), setting the version in every plugin manifest through the version script, merging the pull request with the lint green, tagging the merge commit, creating the GitHub release with gh, how downstream projects sync their copy to the new tag, and staging a team skill for the Skillshare registry (skills.omp.sh) without the frontmatter field its packer rejects."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for this repository.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for this repository.
 metadata:
   author: firmansyahn
-  version: "0.2.0"
+  version: "0.2.1"
 ---
 
 # Releasing the skills
+
+**Principle:** This repository is the original: a release is versioned in every manifest, tagged and published from here, and projects only ever sync a tagged copy.
 
 This repository is the original of the skills: projects keep a copy synced from a release and never edit it. A release is a version in every plugin manifest, a tag on the merge commit, and a GitHub release; downstream projects then sync their copy to the tag.
 

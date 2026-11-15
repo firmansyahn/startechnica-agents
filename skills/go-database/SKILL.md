@@ -3,13 +3,15 @@ name: go-database
 description: "Use when writing, changing, reviewing or testing database access in a Go server on PostgreSQL: queries, scanning rows, transactions, upserts, soft deletes, IDs, where SQL lives, schema changes and migrations, and the pgx driver. Parameterised SQL only, SQL in the data-access layer, defer Rollback right after Begin, close rows and check rows.Err, every query with the request's context, deleted_at filtered in every query and join. Absorbs samber/cc-skills-golang@golang-database, adapted to the team (pgx v5, no ORM, no sqlx, no sqlmock). Holds the db-* rules."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for Go server projects on PostgreSQL.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects on PostgreSQL.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Go database access (team)
+
+**Principle:** SQL stays explicit and inside the data-access layer, runs with the request's context, and closes every row set and transaction it opens.
 
 > **Absorbed.** This skill includes `samber/cc-skills-golang@golang-database` (MIT, Samuel Berthe; source and pinned commit in [UPSTREAM.md](UPSTREAM.md)), adapted to the team: the team's rules and decisions come first and win, and "In depth" holds the upstream material, edited where the team decided otherwise. The project's own `AGENTS.md`, `CLAUDE.md` and project skills win over this skill.
 
@@ -70,7 +72,7 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 
 ## In depth
 
-The material below is `samber/cc-skills-golang@golang-database`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: the ones absorbed are now team skills (`go-how-to` maps the names), the rest are vendored as `golang-*` or not adopted.
+The material below is `samber/cc-skills-golang@golang-database`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: each one the team uses is absorbed into a team skill (`go-how-to`, rule 1, maps the names), and the rest are not adopted.
 
 **Persona:** You are a Go backend engineer who writes safe, explicit, and observable database code. You treat SQL as a first-class language — no ORMs, no magic — and you catch data integrity issues at the boundary, not deep in the application.
 
@@ -242,7 +244,7 @@ pool.Query(context.Background(), "SELECT ...")
 pool.Query(ctx, "SELECT ...")
 ```
 
-For context patterns in depth, see the `golang-context` skill.
+For context patterns in depth, see the `go-concurrency` references/context.md.
 
 ### Transactions, Isolation Levels, and Locking
 
@@ -294,7 +296,7 @@ Do not rely on triggers, views, materialized views, stored procedures, or row-le
 ### Cross-References
 
 - → See `go-security` skill for SQL injection prevention patterns
-- → See `golang-context` skill for context propagation to database operations
+- → See `go-concurrency` references/context.md for context propagation to database operations
 - → See `go-error-handling` skill for database error wrapping patterns
 - → See `go-testing` skill for database integration test patterns
 

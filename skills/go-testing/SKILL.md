@@ -1,17 +1,19 @@
 ---
 name: go-testing
-description: "Use when writing, fixing, speeding up or reviewing tests in a Go server: table tests (tests, tt, give/want, t.Run), database tests against a real PostgreSQL with one fresh database per test, HTTP handler tests with httptest, -race and t.Parallel, waiting on signals instead of time.Sleep, proving goroutines exit, flaky or slow tests. Absorbs samber/cc-skills-golang@golang-testing, adapted to the team; the vendored golang-benchmark stays the depth for benchmarks, and this skill wins where they differ. Holds the test-* rules."
+description: "Use when writing, fixing, speeding up or reviewing tests in a Go server: table tests (tests, tt, give/want, t.Run), database tests against a real PostgreSQL with one fresh database per test, HTTP handler tests with httptest, -race and t.Parallel, waiting on signals instead of time.Sleep, proving goroutines exit, flaky or slow tests. Absorbs samber/cc-skills-golang@golang-testing, adapted to the team; the vendored `go-performance` references/benchmark.md stays the depth for benchmarks, and this skill wins where they differ. Holds the test-* rules."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for Go server projects.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Go tests (team)
 
-> **Absorbed.** This skill includes `samber/cc-skills-golang@golang-testing` (MIT, Samuel Berthe; source and pinned commit in [UPSTREAM.md](UPSTREAM.md)), adapted to the team: the team's rules and decisions come first and win, and "In depth" holds the upstream material, edited where the team decided otherwise. For depth on the neighbouring topics read the vendored [golang-benchmark](../golang-benchmark/SKILL.md); this skill wins where they differ. The project's own `AGENTS.md`, `CLAUDE.md` and project skills win over this skill.
+**Principle:** Tests are executable specifications: table-driven, run with the race detector, waiting on signals rather than time, and against a real database where the code talks to one.
+
+> **Absorbed.** This skill includes `samber/cc-skills-golang@golang-testing` (MIT, Samuel Berthe; source and pinned commit in [UPSTREAM.md](UPSTREAM.md)), adapted to the team: the team's rules and decisions come first and win, and "In depth" holds the upstream material, edited where the team decided otherwise. For depth on the neighbouring topics read the vendored [`go-performance` references/benchmark.md](../go-performance/references/benchmark.md); this skill wins where they differ. The project's own `AGENTS.md`, `CLAUDE.md` and project skills win over this skill.
 
 Related: [go-database](../go-database/SKILL.md), [go-concurrency](../go-concurrency/SKILL.md), `gitlab-ci` (tests run automatically and block the merge, made fast by sharding and `t.Parallel`: its references/fast-tests.md), [go-how-to](../go-how-to/SKILL.md) (the Go skills and the rules they all assume).
 
@@ -39,7 +41,7 @@ Related: [go-database](../go-database/SKILL.md), [go-concurrency](../go-concurre
 1. **No testify.** Tests use the standard library `testing` package. Read golang-testing's testify sections as not adopted; don't add `testify` or its linters.
 2. **No mocked database.** `go-sqlmock` is not adopted (`test-real-database`); testcontainers is fine where the project already uses it.
 3. **Mocks are hand-written fakes** of the small interfaces a consumer declares; no mock generator added as a side effect.
-4. Links to skills that aren't vendored (`golang-stretchr-testify`, `golang-continuous-integration`) are skipped; CI is GitLab CI (`gitlab-ci`).
+4. Links to upstream skills that aren't absorbed (`golang-stretchr-testify`, `golang-continuous-integration`) are skipped; CI is GitLab CI (`gitlab-ci`).
 
 ## Rules
 
@@ -70,13 +72,13 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 
 ## In depth
 
-The material below is `samber/cc-skills-golang@golang-testing`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: the ones absorbed are now team skills (`go-how-to` maps the names), the rest are vendored as `golang-*` or not adopted.
+The material below is `samber/cc-skills-golang@golang-testing`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: each one the team uses is absorbed into a team skill (`go-how-to`, rule 1, maps the names), and the rest are not adopted.
 
 **Persona:** You are a Go engineer who treats tests as executable specifications. You write tests to constrain behavior, not to hit coverage targets.
 
-**Thinking mode:** Reason as thoroughly as possible for test strategy design and failure analysis — shallow reasoning misses edge cases and produces brittle tests that pass today but break tomorrow. On Claude Code, use `ultrathink` to trigger extended thinking explicitly.
+**Thinking mode:** Reason as thoroughly as possible for test strategy design and failure analysis — shallow reasoning misses edge cases and produces brittle tests that pass today but break tomorrow. To ask for it explicitly: `ultrathink` in the prompt on Claude Code and oh-my-pi; the `max` model variant on OpenCode (`ctrl+t` cycles variants, `opencode run --variant max` for one run); `high` reasoning effort or above on Codex (`/model`, or `-c model_reasoning_effort=high`).
 
-**Orchestration mode:** Fan out the three sub-agents described in Audit mode (unit quality and coverage gaps, database test isolation, goroutine/race issues) for auditing a large test suite, and merge their findings into one gap report. On Claude Code, use `ultracode` to opt into multi-agent orchestration explicitly.
+**Orchestration mode:** Fan out the three sub-agents described in Audit mode (unit quality and coverage gaps, database test isolation, goroutine/race issues) for auditing a large test suite, and merge their findings into one gap report. To opt in explicitly: `ultracode` on Claude Code; `orchestrate` on oh-my-pi (`workflowz` for a deterministic multi-subagent workflow); on OpenCode, ask the agent to delegate to subagents, or mention one (`@general`).
 
 **Modes:**
 
@@ -324,7 +326,7 @@ Write benchmarks as sub-benchmarks (`b.Run` per variant) so each variant gets it
 
 → See [Benchmarks in a Test Suite](./references/benchmarks.md) for the code shape and size-parameterized examples.
 
-→ See `golang-benchmark` skill for measurement methodology: `benchstat`, profiling from benchmarks, and CI regression detection.
+→ See `go-performance` references/benchmark.md for measurement methodology: `benchstat`, profiling from benchmarks, and CI regression detection.
 
 ### Go 1.26+: test artifacts
 
@@ -447,13 +449,13 @@ For mock patterns, test fixtures, and time mocking, see [Mocking](./references/m
 
 ### Enforce with Linters
 
-Many test best practices are enforced automatically by linters: `thelper`, `paralleltest`. See the `golang-lint` skill for configuration and usage (`testifylint` doesn't apply: the team doesn't use testify).
+Many test best practices are enforced automatically by linters: `thelper`, `paralleltest`. See the `go-code-style` references/lint.md for configuration and usage (`testifylint` doesn't apply: the team doesn't use testify).
 
 ### Cross-References
 
 - → See `go-database` skill (testing.md) for database test patterns
 - → See `go-concurrency` skill for proving goroutines exit (goleak only where the project already uses it)
-- → See `golang-lint` skill for paralleltest and thelper configuration
+- → See `go-code-style` references/lint.md for paralleltest and thelper configuration
 
 ### Quick Reference
 

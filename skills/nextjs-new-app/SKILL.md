@@ -3,13 +3,15 @@ name: nextjs-new-app
 description: "Use when creating a new Next.js App Router app for the team, in its own folder beside a backend, as apps/<app-name>/ in a monorepo, or as a whole repo: pinning Yarn 4 with a committed release before create-next-app, the create-next-app flags, the folder layout and aliases, Tailwind v4 and shadcn on Base UI in components/shadcn-ui, the TanStack Query provider and services transport with Result/runAction, next-intl, the pino logger and instrumentation.ts, Vitest (node/dom) and Playwright, the review lint config and rule tests, runtime config and probes for a next start image, the Dockerfile and CI, AGENTS.md, .gitattributes and the first commit. Each step points at the skill that owns it."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for Next.js apps.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Next.js apps.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # New Next.js app
+
+**Principle:** A new app follows every team skill from its first commit, set up in order: Yarn is pinned before anything installs, and each step names the skill that owns it.
 
 The steps below set up a new app that follows every team skill from its first commit. Each step names the skill that owns the detail, so read that skill when the step needs more than these commands. The order matters: Yarn is pinned before anything installs.
 

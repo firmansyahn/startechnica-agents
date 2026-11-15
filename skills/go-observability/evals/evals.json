@@ -44,28 +44,28 @@
   },
   {
     "id": 4,
-    "name": "production-json-logging",
-    "description": "Tests whether the model recommends JSON handler for production and explains why plain text is problematic",
-    "prompt": "I'm setting up slog for my Go production service. I like the TextHandler output because it's readable. Here's my setup:\n\nslog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, nil)))\n\nShould I use this in production?",
-    "trap": "Without the skill, the model may say TextHandler is fine since it produces structured key=value output",
+    "name": "production-ecs-json-logging",
+    "description": "Tests whether the model replaces a development or zap.NewProduction logger with an ECS json core on stdout built from the logging block",
+    "prompt": "I'm setting up zap for my Go production service. I like the development output because it's readable. Here's my setup:\n\nlogger, _ := zap.NewDevelopment()\nzap.ReplaceGlobals(logger)\n\nShould I use this in production?",
+    "trap": "Without the skill, the model may suggest zap.NewProduction() and keep the global, missing that it writes to stderr with zap keys rather than ECS json on stdout, and that the logger is injected",
     "assertions": [
-      {"id": "4.1", "text": "Recommends JSONHandler for production, not TextHandler"},
+      {"id": "4.1", "text": "Recommends json output in production, not the development console encoder"},
       {"id": "4.2", "text": "Explains that plain-text multiline logs (e.g., stack traces) get split into separate records by log collectors"},
-      {"id": "4.3", "text": "Suggests TextHandler is appropriate for development only"},
-      {"id": "4.4", "text": "Shows the correct JSONHandler setup with slog.LevelInfo for production"}
+      {"id": "4.3", "text": "Shows an ECS core (go.elastic.co/ecszap) writing to stdout, with the level and format taken from the settings file's logging block"},
+      {"id": "4.4", "text": "Says the logger is injected into constructors rather than set with zap.ReplaceGlobals, and that main defers logger.Sync()"}
     ]
   },
   {
     "id": 5,
-    "name": "slog-context-variant-trace-correlation",
-    "description": "Tests whether the model insists on *Context variants of slog for trace correlation",
-    "prompt": "I'm adding logging to my Go service that already has OpenTelemetry tracing configured with otelslog bridge. Here's my logging code:\n\nfunc (s *OrderService) Create(ctx context.Context, req CreateOrderRequest) error {\n    slog.Info(\"creating order\", \"order_id\", req.ID)\n    // ... business logic ...\n    slog.Error(\"order creation failed\", \"error\", err)\n    return err\n}\n\nAnything wrong with my logging?",
-    "trap": "Without the skill, the model may not flag the missing context parameter since the logging looks correct",
+    "name": "zap-trace-correlation-in-service",
+    "description": "Tests whether the model adds trace.id and span.id to zap log lines in traced code",
+    "prompt": "I'm adding logging to my Go service that already has OpenTelemetry tracing and uses zap. Here's my logging code:\n\nfunc (s *OrderService) Create(ctx context.Context, req CreateOrderRequest) error {\n    s.log.Info(\"creating order\", zap.String(\"order_id\", req.ID))\n    // ... business logic ...\n    s.log.Error(\"order creation failed\", zap.Error(err))\n    return err\n}\n\nAnything wrong with my logging?",
+    "trap": "Without the skill, the model may not flag that the log lines carry no trace ids, since zap has no context variants to forget",
     "assertions": [
-      {"id": "5.1", "text": "Identifies that slog.Info and slog.Error should use their *Context variants (slog.InfoContext, slog.ErrorContext)"},
-      {"id": "5.2", "text": "Explains that without ctx, trace_id and span_id won't be injected into log records"},
-      {"id": "5.3", "text": "Shows the corrected code using slog.InfoContext(ctx, ...) and slog.ErrorContext(ctx, ...)"},
-      {"id": "5.4", "text": "Mentions that the otelslog bridge automatically injects trace correlation when context is passed"}
+      {"id": "5.1", "text": "Identifies that the log lines carry no trace.id/span.id, so they cannot be correlated with the trace"},
+      {"id": "5.2", "text": "Explains that zap takes no ctx, so the ids must be added from the span context in ctx"},
+      {"id": "5.3", "text": "Shows a helper (e.g. WithTrace(ctx, log)) that adds trace.id and span.id from trace.SpanContextFromContext(ctx), and its use in Create"},
+      {"id": "5.4", "text": "Flags that the error is both logged and returned, and says to do only one"}
     ]
   },
   {
@@ -125,16 +125,16 @@
   },
   {
     "id": 10,
-    "name": "otelslog-bridge-setup",
-    "description": "Tests log-trace correlation setup using otelslog bridge",
-    "prompt": "I have a Go service with both slog logging and OpenTelemetry tracing. I want to correlate them so that when I see a log line in Grafana Loki, I can jump to the trace in Tempo. How do I connect them?",
-    "trap": "Without the skill, the model may suggest manually extracting trace_id from span context and adding it as a slog attribute, missing the otelslog bridge",
+    "name": "zap-log-trace-correlation-setup",
+    "description": "Tests log-trace correlation setup for zap with ECS fields",
+    "prompt": "I have a Go service with zap logging (ECS json to stdout, collected into Grafana Loki) and OpenTelemetry tracing. I want to jump from a log line in Loki to the trace in Tempo. How do I connect them?",
+    "trap": "Without the skill, the model may suggest an slog bridge or switching loggers, or invent field names that are not ECS",
     "assertions": [
-      {"id": "10.1", "text": "Recommends using the otelslog bridge from go.opentelemetry.io/contrib/bridges/otelslog"},
-      {"id": "10.2", "text": "Shows creating a handler with otelslog.NewHandler()"},
-      {"id": "10.3", "text": "Shows setting it as default with slog.SetDefault()"},
-      {"id": "10.4", "text": "Explains that trace_id and span_id are automatically injected into log records"},
-      {"id": "10.5", "text": "Emphasizes using slog.*Context(ctx, ...) variants to enable the automatic injection"}
+      {"id": "10.1", "text": "Adds trace.id and span.id fields taken from trace.SpanContextFromContext(ctx)"},
+      {"id": "10.2", "text": "Shows a helper that derives a child logger with log.With(...) and returns the logger unchanged when the span context is invalid"},
+      {"id": "10.3", "text": "Uses the helper in service code and in the access-log middleware"},
+      {"id": "10.4", "text": "Mentions configuring a derived field or data link in Grafana from trace.id to Tempo"},
+      {"id": "10.5", "text": "Keeps zap; mentions the otelzap bridge only for shipping logs over OTLP"}
     ]
   },
   {
@@ -288,50 +288,49 @@
   },
   {
     "id": 22,
-    "name": "slog-migration-from-zap",
-    "description": "Tests the incremental migration strategy from zap to slog using bridge handlers",
-    "prompt": "My Go codebase has 500+ files using zap for logging. We want to migrate to slog. How do we do this without a big-bang rewrite?",
-    "trap": "Without the skill, the model may suggest a gradual replacement without the bridge handler step, or suggest running both loggers in parallel",
+    "name": "zap-project-asked-to-move-to-slog",
+    "description": "Tests that the model keeps zap as the team logger and bridges slog-only dependencies instead of migrating",
+    "prompt": "Our Go service uses zap everywhere. A new dependency takes a *slog.Logger in its options, and someone suggested we migrate the whole codebase to slog. What should we do?",
+    "trap": "Without the skill, the model recommends migrating to slog as the standard library logger",
     "assertions": [
-      {"id": "22.1", "text": "Recommends a three-step migration: bridge, replace call sites, remove bridge"},
-      {"id": "22.2", "text": "Step 1: Use samber/slog-zap bridge handler to route slog output through zap"},
-      {"id": "22.3", "text": "Step 2: Gradually replace zap.L().Info(...) calls with slog.Info(...)"},
-      {"id": "22.4", "text": "Step 3: Once fully migrated, replace the bridge with native slog JSONHandler and remove zap dependency"},
-      {"id": "22.5", "text": "Mentions using parallel sub-agents for large codebase migration (assigning independent packages to each)"}
+      {"id": "22.1", "text": "Keeps zap as the logger and does not recommend migrating to slog"},
+      {"id": "22.2", "text": "Gives the dependency a *slog.Logger backed by the same zap core: slog.New(zapslog.NewHandler(log.Core())) from go.uber.org/zap/exp/zapslog"},
+      {"id": "22.3", "text": "Explains that the dependency's lines then share the format (ECS json) and level of the rest of the service"},
+      {"id": "22.4", "text": "Says project code keeps taking *zap.Logger in its constructors"}
     ]
   },
   {
     "id": 23,
-    "name": "slog-migration-from-logrus",
-    "description": "Tests the bridge handler approach for logrus migration",
-    "prompt": "We use logrus throughout our Go project and want to standardize on slog. Is there a way to migrate incrementally?",
-    "trap": "Without the skill, the model may not know about samber/slog-logrus bridge",
+    "name": "logrus-project-logger-choice",
+    "description": "Tests that a project on another logger follows its own AGENTS.md and that a move to zap is incremental",
+    "prompt": "We use logrus throughout our Go project and the team wants to standardize on zap. Is there a way to migrate incrementally?",
+    "trap": "Without the skill, the model may recommend slog as the target or a big-bang rewrite",
     "assertions": [
-      {"id": "23.1", "text": "Recommends using samber/slog-logrus bridge handler for incremental migration"},
-      {"id": "23.2", "text": "Explains that slog is the standard library logger since Go 1.21"},
-      {"id": "23.3", "text": "Shows the bridge step: route slog output through the existing logrus logger"},
-      {"id": "23.4", "text": "Shows the replacement: logrus.WithField(\"key\", val).Info(\"msg\") becomes slog.Info(\"msg\", \"key\", val)"}
+      {"id": "23.1", "text": "Targets zap, not slog"},
+      {"id": "23.2", "text": "Builds the *zap.Logger once at the root from the logging block and injects it"},
+      {"id": "23.3", "text": "Migrates one package at a time, each constructor taking *zap.Logger, and removes logrus once nothing imports it"},
+      {"id": "23.4", "text": "Shows the replacement: logrus.WithField(\"key\", val).Info(\"msg\") becomes log.Info(\"msg\", zap.String(\"key\", val))"}
     ]
   },
   {
     "id": 24,
     "name": "debug-level-production-cost",
     "description": "Tests awareness of log level cost implications in production",
-    "prompt": "I'm setting up slog for my Go production service. To maximize debugging ability, I'm considering setting the log level to Debug so we always have full visibility. What log level should I use?",
+    "prompt": "I'm setting up zap for my Go production service. To maximize debugging ability, I'm considering setting the log level to Debug so we always have full visibility. What log level should I use?",
     "trap": "Without the skill, the model may suggest Debug with a generic caveat about volume, missing the specific cost analysis",
     "assertions": [
-      {"id": "24.1", "text": "Recommends slog.LevelInfo for production, NOT Debug"},
+      {"id": "24.1", "text": "Recommends level: info for production, NOT debug"},
       {"id": "24.2", "text": "Explains that Debug level can generate millions of log lines per minute in busy services"},
       {"id": "24.3", "text": "Mentions cost: CPU for serialization, I/O for disk/network, money for log ingestion/storage"},
       {"id": "24.4", "text": "Mentions Debug can inflate costs by 10-100x"},
-      {"id": "24.5", "text": "Suggests samber/slog-sampling as an alternative to sample verbose logs rather than dropping entirely"}
+      {"id": "24.5", "text": "Suggests zap's sampler (zapcore.NewSamplerWithOptions) or an AtomicLevel raised briefly, rather than always-on Debug"}
     ]
   },
   {
     "id": 25,
     "name": "ip-address-pii-in-logs",
     "description": "Tests whether the model recognizes IP address as PII that requires care in logs",
-    "prompt": "I'm adding observability to my Go authentication service. Here's my access log:\n\nslog.Info(\"login attempt\",\n    \"user_id\", req.UserID,\n    \"ip\", r.RemoteAddr,\n    \"user_agent\", r.UserAgent(),\n    \"success\", success,\n)\n\nThis looks useful for detecting brute-force attacks. Is there a compliance concern?",
+    "prompt": "I'm adding observability to my Go authentication service. Here's my access log:\n\ns.log.Info(\"login attempt\",\n    zap.String(\"user_id\", req.UserID),\n    zap.String(\"ip\", r.RemoteAddr),\n    zap.String(\"user_agent\", r.UserAgent()),\n    zap.Bool(\"success\", success),\n)\n\nThis looks useful for detecting brute-force attacks. Is there a compliance concern?",
     "trap": "Without the skill, the model validates this as good observability practice since IP addresses are legitimately useful for security. The model knows email/SSN are PII but commonly misses that IP address is also regulated PII under GDPR.",
     "assertions": [
       {"id": "25.1", "text": "Identifies IP address (r.RemoteAddr) as PII under GDPR and CCPA"},
@@ -446,7 +445,7 @@
     "assertions": [
       {"id": "33.1", "text": "States that a feature is not production-ready until it is observable"},
       {"id": "33.2", "text": "Checks for metric declarations (counters, histograms, gauges) with PromQL comments"},
-      {"id": "33.3", "text": "Checks for proper structured logging with slog and context variants"},
+      {"id": "33.3", "text": "Checks for structured logging through the injected *zap.Logger with typed fields and trace.id/span.id"},
       {"id": "33.4", "text": "Checks for OpenTelemetry spans on service methods, DB queries, and external calls"},
       {"id": "33.5", "text": "Checks for dashboards and alerts being wired up"},
       {"id": "33.6", "text": "Checks that errors are either logged OR returned, never both"}
@@ -467,29 +466,28 @@
   },
   {
     "id": 35,
-    "name": "slog-error-as-attr-not-positional",
-    "description": "Tests whether the model uses slog.Any/slog.Attr correctly for error values vs positional args",
-    "prompt": "I'm logging errors in my Go service using slog. Review this code:\n\nif err != nil {\n    slog.ErrorContext(ctx, \"payment failed\", err, \"order_id\", orderID)\n    return err\n}\n\nDoes this look right?",
-    "trap": "Without the skill, the model may miss that passing err directly as a positional argument (not as a named key-value pair) is incorrect. slog expects alternating key-value pairs; err as a positional arg becomes the key with its string representation, losing structured error metadata.",
+    "name": "zap-sugared-error-without-key",
+    "description": "Tests whether the model catches an error passed without a key to a sugared zap logger and moves to typed fields",
+    "prompt": "I'm logging errors in my Go service using zap. Review this code:\n\nif err != nil {\n    s.log.Sugar().Errorw(\"payment failed\", err, \"order_id\", orderID)\n    return err\n}\n\nDoes this look right?",
+    "trap": "Without the skill, the model may miss that Errorw takes alternating key-value pairs, so err becomes a key and the pairs are off by one",
     "assertions": [
-      {"id": "35.1", "text": "Identifies that err is passed as a positional argument without a key name, which is incorrect for slog"},
-      {"id": "35.2", "text": "Explains that slog expects alternating key-value pairs — passing err without a key makes slog treat it as a mismatched argument or key"},
-      {"id": "35.3", "text": "Shows the corrected form using a named key: slog.ErrorContext(ctx, \"payment failed\", \"error\", err, \"order_id\", orderID)"},
-      {"id": "35.4", "text": "Notes that the correct form preserves the error's structured information (message, type) in the log record"}
+      {"id": "35.1", "text": "Identifies that err is passed without a key, so the key-value pairs are off by one"},
+      {"id": "35.2", "text": "Recommends the typed *zap.Logger over the SugaredLogger in library code"},
+      {"id": "35.3", "text": "Shows the corrected form: s.log.Error(\"payment failed\", zap.Error(err), zap.String(\"order_id\", orderID))"},
+      {"id": "35.4", "text": "Flags that the error is both logged and returned, and says to do only one"}
     ]
   },
   {
     "id": 36,
-    "name": "slog-ecosystem-handlers",
-    "description": "Tests awareness of the slog handler ecosystem beyond stdlib",
-    "prompt": "I need my Go service logs to go to multiple destinations: JSON to stdout, errors to Sentry, and all logs to Datadog. Can slog do this?",
-    "trap": "Without the skill, the model may suggest writing custom handlers from scratch",
+    "name": "zap-several-destinations",
+    "description": "Tests stdout-plus-collector as the default and zapcore.NewTee for in-process fan-out",
+    "prompt": "I need my Go service logs to go to multiple destinations: JSON to stdout, errors to Sentry, and all logs to Datadog. We use zap. How do I do this?",
+    "trap": "Without the skill, the model may ship every log from the process to each backend, or switch to slog for its handler ecosystem",
     "assertions": [
-      {"id": "36.1", "text": "Recommends stdlib slog.NewMultiHandler for simple fan-out on Go 1.26+, or samber/slog-multi when stdlib composition is insufficient"},
-      {"id": "36.2", "text": "Mentions samber/slog-sentry for sending errors to Sentry"},
-      {"id": "36.3", "text": "Mentions samber/slog-datadog for sending logs to Datadog"},
-      {"id": "36.4", "text": "Explains that slog supports pluggable handlers"},
-      {"id": "36.5", "text": "References the slog ecosystem (go.dev/wiki/Resources-for-slog or similar)"}
+      {"id": "36.1", "text": "Writes ECS json to stdout and lets the platform collector (e.g. the Datadog agent) ship it, rather than sending all logs from the process"},
+      {"id": "36.2", "text": "Uses zapcore.NewTee to add an in-process destination, each core with its own level"},
+      {"id": "36.3", "text": "Sends only Error and above to Sentry through a Sentry zap core"},
+      {"id": "36.4", "text": "Keeps zap; does not suggest switching to slog"}
     ]
   },
   {
@@ -542,7 +540,7 @@
       {"id": "40.1", "text": "Recommends samber/oops for structured errors with stack traces"},
       {"id": "40.2", "text": "Shows using oops to wrap errors with domain (.In()), error code (.Code()), and structured attributes (.With())"},
       {"id": "40.3", "text": "Explains that oops errors carry stack trace, structured context, and work with span.RecordError()"},
-      {"id": "40.4", "text": "Mentions compatibility with errors.Is/errors.As and slog"}
+      {"id": "40.4", "text": "Mentions compatibility with errors.Is/errors.As"}
     ]
   }
 ]

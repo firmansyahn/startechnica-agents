@@ -16,10 +16,12 @@
 // Checks:
 //   frontmatter   name equals the folder, lower-case-hyphen, at most 64 chars; description present, at
 //                 most 1024 chars; team skills also carry license, metadata.author and metadata.version
+//   principle     a team skill's first paragraph after the title is one line, "**Principle:** <one sentence>",
+//                 and its SKILL.md has no role line ("**Persona:**", "You are a ...") outside "## In depth"
 //   license       every skill has a LICENSE file
 //   upstream      every vendored skill's UPSTREAM.md names a source URL and a pinned commit
 //   links         relative links in a team skill's markdown point to files that exist, and #anchors to
-//                 headings that exist (code blocks are skipped)
+//                 headings that exist (code blocks and assets/ templates are skipped)
 //   rules         rule files (rules/<id>.md) have title, impact, tags and check; IDs are unique across
 //                 skills; each is linked from its skill's SKILL.md; its prefix is registered in
 //                 agent-skills-authoring references/rule-prefixes.md
@@ -92,6 +94,9 @@ function anchors(text) {
     let slug = h[1]
       .replace(/<[^>]+>/g, "")
       .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+      // emphasis markers aren't part of the rendered text: _(Go 1.27+)_ -> (Go 1.27+); snake_case stays
+      .replace(/\*+/g, "")
+      .replace(/(^|[^\p{L}\p{N}])_+|_+(?=[^\p{L}\p{N}]|$)/gu, "$1")
       .toLowerCase()
       .replace(/[^\p{L}\p{N}\s_-]/gu, "")
       .replace(/\s/g, "-");
@@ -155,6 +160,42 @@ for (const s of skills) {
   }
 }
 
+// --- principle and role lines in team skills
+for (const s of skills) {
+  if (kind[s] !== "team") continue;
+  const f = path.join(root, s, "SKILL.md");
+  if (!exists(f)) continue;
+  const lines = read(f).split("\n");
+  let start = 0;
+  if (lines[0] === "---") start = lines.indexOf("---", 1) + 1;
+  let fence = false;
+  let h1 = -1;
+  let inDepth = false;
+  for (let i = start; i < lines.length; i++) {
+    const l = lines[i];
+    if (/^\s*```/.test(l)) { fence = !fence; continue; }
+    if (fence) continue;
+    if (h1 < 0 && /^# /.test(l)) { h1 = i; continue; }
+    if (/^## In depth\b/.test(l)) inDepth = true; // "In depth" is the last section and runs to the end
+    const prose = l.replace(/`[^`]*`/g, ""); // quoting the convention in code is fine
+    if (!inDepth && (/\*\*Persona:\*\*/.test(prose) || /^\s*(\*\*)?You are an? /.test(prose))) {
+      err(f, i + 1, "principle", "role line in team text: state the skill's principle instead (upstream personas stay under '## In depth')");
+    }
+  }
+  if (h1 < 0) { err(f, 0, "principle", "no '# ' title"); continue; }
+  let j = h1 + 1;
+  while (j < lines.length && lines[j].trim() === "") j++;
+  const p = lines[j] || "";
+  if (!/^\*\*Principle:\*\* \S/.test(p)) {
+    err(f, j + 1, "principle", "the first paragraph after the title must be '**Principle:** <one sentence>'");
+    continue;
+  }
+  if ((lines[j + 1] || "").trim() !== "") err(f, j + 2, "principle", "the principle is one line, followed by a blank line");
+  const sentence = p.replace(/^\*\*Principle:\*\* /, "").replace(/`[^`]*`/g, "x");
+  const ends = (sentence.match(/[.!?](?=\s|$)/g) || []).length;
+  if (!/[.!?]$/.test(sentence) || ends > 1) err(f, j + 1, "principle", "the principle is one sentence");
+}
+
 // --- links in team skills
 const anchorCache = new Map();
 const anchorsOf = (p) => {
@@ -162,7 +203,9 @@ const anchorsOf = (p) => {
   return anchorCache.get(p);
 };
 for (const s of skills.filter((s) => kind[s] === "team")) {
-  for (const f of walk(path.join(root, s)).filter((f) => f.endsWith(".md"))) {
+  // assets/ are templates copied into a project, where their links resolve: they aren't checked here
+  const assets = path.join(root, s, "assets") + path.sep;
+  for (const f of walk(path.join(root, s)).filter((f) => f.endsWith(".md") && !f.startsWith(assets))) {
     const lines = read(f).split(/\r?\n/);
     let fence = false;
     lines.forEach((line, i) => {

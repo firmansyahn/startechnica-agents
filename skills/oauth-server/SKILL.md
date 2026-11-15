@@ -3,13 +3,15 @@ name: oauth-server
 description: "Use when designing, implementing, reviewing or testing an OAuth 2.x / OpenID Connect authorization server inside a product (any language): choosing a library, client kinds and registration, the authorization code + PKCE flow, sign-in and consent pages, scopes, access/refresh/ID tokens and their lifetimes, refresh rotation and reuse detection, revocation, introspection, JWKS and key rotation, discovery and protected-resource metadata, native-app redirects, protecting resource servers with the tokens, or an MCP server's authorization."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for OAuth 2.1 authorization servers and clients.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for OAuth 2.1 authorization servers and clients.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # OAuth / OIDC authorization server
+
+**Principle:** A certified library does the protocol and the product's code decides policy; every token, code and secret is short-lived, scoped to one resource and stored only as a hash.
 
 Build on the current best practice (OAuth 2.1 draft, RFC 9700 Security BCP, OpenID Connect Core), with a **certified library doing the protocol** and the product's own code deciding policy: who may sign in, which clients exist, what each may get, how long tokens live.
 

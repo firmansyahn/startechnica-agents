@@ -3,13 +3,15 @@ name: gitlab-mr
 description: "Team overlay on GitLab's agent skills: read it with gitlab-glab (the glab CLI: MRs, notes, pipelines, API), gitlab-mr-description (the description), git-mr-adversarial-review (a review posted to the MR), gitlab-pipeline-watch (waiting for a pipeline), gitlab-babysit-mr (nursing a failed pipeline to green) and gitlab-stacked-mrs (stacks) whenever you open, describe, review, check or merge a merge request, or are asked to ship, land or merge a branch; and for when to use ce-code-review (the deep review) instead. It sets what those skills leave to the project: MRs target the branch the work was cut from (passed explicitly) with Conventional Commits titles, visibility is checked before anything is posted, an MR merges only when its own head pipeline passed for its current sha (never glab's --auto-merge, which merges at once when GitLab sees no running pipeline), MRs without a pipeline, stacked MRs after the base merges, and cleanup via git-worktree. Includes a hook that refuses an unsafe glab mr merge."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for git repositories hosted on GitLab.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for git repositories hosted on GitLab.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Merge requests: the team's overlay
+
+**Principle:** A merge request merges only on its own green pipeline, reaches GitLab only through glab, and carries nothing internal into a public project.
 
 The how-to comes from GitLab's own agent skills, vendored unchanged beside this one (updated as `agent-skills-authoring` describes). Follow them; this file only sets what they leave to the project, and wins where it says something different.
 

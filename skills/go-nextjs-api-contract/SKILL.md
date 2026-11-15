@@ -3,15 +3,15 @@ name: go-nextjs-api-contract
 description: "Use when designing, changing, reviewing or testing the HTTP API between a Go backend and a Next.js (or other TypeScript) frontend: the OpenAPI 3.1 document as the source of truth (where it lives, who owns it, generating it from the Go route table or writing it first, keeping it current in CI), the reply envelope and its mapping to Result/ApiError, status codes, 422 field errors whose paths match form field names, WWW-Authenticate on guard 401s, list endpoints (pagination, sorting, filtering, search, total), PATCH with absent vs null, ids in paths, dates, money and enums on both sides, the scope/tenant header, request ids, versioning and deprecation, generated TypeScript types (openapi-typescript), reply validation, and contract tests on both sides."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for HTTP APIs between a Go backend and a TypeScript frontend.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for HTTP APIs between a Go backend and a TypeScript frontend.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # API contract: Go backend ↔ TypeScript frontend
 
-One document describes every endpoint; both sides are generated from it or tested against it, so a change on one side that the other doesn't know about fails a build, not a page.
+**Principle:** One document describes every endpoint; both sides are generated from it or tested against it, so a change on one side that the other doesn't know about fails a build, not a page.
 
 ```
 Go route table (method, path, request type, reply type, permission)

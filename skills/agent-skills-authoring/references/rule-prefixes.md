@@ -16,6 +16,7 @@ Every rule lives in the skill that teaches it, as `<skill>/rules/<id>.md`; the f
 | `sec-oauth-*`, `sec-safe-redirect-next` | oauth-client | OAuth state and PKCE, return-to URLs |
 | `oauth-` | oauth-server | The authorization server: flow, tokens, access (resource, scopes, consent), sign-in pages and endpoints |
 | `tool-yarn-only` | nextjs-package-manager | Yarn only, one lockfile |
+| `upgrade-`, `router-`, `migrate-` | nextjs-upgrade | Crossing Next.js majors (checkpoints, breaking changes, verifying against a baseline); Pages Router to App Router; migrating onto the team's stack in phases |
 | `ci-` | gitlab-ci | Workflow rules, per-app rules and variables, org template overrides, manual jobs, triggers, images |
 | `mr-` | gitlab-mr | Merging on a green pipeline, stacked MRs, public MRs, reaching GitLab through glab |
 | `wt-` | git-worktree | When to make a worktree, its base, its dependencies, removing it safely |

@@ -3,13 +3,15 @@ name: nextjs-bff
 description: "Use when building, reviewing or debugging a Backend-for-Frontend in a Next.js app: the browser holds only an opaque session cookie while the Next server keeps the OAuth tokens, proxies reads to a backend API through a route handler, and sends writes through server actions; covers the session store (Redis), token refresh with a lock, the proxy route's hardening, proxy.ts rewrites and page gating, reply validation against OpenAPI, the Result envelope, request ids, and runtime config for one image in every environment."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for Next.js apps.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Next.js apps.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Next.js as a Backend-for-Frontend
+
+**Principle:** The browser holds only an opaque session cookie; tokens, backend URLs and backend errors stay on the Next server, and the backend stays the authority on access.
 
 The browser never sees an access or refresh token. It holds one opaque, `HttpOnly` session cookie; the Next server maps that cookie to the user's tokens in a server-side store and calls the backend API with them. Reads go through one proxy route handler, writes through server actions, and both share one forwarding path.
 

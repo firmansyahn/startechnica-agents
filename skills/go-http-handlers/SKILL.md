@@ -3,15 +3,17 @@ name: go-http-handlers
 description: "Use when writing, changing, testing or reviewing HTTP handlers and outbound HTTP calls in a Go server: limiting request bodies, decoding into a typed struct and validating it, mapping errors to statuses in one place, returning right after writing an error, never sending internal errors to the client, closing outbound response bodies, testing handlers with httptest. The reply's shape (envelope, status codes, field errors, OpenAPI) is go-nextjs-api-contract's. No samber skill covers handlers; this is the team's own. Holds the api-* rules."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for Go server projects.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Go HTTP handlers (team)
 
-The team's own skill: no vendored `golang-*` skill covers HTTP handlers (upstream's `golang-grpc`, `golang-swagger` and the web-framework skills aren't vendored). What a reply looks like on the wire (envelope, status codes, field errors, pagination, the OpenAPI document) is [go-nextjs-api-contract](../go-nextjs-api-contract/SKILL.md); this skill is the Go code behind it. The project's own `AGENTS.md`, `CLAUDE.md` and project skills win.
+**Principle:** A handler limits, decodes and validates its input before using it, maps errors to statuses in one place, and never sends an internal error to the client.
+
+The team's own skill: no upstream `golang-*` skill covers HTTP handlers (upstream's `golang-grpc`, `golang-swagger` and the web-framework skills aren't adopted). What a reply looks like on the wire (envelope, status codes, field errors, pagination, the OpenAPI document) is [go-nextjs-api-contract](../go-nextjs-api-contract/SKILL.md); this skill is the Go code behind it. The project's own `AGENTS.md`, `CLAUDE.md` and project skills win.
 
 Related: [go-error-handling](../go-error-handling/SKILL.md) (the handler is where an error becomes a status and a log line), [go-security](../go-security/SKILL.md) (authorization, server timeouts, SSRF), [go-project-layout](../go-project-layout/SKILL.md) (handlers are the Surface layer), [go-testing](../go-testing/SKILL.md), [go-how-to](../go-how-to/SKILL.md) (the Go skills and the rules they all assume).
 

@@ -3,15 +3,17 @@ name: nextjs-logging
 description: "Use when adding, reviewing or debugging logging and error reporting in a Next.js App Router app: a structured server logger (pino, JSON to stdout), log levels and field names, request ids across proxy.ts, route handlers, server actions and backend calls, redacting secrets and personal data, instrumentation.ts (register, onRequestError), error.tsx/global-error.tsx and error digests, reporting browser errors, OpenTelemetry trace ids in logs, ESLint no-console, and testing what gets logged."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for Next.js apps.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Next.js apps.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Logging in Next.js
 
-Logs are **structured JSON on stdout**, one event per line, from **one server-side logger**, with a **request id on every line** and **no secrets ever**. The platform (Kubernetes, a log shipper) collects stdout; the app never writes log files.
+**Principle:** Logs are structured JSON on stdout from one server-side logger, with a request id on every line and no secrets ever.
+
+One event per line. The platform (Kubernetes, a log shipper) collects stdout, and the app never writes log files.
 
 Related: `nextjs-bff` (request ids on backend calls), `nextjs-data` (logging in the action helper), `go-code-style` (the backend's logging rules, which these mirror). Details:
 - [references/server-logger.md](references/server-logger.md): the logger module, field names, redaction, request context, OpenTelemetry, tests

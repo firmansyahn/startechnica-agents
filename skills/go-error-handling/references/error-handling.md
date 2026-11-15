@@ -6,7 +6,7 @@
 - [Panic and Recover](#panic-and-recover)
   - [When to panic](#when-to-panic)
   - [Recovering from panics](#recovering-from-panics)
-- [Logging Errors with `slog`](#logging-errors-with-slog)
+- [Logging Errors with zap](#logging-errors-with-zap)
 
 ## The Single Handling Rule
 
@@ -33,10 +33,10 @@ func processOrder(id string) error {
 }
 
 // ✓ Good — handle at the top level (HTTP handler, main, etc.)
-func handleOrder(w http.ResponseWriter, r *http.Request) {
+func (h *OrderHandler) handleOrder(w http.ResponseWriter, r *http.Request) {
     err := processOrder(r.FormValue("id"))
     if err != nil {
-        slog.Error("order failed", "error", err)
+        h.log.Error("order failed", zap.Error(err))
         http.Error(w, "internal error", http.StatusInternalServerError)
         return
     }
@@ -75,13 +75,13 @@ func GetUser(id string) *User {
 Use `recover` in deferred functions at goroutine boundaries (HTTP handlers, worker goroutines) to prevent one panic from crashing the entire process.
 
 ```go
-func safeHandler(next http.Handler) http.Handler {
+func safeHandler(log *zap.Logger, next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         defer func() {
-            if r := recover(); r != nil {
-                slog.Error("panic recovered",
-                    "panic", r,
-                    "stack", string(debug.Stack()),
+            if rec := recover(); rec != nil {
+                log.Error("panic recovered",
+                    zap.Any("panic", rec),
+                    zap.Stack("stack"),
                 )
                 http.Error(w, "internal error", http.StatusInternalServerError)
             }
@@ -91,6 +91,6 @@ func safeHandler(next http.Handler) http.Handler {
 }
 ```
 
-## Logging Errors with `slog`
+## Logging Errors with zap
 
-→ See [go-observability](../../go-observability/SKILL.md) for comprehensive structured logging guidance (the team's logging rules: [go-code-style](../../go-code-style/SKILL.md)), including `slog` setup, log levels, log handlers, HTTP middleware, and cost considerations.
+→ See [go-observability](../../go-observability/SKILL.md) for comprehensive structured logging guidance (the team's logging rules: [go-code-style](../../go-code-style/SKILL.md)), including building the zap logger, log levels, several destinations, HTTP middleware, and cost considerations.

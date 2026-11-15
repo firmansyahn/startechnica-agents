@@ -23,14 +23,14 @@ if err != nil {
 **Correct:**
 
 ```go
-func writeErr(w http.ResponseWriter, r *http.Request, log *slog.Logger, err error) {
+func writeErr(w http.ResponseWriter, r *http.Request, log *zap.Logger, err error) {
 	switch {
 	case errors.Is(err, domain.ErrNotFound):
 		writeError(w, http.StatusNotFound, "not found")
 	case errors.Is(err, domain.ErrConflict):
 		writeError(w, http.StatusConflict, "already exists")
 	default:
-		log.ErrorContext(r.Context(), "request failed", "err", err)
+		logging.WithTrace(r.Context(), log).Error("request failed", zap.Error(err)) // adds trace.id, span.id (go-observability)
 		writeError(w, http.StatusInternalServerError, "internal error")
 	}
 }

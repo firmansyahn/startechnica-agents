@@ -1,17 +1,19 @@
 ---
 name: go-code-style
-description: "Use when writing or reviewing everyday Go code style in a server: the Uber Go Style Guide as the team applies it (formatting, import groups, naming, early returns, struct literals by field name, nil slices, enums from iota+1), time.Time and time.Duration or the unit in the name, JSON tags on every marshaled field, logging through the injected structured logger, structs and interfaces, doc comments, golangci-lint and nolint, moving to newer Go features. Absorbs samber/cc-skills-golang@golang-code-style, adapted to the team (no samber/lo or mo, no new linter config as a side effect); the absorbed go-observability and the vendored golang-naming, golang-structs-interfaces, golang-documentation, golang-lint and golang-modernize stay the depth for their topics, and this skill wins where they differ. Holds the style-* rules."
+description: "Use when writing or reviewing everyday Go code style in a server: the Uber Go Style Guide as the team applies it (formatting, import groups, naming, early returns, struct literals by field name, nil slices, enums from iota+1), time.Time and time.Duration or the unit in the name, JSON tags on every marshaled field, logging through the injected structured logger, structs and interfaces, doc comments, golangci-lint and nolint, moving to newer Go features. Absorbs samber/cc-skills-golang@golang-code-style, adapted to the team (no samber/lo or mo, no new linter config as a side effect), and golang-naming, golang-structs-interfaces, golang-documentation, golang-lint and golang-modernize as its references; go-observability holds logging in depth. Holds the style-* rules."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for Go server projects.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Go code style (team)
 
-> **Absorbed.** This skill includes `samber/cc-skills-golang@golang-code-style` (MIT, Samuel Berthe; source and pinned commit in [UPSTREAM.md](UPSTREAM.md)), adapted to the team: the team's rules and decisions come first and win, and "In depth" holds the upstream material, edited where the team decided otherwise. For depth on the neighbouring topics read the absorbed [go-observability](../go-observability/SKILL.md) and the vendored [golang-naming](../golang-naming/SKILL.md), [golang-structs-interfaces](../golang-structs-interfaces/SKILL.md), [golang-documentation](../golang-documentation/SKILL.md), [golang-lint](../golang-lint/SKILL.md) and [golang-modernize](../golang-modernize/SKILL.md); this skill wins where they differ. The project's own `AGENTS.md`, `CLAUDE.md` and project skills win over this skill.
+**Principle:** Code reads the same everywhere: the Uber style as the team applies it, explicit types for time and units, a tag on every marshaled field, and logs through the injected logger.
+
+> **Absorbed.** This skill includes `samber/cc-skills-golang@golang-code-style` (MIT, Samuel Berthe; source and pinned commit in [UPSTREAM.md](UPSTREAM.md)), adapted to the team: the team's rules and decisions come first and win, and "In depth" holds the upstream material, edited where the team decided otherwise. It also absorbs `samber/cc-skills-golang@golang-naming`, `samber/cc-skills-golang@golang-structs-interfaces`, `samber/cc-skills-golang@golang-documentation`, `samber/cc-skills-golang@golang-lint`, `samber/cc-skills-golang@golang-modernize`: each is a reference of this skill, listed at the start of "In depth", and this skill wins where they differ. The project's own `AGENTS.md`, `CLAUDE.md` and project skills win over this skill.
 
 The style source is the **Uber Go Style Guide** (`github.com/uber-go/guide/blob/master/style.md`), binding unless the project says otherwise; [references/uber-style.md](references/uber-style.md) marks each of its rules must, should or skip for a server. The project's own `AGENTS.md`, `CLAUDE.md` and project skills win over all of it.
 
@@ -40,16 +42,18 @@ Related: [go-error-handling](../go-error-handling/SKILL.md) (error style), [go-c
 - Don't embed types in exported structs; copy slices and maps received or returned across a boundary when the callee keeps them.
 
 **Logging**
-- Log through an injected structured logger (`*slog.Logger`, or the project's choice such as `*zap.Logger`) with typed fields, using the project's field naming scheme if it ships logs in one (ECS, OpenTelemetry).
+- Log through the injected `*zap.Logger` (the team logs with zap, not slog) with typed fields (`zap.String`, `zap.Error`) and a constant message, using the project's field naming scheme if it ships logs in one (ECS, OpenTelemetry). No `zap.L()`, `zap.S()` or `SugaredLogger` in library code. A project whose `AGENTS.md` settles on another logger keeps it.
 - No new `log.Printf` in a project that has moved to a structured logger. Never log secrets (`sec-no-secrets-in-logs`).
 
 ## Team decisions
 
 1. **No `samber/lo`, `samber/mo` or other `samber/*` helper libraries**, whatever upstream recommends: standard library `slices`, `maps` and plain loops.
-2. **Linter config:** golang-lint's `assets/.golangci.yml` is a starting point to propose, not to add to a project as a side effect. The linters worth enabling, when a project has none: `errcheck`, `govet`, `staticcheck`, `errorlint`, `gosec`, `bodyclose`, `noctx`, `sqlclosecheck`, `rowserrcheck`, `contextcheck`, `gochecknoinits`, `musttag`; they turn most `scan (candidates)` checks in the go-<topic> skills into exact lint findings.
+2. **Linter config:** [references/lint.md](references/lint.md)'s `assets/lint/.golangci.yml` is a starting point to propose, not to add to a project as a side effect. The linters worth enabling, when a project has none: `errcheck`, `govet`, `staticcheck`, `errorlint`, `gosec`, `bodyclose`, `noctx`, `sqlclosecheck`, `rowserrcheck`, `contextcheck`, `gochecknoinits`, `musttag`; they turn most `scan (candidates)` checks in the go-<topic> skills into exact lint findings. Upstream's config in `assets/lint/.golangci.yml` lacks `contextcheck` and `musttag` and disables `gochecknoinits`: add them when proposing it.
 3. **Modernizing:** `go.mod` (`go` and `toolchain` lines) decides which features are available; modernize in its own change, not inside an unrelated one.
-4. **Metrics, tracing and profiling** (Prometheus, OpenTelemetry, Pyroscope) only where the project already has them; otherwise suggest, don't add.
-5. Links to skills that aren't vendored (`golang-samber-*`, `golang-uber-*`, `golang-popular-libraries`, `golang-gopls`) are skipped.
+4. **zap, not slog:** upstream's `log/slog` examples are written with zap; building the logger (ECS json, the `logging` block) is in [go-observability](../go-observability/SKILL.md).
+5. **Metrics, tracing and profiling** (Prometheus, OpenTelemetry, Pyroscope) only where the project already has them; otherwise suggest, don't add.
+6. **CI is GitLab CI** (`gitlab-ci`) and **tests use the standard `testing` package**: the lint and modernize references assume both, and `sloglint`/`testifylint` only flag leftovers of slog and testify.
+7. Links to upstream skills that aren't absorbed (`golang-samber-*`, `golang-uber-*`, `golang-popular-libraries`, `golang-gopls`, `golang-continuous-integration`, `golang-cli`, `golang-pkg-go-dev`) are skipped.
 
 ## Rules
 
@@ -79,11 +83,19 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 
 ## In depth
 
-The material below is `samber/cc-skills-golang@golang-code-style`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: the ones absorbed are now team skills (`go-how-to` maps the names), the rest are vendored as `golang-*` or not adopted.
+The material below is `samber/cc-skills-golang@golang-code-style`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: each one the team uses is absorbed into a team skill (`go-how-to`, rule 1, maps the names), and the rest are not adopted.
 
-**Orchestration mode:** Fan out the sub-agents described in the "Parallelizing Code Style Reviews" section, each covering an independent style concern, when reviewing code style across a large codebase, and merge their findings. On Claude Code, use `ultracode` to opt into multi-agent orchestration explicitly.
+Also absorbed, one reference each (their own references, assets and evals sit in a folder of the same name):
 
-Style rules that require human judgment — linters handle formatting, this skill handles clarity. For naming see `golang-naming` skill; for design patterns see `golang-design-patterns` skill; for struct/interface design see `golang-structs-interfaces` skill.
+- [references/naming.md](references/naming.md) (`golang-naming`): names of packages, types, functions, constants, errors, receivers, tests
+- [references/structs-interfaces.md](references/structs-interfaces.md) (`golang-structs-interfaces`): composition, embedding, interfaces, type assertions, field tags, receivers
+- [references/documentation.md](references/documentation.md) (`golang-documentation`): doc comments, README, CHANGELOG, examples, API docs
+- [references/lint.md](references/lint.md) (`golang-lint`): golangci-lint, its configuration and nolint directives
+- [references/modernize.md](references/modernize.md) (`golang-modernize`): newer language features and standard library replacements
+
+**Orchestration mode:** Fan out the sub-agents described in the "Parallelizing Code Style Reviews" section, each covering an independent style concern, when reviewing code style across a large codebase, and merge their findings. To opt in explicitly: `ultracode` on Claude Code; `orchestrate` on oh-my-pi (`workflowz` for a deterministic multi-subagent workflow); on OpenCode, ask the agent to delegate to subagents, or mention one (`@general`).
+
+Style rules that require human judgment — linters handle formatting, this skill handles clarity. For naming see [references/naming.md](references/naming.md); for design patterns see `go-project-layout` references/design-patterns.md; for struct/interface design see [references/structs-interfaces.md](references/structs-interfaces.md).
 
 > "Clear is better than clever." — Go Proverbs
 
@@ -173,21 +185,21 @@ When the `if` body ends with `return`/`break`/`continue`, the `else` MUST be dro
 
 ```go
 // Good — default-then-override with switch (cleanest for mutually exclusive overrides)
-level := slog.LevelInfo
+level := zapcore.InfoLevel
 switch {
 case debug:
-    level = slog.LevelDebug
+    level = zapcore.DebugLevel
 case verbose:
-    level = slog.LevelWarn
+    level = zapcore.WarnLevel
 }
 
 // Bad — else-if chain hides that there's a default
 if debug {
-    level = slog.LevelDebug
+    level = zapcore.DebugLevel
 } else if verbose {
-    level = slog.LevelWarn
+    level = zapcore.WarnLevel
 } else {
-    level = slog.LevelInfo
+    level = zapcore.InfoLevel
 }
 ```
 
@@ -231,7 +243,7 @@ default:
 ### Function Design
 
 - Functions SHOULD be **short and focused** — one function, one job.
-- Functions SHOULD have **≤4 parameters**. Beyond that, use an options struct (see `golang-design-patterns` skill).
+- Functions SHOULD have **≤4 parameters**. Beyond that, use an options struct (see `go-project-layout` references/design-patterns.md).
 - **Parameter order**: `context.Context` first, then inputs, then output destinations.
 - Naked returns help in very short functions (1-3 lines) where return values are obvious, but become confusing when readers must scroll to find what's returned — name returns explicitly in longer functions.
 
@@ -289,12 +301,12 @@ When reviewing code style across a large codebase, use up to 5 parallel sub-agen
 
 ### Enforce with Linters
 
-Many rules are enforced automatically where the project's linter config enables them: `gofmt`, `gofumpt`, `goimports`, `gocritic`, `revive`, `wsl_v5`. Don't add or change a `.golangci.yml` as a side effect; propose it. → See the `golang-lint` skill.
+Many rules are enforced automatically where the project's linter config enables them: `gofmt`, `gofumpt`, `goimports`, `gocritic`, `revive`, `wsl_v5`. Don't add or change a `.golangci.yml` as a side effect; propose it. → See the [references/lint.md](references/lint.md).
 
 ### Cross-References
 
-- → See the `golang-naming` skill for identifier naming conventions
-- → See the `golang-structs-interfaces` skill for pointer vs value receivers, interface design
-- → See the `golang-design-patterns` skill for functional options, builders, constructors
-- → See the `golang-lint` skill for automated formatting enforcement
-- → See `golang-refactoring` skill for mechanically applying guard-clause conversion, function extraction, and options-struct migration safely across many call sites once a review surfaces violations at scale
+- → See the [references/naming.md](references/naming.md) for identifier naming conventions
+- → See the [references/structs-interfaces.md](references/structs-interfaces.md) for pointer vs value receivers, interface design
+- → See the `go-project-layout` references/design-patterns.md for functional options, builders, constructors
+- → See the [references/lint.md](references/lint.md) for automated formatting enforcement
+- → See `go-refactoring` skill for mechanically applying guard-clause conversion, function extraction, and options-struct migration safely across many call sites once a review surfaces violations at scale

@@ -3,13 +3,15 @@ name: nextjs-data
 description: "Use when reading or writing server data in a Next.js App Router app: TanStack Query v5 for reads (provider, query options and key factories in a services registry, useQuery/useSuspenseQuery, pagination, polling, dependent queries, prefetching from a Server Component) and Server Actions for writes (the action file's shape, zod validation, identity and authorization inside the action, the Result it returns, useMutation with runAction, invalidation or setQueryData, optimistic updates, updateTag/revalidatePath/refresh, redirect, uploads, deployment skew, allowedOrigins, bodySizeLimit, the encryption key); edit forms that refetches must not overwrite, clearing the cache on a tenant switch, testing queries and actions; and client-only shared state with Zustand v5 (store vs query cache, URL or form, per-request stores in the App Router, selectors and useShallow, persist with skipHydration, resetting on scope switch, tests). Replaces useEffect fetches and SWR."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for Next.js apps.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Next.js apps.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Next.js data: TanStack Query reads, Server Action writes, Zustand client state
+
+**Principle:** Server data has one path: reads through TanStack Query, writes through Server Actions that return a Result, and authorization on the server, never only in the UI.
 
 One path for server data in a client-rendered page:
 

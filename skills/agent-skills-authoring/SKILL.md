@@ -3,13 +3,15 @@ name: agent-skills-authoring
 description: "Use when writing, changing, renaming, vendoring or checking the team's agent skills: a new team skill or rule, a rule ID and its prefix, the rule file format and impact levels, the finding format reviews use, adopting an established upstream skill (vendored unchanged, or absorbed into a team skill), updating one to a newer commit, keeping examples neutral and paths portable, and running the skills lint (frontmatter, licences, links, rules, orphans, line endings, install paths, the organisation's private names) before committing or publishing the skills."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for any folder of Agent Skills.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for any folder of Agent Skills.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Writing and checking the team's skills
+
+**Principle:** One focused skill per topic, each rule in its own file with how it is caught, and nothing in a skill that ties it to one project or one install location.
 
 The skills are installed together, each in its own folder, wherever a project or user keeps skills. They follow the [Agent Skills](https://agentskills.io) format and the samber/cc-skills-golang shape: **one focused skill per topic**, each owning its rules, its references and its own scan; a small `<area>-how-to` skill per area (`git-how-to`, `gitlab-how-to`, `go-how-to`, `nextjs-how-to`) only routes to them.
 
@@ -30,6 +32,8 @@ Details: [references/rule-prefixes.md](references/rule-prefixes.md) (every rule 
 
 - **Frontmatter:** `name` equals the folder (lower case, hyphens, at most 64 characters); `description` says when to use it, in at most 1024 characters, naming the tasks and words that should trigger it; `user-invocable: true`, `license: MIT`, `compatibility`, `metadata.author`, `metadata.version` (bump the minor on a new rule or section).
 - **Name by area:** `git-`, `gitlab-`, `go-`, `nextjs-`, `oauth-`, and `<area>-<library>` for a library skill (`go-knadh-koanf`).
+- **Principle first:** the first paragraph after the title is one line, `**Principle:** <one sentence>`: the stance that decides what the rules don't cover. Example: "Reproduce today's behaviour on the new version first; every improvement comes after, in its own change." A router's principle is that it only routes.
+- **No role lines:** team text has no `**Persona:**` and no "You are a …" line. A persona sets priorities without saying them, several loaded skills give the model several identities, and the principle and the rules say the same thing in a form a review can check. In an absorbed skill, upstream's persona stays under "## In depth" as upstream text.
 - **Every skill is reachable:** its area's `<area>-how-to` routes to it, and a related skill names it.
 - **Portable:** files are linked relative to the skill (`references/x.md`, `bash <this skill>/scripts/scan.sh`, `$(dirname "$0")` in scripts), and other skills are named in backticks (`git-commit`) or linked as a sibling (`../git-commit/SKILL.md`). Never a path into an install location (a dot-folder's `skills/<name>`).
 - **Neutral examples:** a generic domain (customers, orders, users, items), `example.com` hosts, documentation IP ranges (192.0.2.0/24, 198.51.100.0/24, 203.0.113.0/24), and placeholders for whatever a project names (`<app>`, `<app-root>`, `<module-root>`, `<topic>`). Never names, paths, packages, variables or numbers from the project a rule was learnt in: the skills are published beyond it.
@@ -73,6 +77,9 @@ Look for an established skill (Anthropic's `anthropics/skills`, GitLab's `gitlab
 
 - **Vendor** a skill on a topic the team has no skill for: the upstream folder unchanged, plus `LICENSE` (upstream's) and `UPSTREAM.md` (source URL, pinned commit and date, licence, and any local change such as a rename). The team skill closest to its topic names it and says where the team differs; the team wins.
 - **Absorb** a skill on a topic the team has a skill for: its body goes under "## In depth" in the team skill (headings one level down), its `references/` and `evals/` move in, passages that contradict the team are edited, upstream's copyright is added to `LICENSE`, and `UPSTREAM.md` takes the absorbed form ("Part of this skill is absorbed from ...", what came in, local changes, how to update). Delete the vendored folder.
+  - **A second upstream skill into the same team skill** doesn't go under "In depth" (one `SKILL.md` would grow too large to load): its body becomes `references/<topic>.md`, with a one-line note at the top that the team skill wins; its `references/`, `assets/` and `evals/evals.json` go to `references/<topic>/`, `assets/<topic>/` and `evals/<topic>.json`; "In depth" lists it; `UPSTREAM.md` gets a line for it.
+  - **A topic the team has no skill for** becomes a new team skill under the area's name (`golang-safety` → `go-safety`) with the principle, the team's decisions and the upstream body under "In depth".
+  - **Rename references** the area's router maps (`go-how-to` rule 1), and every link is resolved from the file's old location to its new one, not rewritten by search and replace.
 - **Update** a vendored skill: replace the folder with upstream's at a newer commit, redo the local changes `UPSTREAM.md` lists, update the commit, and re-read the team skill that names it. An absorbed skill: diff upstream between the two commits and port each change by hand.
 - Never edit a vendored skill's content; put the difference in the team skill.
 
@@ -84,7 +91,7 @@ Before committing a change to the skills, run [scripts/lint-skills.mjs](scripts/
 node <this skill>/scripts/lint-skills.mjs [skills-dir]   # default: the folder that holds this skill
 ```
 
-It checks every skill's frontmatter (name equals the folder, description within 1024 characters, licence and version on team skills), `LICENSE` and `UPSTREAM.md`, relative links and their anchors, rule files (frontmatter, unique IDs, indexed, prefix registered), that every skill is named by another team skill, that no team skill hard-codes where skills are installed, and LF line endings. It exits 1 on an error.
+It checks every skill's frontmatter (name equals the folder, description within 1024 characters, licence and version on team skills), the opening principle and the absence of role lines in team skills, `LICENSE` and `UPSTREAM.md`, relative links and their anchors, rule files (frontmatter, unique IDs, indexed, prefix registered), that every skill is named by another team skill, that no team skill hard-codes where skills are installed, and LF line endings. It exits 1 on an error.
 
 Before publishing the skills outside the organisation, set `SKILLS_INTERNAL_PATTERNS` to a regex of the organisation's own names (projects, hosts, domains, clusters, customers; kept in CI variables, never in the skills): any line matching it is an error, and private IPv4 addresses are warned about.
 
@@ -97,6 +104,7 @@ Publishing a version of the skills — the bump kind, the version script, taggin
 ## Checklist
 
 - [ ] `name` equals the folder; the description says when to use it, within 1024 characters
+- [ ] Opens with a one-sentence `**Principle:**`; no role lines outside "In depth"
 - [ ] The area's `<area>-how-to` routes to the skill
 - [ ] Each rule in its own file, indexed with its check, prefix registered
 - [ ] Scan checks for the rules marked `scan`

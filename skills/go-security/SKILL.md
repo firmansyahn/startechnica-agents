@@ -3,13 +3,15 @@ name: go-security
 description: "Use when writing or reviewing Go server code that handles untrusted input, secrets, authorization, files, TLS or outbound calls: parameterised SQL, authorization on every route with every query scoped to the caller, crypto/rand for secrets, constant-time comparison, TLS verification left on, http.Server timeouts, paths kept inside their root, user-supplied URLs checked before the server calls them (SSRF), no secrets in logs. Also a security review of a Go diff. Absorbs samber/cc-skills-golang@golang-security, adapted to the team. Holds the sec-* rules."
 user-invocable: true
 license: MIT
-compatibility: Designed for Claude Code, Codex, OpenCode or similar harness, and for Go server projects.
+compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Go security (team)
+
+**Principle:** Every route authorizes its caller and scopes its data to them, every input is hostile until checked, and secrets are generated, compared, stored and logged with care.
 
 > **Absorbed.** This skill includes `samber/cc-skills-golang@golang-security` (MIT, Samuel Berthe; source and pinned commit in [UPSTREAM.md](UPSTREAM.md)), adapted to the team: the team's rules and decisions come first and win, and "In depth" holds the upstream material, edited where the team decided otherwise. The project's own `AGENTS.md`, `CLAUDE.md` and project skills win over this skill.
 
@@ -38,7 +40,7 @@ Related: [go-database](../go-database/SKILL.md) (queries), [go-http-handlers](..
 
 1. **Secrets in settings** are loaded with koanf, inline or from a mounted `*_file` ([go-knadh-koanf](../go-knadh-koanf/SKILL.md)), never from a flag.
 2. **CI security tooling** is the project's GitLab CI (`gitlab-ci`); GitHub CodeQL and Dependabot advice doesn't apply. `govulncheck` runs where the project has it.
-3. Links to skills that aren't vendored are skipped.
+3. Links to upstream skills that aren't absorbed are skipped.
 
 ## Rules
 
@@ -74,13 +76,13 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 
 ## In depth
 
-The material below is `samber/cc-skills-golang@golang-security`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: the ones absorbed are now team skills (`go-how-to` maps the names), the rest are vendored as `golang-*` or not adopted.
+The material below is `samber/cc-skills-golang@golang-security`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: each one the team uses is absorbed into a team skill (`go-how-to`, rule 1, maps the names), and the rest are not adopted.
 
 **Persona:** You are a senior Go security engineer. You apply security thinking both when auditing existing code and when writing new code — threats are easier to prevent than to fix.
 
-**Thinking mode:** Reason as thoroughly as possible for security audits and vulnerability analysis — security bugs hide in subtle interactions and deep reasoning catches what surface-level review misses. On Claude Code, use `ultrathink` to trigger extended thinking explicitly.
+**Thinking mode:** Reason as thoroughly as possible for security audits and vulnerability analysis — security bugs hide in subtle interactions and deep reasoning catches what surface-level review misses. To ask for it explicitly: `ultrathink` in the prompt on Claude Code and oh-my-pi; the `max` model variant on OpenCode (`ctrl+t` cycles variants, `opencode run --variant max` for one run); `high` reasoning effort or above on Codex (`/model`, or `-c model_reasoning_effort=high`).
 
-**Orchestration mode:** Fan out the five vulnerability-domain sub-agents described in Audit mode as a fan-out-then-synthesize workflow for a full-codebase security audit. Parallelism covers more attack surface per pass; the synthesis step deduplicates findings and ranks them by severity. On Claude Code, use `ultracode` to opt into multi-agent orchestration explicitly.
+**Orchestration mode:** Fan out the five vulnerability-domain sub-agents described in Audit mode as a fan-out-then-synthesize workflow for a full-codebase security audit. Parallelism covers more attack surface per pass; the synthesis step deduplicates findings and ranks them by severity. To opt in explicitly: `ultracode` on Claude Code; `orchestrate` on oh-my-pi (`workflowz` for a deterministic multi-subagent workflow); on OpenCode, ask the agent to delegate to subagents, or mention one (`@general`).
 
 **Modes:**
 
@@ -173,7 +175,7 @@ For the full security review checklist organized by domain (input handling, data
 
 #### Static Analysis & Linting
 
-Security-relevant linters: `bodyclose`, `sqlclosecheck`, `nilerr`, `errcheck`, `govet`, `staticcheck`. See the `golang-lint` skill for configuration and usage.
+Security-relevant linters: `bodyclose`, `sqlclosecheck`, `nilerr`, `errcheck`, `govet`, `staticcheck`. See the `go-code-style` references/lint.md for configuration and usage.
 
 For deeper security-specific analysis:
 
@@ -182,7 +184,7 @@ For deeper security-specific analysis:
 go get -tool github.com/securego/gosec/v2/cmd/gosec@latest
 go tool gosec ./...
 
-# Vulnerability scanner — see golang-dependency-management for full govulncheck usage
+# Vulnerability scanner — see `go-project-layout` references/dependency-management.md for full govulncheck usage
 go get -tool golang.org/x/vuln/cmd/govulncheck@latest
 go tool govulncheck ./...
 ```
@@ -230,7 +232,7 @@ See **[Security Architecture](./references/architecture.md)** for detailed anti-
 
 ### Cross-References
 
-See `go-database`, `golang-safety`, `go-observability` and `gitlab-ci` (the project's CI, where `govulncheck` and `gosec` run when the project has them) skills.
+See `go-database`, `go-safety`, `go-observability` and `gitlab-ci` (the project's CI, where `govulncheck` and `gosec` run when the project has them) skills.
 
 
 ### Additional Resources
