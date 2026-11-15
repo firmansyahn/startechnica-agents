@@ -2,7 +2,7 @@
 title: Use [ci skip] only on commits without code
 impact: MEDIUM
 tags: ci, pipeline, merge-request
-check: review
+check: scan, review
 ---
 
 ## Use [ci skip] only on commits without code

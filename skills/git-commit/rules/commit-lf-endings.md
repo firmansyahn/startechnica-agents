@@ -2,7 +2,7 @@
 title: Commit LF line endings, enforced by .gitattributes
 impact: LOW
 tags: line-endings, windows, gitattributes
-check: review
+check: scan, review
 ---
 
 ## Commit LF line endings, enforced by .gitattributes
@@ -27,4 +27,4 @@ git add --renormalize . && git diff --cached --ignore-cr-at-eol --stat   # empty
 git commit -m "style: convert line endings to LF"
 ```
 
-**How to check:** `git ls-files --eol | grep -v 'i/lf\|i/-text\|i/none'` prints nothing.
+**How to check:** `scripts/scan.sh` reports a missing `* ... eol=lf` line in `.gitattributes` and every tracked file committed with CRLF or mixed endings (`git ls-files --eol` shows `i/crlf` or `i/mixed`). With that `.gitattributes`, git itself stores new text files as LF, so no hook is needed. Whether a renormalisation went in as its own commit, with an empty `git diff --cached --ignore-cr-at-eol` and an unchanged rendered output for deployable config, stays review.

@@ -2,7 +2,7 @@
 title: Only the data layer and the config reader touch process.env
 impact: HIGH
 tags: data
-check: review
+check: eslint, review
 ---
 
 ## Only the data layer and the config reader touch process.env
@@ -26,3 +26,5 @@ export default async function Page() {
   const items = await listItemsDTO();        // src/data or src/api: config and key read there
 }
 ```
+
+**How to check:** the kit's `eslint.config.mjs` (`nextjs-new-app/assets`) flags `process.env.X` (other than `NODE_ENV`, which Next inlines) and `const { X } = process.env` in pages, components, hooks and providers; route handlers are outside. Left to review: which modules in `src/` read the environment (the config reader and the data layer only).

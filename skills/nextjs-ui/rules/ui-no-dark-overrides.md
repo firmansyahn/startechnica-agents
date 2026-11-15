@@ -2,7 +2,7 @@
 title: No manual dark: color overrides
 impact: MEDIUM
 tags: tailwind, themes, dark-mode
-check: review
+check: eslint
 ---
 
 ## No manual `dark:` color overrides
@@ -23,4 +23,4 @@ Tokens already change per mode. `dark:bg-...`/`dark:text-...` on top of a token 
 <div className="bg-card text-card-foreground">
 ```
 
-**How to check:** search for `dark:bg-`, `dark:text-` and `dark:border-` on elements that already use a token class.
+**How to check:** The kit's `eslint.config.mjs` (nextjs-new-app) reports `dark:` color classes (`dark:bg-*`, `dark:text-*`, `dark:border-*` and the other color utilities, also after another variant) in `app/`, `components/` and `src/`; widths and shadow sizes pass, and the shadcn primitives are exempt. An override of third-party markup carries a disable comment with the reason.

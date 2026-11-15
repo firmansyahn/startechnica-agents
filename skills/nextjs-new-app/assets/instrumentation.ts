@@ -11,11 +11,11 @@ export const onRequestError: Instrumentation.onRequestError = async (err, reques
   const digest = typeof err === "object" && err !== null && "digest" in err ? String(err.digest) : undefined;
   logger.error(
     {
-      "error.message": err instanceof Error ? err.message : String(err),
-      "error.stack_trace": err instanceof Error ? err.stack : undefined,
-      "error.id": digest,
+      err,
+      digest,
       "http.request.method": request.method,
       "url.path": request.path.split("?")[0],
+      "http.request.id": [request.headers["x-request-id"]].flat()[0],
       "next.route": context.routePath,
       "next.route_type": context.routeType,
     },

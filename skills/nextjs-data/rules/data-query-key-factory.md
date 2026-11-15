@@ -2,7 +2,7 @@
 title: Build query keys from the registry's factory
 impact: MEDIUM
 tags: tanstack-query, cache, invalidation
-check: review
+check: eslint, review
 ---
 
 ## Build query keys from the registry's factory
@@ -25,4 +25,4 @@ useQuery(items.list(tenant, { page }));
 queryClient.invalidateQueries({ queryKey: items.key(tenant) });
 ```
 
-**How to check:** look for `queryKey: [` and `invalidateQueries({ queryKey: [` with literal arrays outside `src/services/`.
+**How to check:** the kit's `eslint.config.mjs` (`nextjs-new-app/assets`) flags a literal array as `queryKey` in pages, components, hooks and providers (`src/services/` is outside). It misses a key array built in a variable first. Left to review: that the registry's own keys follow `[domain, resource, ...params, scope]`.

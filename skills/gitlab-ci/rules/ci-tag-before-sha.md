@@ -2,7 +2,7 @@
 title: Don't let a zero BEFORE_SHA rule block tag releases
 impact: HIGH
 tags: rules, tags, release, templates
-check: review
+check: ci, review
 ---
 
 ## Don't let a zero BEFORE_SHA rule block tag releases
@@ -35,4 +35,4 @@ rules:
 
 Keep the build's, release's and stop job's rules the same (the stop job's last rule `when: manual`), since the release needs the build and the environment needs its stop job.
 
-**How to check:** after a tag push, the tag's pipeline lists `<app>:build` and `<app>:release`.
+**How to check:** `scripts/check-merged.sh` (the `ci:rules` job in `assets/ci-rules.gitlab-ci.yml`) reads each build, release and stop job's rules in the merged configuration (`RELEASE_JOBS`, default `(^|:)(build|release|stop[a-z-]*)$`) and reports one whose first zero-`CI_COMMIT_BEFORE_SHA` `when: never` rule comes before the first rule that lets `$CI_COMMIT_TAG` through. A tag that matches through another variable (`$CI_COMMIT_REF_NAME =~ /^v/`) is reported too: confirm it. After a tag push, the tag's pipeline lists `<app>:build` and `<app>:release`.

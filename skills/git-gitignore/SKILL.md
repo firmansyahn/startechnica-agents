@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for any git repository.
 metadata:
   author: firmansyahn
-  version: "0.1.1"
+  version: "0.1.2"
 ---
 
 # Ignoring files in git
@@ -117,11 +117,11 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
-| [ignore-env-with-values](rules/ignore-env-with-values.md) | Ignore env files with values; commit the example | HIGH | scan (tracked env files, env files no rule ignores) |
-| [ignore-never-shared-files](rules/ignore-never-shared-files.md) | Never ignore lockfiles, committed tool releases or the env example | HIGH | scan (`git check-ignore` on lockfiles, `.yarn/releases`, env examples) |
-| [ignore-untrack-when-ignoring](rules/ignore-untrack-when-ignoring.md) | Untrack a committed file in the commit that ignores it | HIGH | scan (`git ls-files -ci --exclude-per-directory=.gitignore`) |
+| [ignore-env-with-values](rules/ignore-env-with-values.md) | Ignore env files with values; commit the example | HIGH | scan (tracked env files, env files no rule ignores), review |
+| [ignore-never-shared-files](rules/ignore-never-shared-files.md) | Never ignore lockfiles, committed tool releases or the env example | HIGH | scan (`git check-ignore` on lockfiles, `.yarn/releases`, env examples), review |
+| [ignore-untrack-when-ignoring](rules/ignore-untrack-when-ignoring.md) | Untrack a committed file in the commit that ignores it | HIGH | scan (`git ls-files -ci --exclude-per-directory=.gitignore`), review |
 | [ignore-keep-other-ignores-in-step](rules/ignore-keep-other-ignores-in-step.md) | Add size and secret patterns to .dockerignore too | MEDIUM | review |
-| [ignore-reinclude-with-star](rules/ignore-reinclude-with-star.md) | Ignore a folder's contents, not the folder, to keep a file in it | MEDIUM | scan (a negation under a folder excluded with `dir/`) |
+| [ignore-reinclude-with-star](rules/ignore-reinclude-with-star.md) | Ignore a folder's contents, not the folder, to keep a file in it | MEDIUM | scan (a negation under a folder excluded with `dir/`), review |
 | [ignore-anchor-paths](rules/ignore-anchor-paths.md) | Anchor paths that live in one place; slash-terminate folders | LOW | review |
 | [ignore-personal-files-elsewhere](rules/ignore-personal-files-elsewhere.md) | Keep one person's files out of the project ignore file | LOW | review |
 

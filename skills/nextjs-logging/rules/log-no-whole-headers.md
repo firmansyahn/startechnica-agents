@@ -2,7 +2,7 @@
 title: Never log headers wholesale
 impact: HIGH
 tags: redaction
-check: review
+check: eslint, review
 ---
 
 ## Never log headers wholesale
@@ -22,3 +22,5 @@ log.warn({ headers: Object.fromEntries(req.headers) }, "refused");
 ```ts
 log.warn({ headers: safeHeaders(req.headers) }, "refused");
 ```
+
+**How to check:** the kit's `eslint.config.mjs` (`nextjs-new-app/assets`) flags, inside a `log`/`logger` call in app code, `Object.fromEntries(...)`, a field whose value is `x.headers`, a spread of `x.headers`, and `x.headers` passed as an argument. It misses a headers object built earlier and passed by variable; look for those in review.

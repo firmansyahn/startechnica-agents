@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Next.js apps.
 metadata:
   author: firmansyahn
-  version: "0.1.1"
+  version: "0.2.0"
 ---
 
 # Next.js app structure: folders and page anatomy
@@ -46,21 +46,21 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 |---|---|---|---|
 | [struct-colocate-until-shared](rules/struct-colocate-until-shared.md) | Keep code beside its one route until a second route needs it | LOW | review |
 | [struct-src-folder-kinds](rules/struct-src-folder-kinds.md) | Put shared code in the src folder for its kind | LOW | test: nextjs-app-structure template |
-| [struct-no-top-level-twins](rules/struct-no-top-level-twins.md) | No top-level twins of src folders | LOW | review |
-| [struct-components-only-react](rules/struct-components-only-react.md) | components/ holds React components only | LOW | review |
-| [struct-use-aliases](rules/struct-use-aliases.md) | Imports use the aliases, not long relative paths | LOW | review |
-| [struct-no-cross-app-imports](rules/struct-no-cross-app-imports.md) | Apps never import each other | LOW | review |
-| [struct-private-folders-underscore](rules/struct-private-folders-underscore.md) | Private route folders start with an underscore | LOW | review |
-| [struct-src-folder-readme](rules/struct-src-folder-readme.md) | A new src folder gets a README | LOW | review |
+| [struct-no-top-level-twins](rules/struct-no-top-level-twins.md) | No top-level twins of src folders | LOW | test: `templates/src-layout.test.ts` |
+| [struct-components-only-react](rules/struct-components-only-react.md) | components/ holds React components only | LOW | test, review |
+| [struct-use-aliases](rules/struct-use-aliases.md) | Imports use the aliases, not long relative paths | LOW | eslint |
+| [struct-no-cross-app-imports](rules/struct-no-cross-app-imports.md) | Apps never import each other | LOW | eslint |
+| [struct-private-folders-underscore](rules/struct-private-folders-underscore.md) | Private route folders start with an underscore | LOW | scan (candidates), review |
+| [struct-src-folder-readme](rules/struct-src-folder-readme.md) | A new src folder gets a README | LOW | test, review |
 
 ### Pages
 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
 | [page-copy-reference-page](rules/page-copy-reference-page.md) | Copy the reference page, not the nearest page | MEDIUM | review |
-| [page-thin-server-page](rules/page-thin-server-page.md) | page.tsx is a thin server component | MEDIUM | review |
-| [page-client-named-after-page](rules/page-client-named-after-page.md) | The client component is named after the page | MEDIUM | review |
-| [page-central-access-map](rules/page-central-access-map.md) | Access is declared once, centrally | MEDIUM | review |
+| [page-thin-server-page](rules/page-thin-server-page.md) | page.tsx is a thin server component | MEDIUM | eslint, review |
+| [page-client-named-after-page](rules/page-client-named-after-page.md) | The client component is named after the page | MEDIUM | scan, review |
+| [page-central-access-map](rules/page-central-access-map.md) | Access is declared once, centrally | MEDIUM | test, scan (candidates), review |
 | [page-form-drawer-composite](rules/page-form-drawer-composite.md) | Create and edit happen in the form drawer or dialog composite | MEDIUM | review |
 | [page-read-only-context](rules/page-read-only-context.md) | Read-only users see disabled controls through one context | MEDIUM | review |
 | [page-settings-hook](rules/page-settings-hook.md) | Settings pages use the settings hook | MEDIUM | review |
@@ -70,28 +70,28 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
-| [i18n-strings-from-messages](rules/i18n-strings-from-messages.md) | Every visible string comes from the message files | MEDIUM | review |
+| [i18n-strings-from-messages](rules/i18n-strings-from-messages.md) | Every visible string comes from the message files | MEDIUM | eslint, review |
 | [i18n-keys-by-route](rules/i18n-keys-by-route.md) | Keys are namespaced by route | MEDIUM | review |
-| [i18n-key-in-every-locale](rules/i18n-key-in-every-locale.md) | Every key exists in every locale | MEDIUM | review |
-| [i18n-metadata-translated](rules/i18n-metadata-translated.md) | Metadata comes from translations | MEDIUM | review |
+| [i18n-key-in-every-locale](rules/i18n-key-in-every-locale.md) | Every key exists in every locale | MEDIUM | test: `templates/locale-parity.test.ts` |
+| [i18n-metadata-translated](rules/i18n-metadata-translated.md) | Metadata comes from translations | MEDIUM | test, review |
 | [i18n-no-mixed-strings](rules/i18n-no-mixed-strings.md) | Never mix translated and hard-coded strings in one page | MEDIUM | review |
-| [i18n-variables-not-concatenation](rules/i18n-variables-not-concatenation.md) | Messages carry variables, not concatenation | MEDIUM | review |
-| [i18n-use-formatters](rules/i18n-use-formatters.md) | Numbers and dates go through the formatters | MEDIUM | review |
+| [i18n-variables-not-concatenation](rules/i18n-variables-not-concatenation.md) | Messages carry variables, not concatenation | MEDIUM | eslint, review |
+| [i18n-use-formatters](rules/i18n-use-formatters.md) | Numbers and dates go through the formatters | MEDIUM | eslint, review |
 | [i18n-backend-messages-as-sent](rules/i18n-backend-messages-as-sent.md) | Backend messages are shown as sent, not translated by key guessing | MEDIUM | review |
 
 ### Testing
 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
-| [page-test-beside-code](rules/page-test-beside-code.md) | Tests sit beside the code they test | LOW | review |
-| [page-test-suffix-environment](rules/page-test-suffix-environment.md) | The suffix picks the environment | LOW | review |
-| [page-test-every-page](rules/page-test-every-page.md) | Every page has a page test | LOW | review |
+| [page-test-beside-code](rules/page-test-beside-code.md) | Tests sit beside the code they test | LOW | test |
+| [page-test-suffix-environment](rules/page-test-suffix-environment.md) | The suffix picks the environment | LOW | test, review |
+| [page-test-every-page](rules/page-test-every-page.md) | Every page has a page test | LOW | test, review |
 | [page-test-one-behaviour](rules/page-test-one-behaviour.md) | One behaviour per test | LOW | review |
-| [page-test-query-by-role](rules/page-test-query-by-role.md) | Query by role and name | LOW | review |
+| [page-test-query-by-role](rules/page-test-query-by-role.md) | Query by role and name | LOW | eslint, review |
 | [page-test-read-only-user](rules/page-test-read-only-user.md) | The read-only user is tested | LOW | review |
-| [page-test-second-locale](rules/page-test-second-locale.md) | A second locale renders | LOW | review |
+| [page-test-second-locale](rules/page-test-second-locale.md) | A second locale renders | LOW | test |
 | [page-test-screenshots-light-dark](rules/page-test-screenshots-light-dark.md) | Visual changes are looked at in light and dark | LOW | review |
-| [page-test-run-related](rules/page-test-run-related.md) | Run the related tests while working, the suite before merging | LOW | review |
+| [page-test-run-related](rules/page-test-run-related.md) | Run the related tests while working, the suite before merging | LOW | ci (`nextjs-deploy` pipeline: typecheck, lint, `yarn test` on every MR), review |
 
 ## The tree, short
 
@@ -150,9 +150,10 @@ app/<section>/<page>/
 ## Reviewing
 
 1. **Scope.** The diff (`git diff <base>...HEAD`), a merge request's files or the whole app, read for what this skill covers: the folders, pages, strings and page tests it changes.
-2. **Read** the changed code against the Rules above. Open each rule you cite and match its "Incorrect" shape, not just its title.
-3. **Report** each finding in the format of `agent-skills-authoring` ("Scan scripts and findings"): impact, rule ID, file and line, what to change citing the rule's "Correct" shape; ordered by impact. Raise the impact one level on an authentication, payment or deletion path.
-4. **Say what's not covered:** rules whose check is `test` or `eslint` but the project has no such test or lint rule. `kit` in the Check column means a ready-to-copy check exists (`nextjs-new-app`, references/enforcement-kit.md).
+2. **Scan.** `bash <this skill>/scripts/scan.sh <app-root>` lists candidates for the rules whose check includes `scan`. On a diff, keep only findings in changed lines or files. Every line is a candidate: open the rule and confirm it before reporting.
+3. **Read** the changed code against the Rules above. Open each rule you cite and match its "Incorrect" shape, not just its title.
+4. **Report** each finding in the format of `agent-skills-authoring` ("Scan scripts and findings"): impact, rule ID, file and line, what to change citing the rule's "Correct" shape; ordered by impact. Raise the impact one level on an authentication, payment or deletion path.
+5. **Say what's not covered:** rules whose check is `test` or `eslint` but the project has no such test or lint rule (the tests are in `templates/`, listed in [references/folders.md](references/folders.md) "Enforce it"). `kit` in the Check column means a ready-to-copy check exists (`nextjs-new-app`, references/enforcement-kit.md).
 
 ## Checklist
 

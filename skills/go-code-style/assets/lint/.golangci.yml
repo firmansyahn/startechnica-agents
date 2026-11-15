@@ -27,6 +27,7 @@ linters:
     - copyloopvar # loop variable copy issues (Go 1.22+)
     - durationcheck # detect time.Duration * time.Duration bugs
     - reassign # package-level variable reassignment
+    - depguard # team: no SQL mocks in tests (go-testing test-real-database); see settings
     # style
     - gocritic # opinionated style: unnecessary conversions, range copies, redundant code
     - revive # naming conventions, exported types, stuttered package names
@@ -84,7 +85,6 @@ linters:
     - noinlineerr # bans `if err := ...; err != nil {}` — this is idiomatic Go
     - gocognit # cognitive complexity — redundant with gocyclo + nestif
     - cyclop # cyclomatic complexity — redundant with gocyclo
-    - depguard # import allow/deny lists — requires per-project configuration
     - goheader # file header enforcement — project-specific policy
     - importas # import alias enforcement — requires per-project configuration
     - funcorder # function ordering — too opinionated for a default
@@ -113,6 +113,15 @@ linters:
       - examples$
 
   settings:
+    depguard:
+      rules:
+        no-sql-mocks:
+          files: ["$test"]
+          deny:
+            - pkg: github.com/DATA-DOG/go-sqlmock
+              desc: test SQL against a real database (go-testing test-real-database)
+            - pkg: github.com/pashagolub/pgxmock
+              desc: test SQL against a real database (go-testing test-real-database)
     dupl:
       threshold: 100 # lower => stricter (tokens)
     errcheck:

@@ -1,0 +1,37 @@
+# <app>/security.gitlab-ci.yml: two nextjs-security checks the merge-request jobs don't make. Include it
+# from the app's file (include: - local: <app>/security.gitlab-ci.yml) next to nextjs-deploy's
+# nextjs.gitlab-ci.yml, whose hidden jobs it extends: .<app> (the Node image, `cd <app>`, the yarn()
+# function that runs the committed release) and .<app>-check (adds <app>/node_modules from <app>:install).
+# Copy framework-advisories.mjs and prerendered-pages.mjs to <app>/scripts/ci/. Replace <app>.
+
+# deps-framework-patches-fast: the scheduled pipeline (CI/CD > Schedules, daily) fails when Next.js or
+# React has a published advisory, at any severity; the merge-request audit (tool-dependency-audit) only
+# runs on a push and only from its severity up. A failed scheduled pipeline notifies its owner.
+<app>:framework-advisories:
+  extends: .<app>
+  needs: []
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" || $CI_PIPELINE_SOURCE == "web"'
+  script:
+    # The audit exits 1 when it lists advisories; the script tells that from an audit that didn't run.
+    - code=0; yarn npm audit --all --recursive --environment production --json > framework-audit.ndjson || code=$?
+    - node scripts/ci/framework-advisories.mjs framework-audit.ndjson "$code"
+  artifacts:
+    when: on_failure
+    paths:
+      - <app>/framework-audit.ndjson
+    expire_in: 7 days
+
+# sec-nonce-pages-dynamic: with a nonce CSP in proxy.ts, no page may be prerendered (its scripts would get
+# no nonce). Reads .next/prerender-manifest.json after `next build`. Where a job already runs the
+# production build (the Playwright job in CI runs `yarn build && yarn start`), run the node line there
+# after the build instead, and drop this job.
+<app>:nonce-pages-dynamic:
+  extends: .<app>-check
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - <app>/**/*
+  script:
+    - yarn build
+    - node scripts/ci/prerendered-pages.mjs

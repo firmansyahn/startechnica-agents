@@ -2,7 +2,7 @@
 title: Fake the network at fetch, not the code
 impact: MEDIUM
 tags: testing
-check: review
+check: scan
 ---
 
 ## Fake the network at fetch, not the code
@@ -23,3 +23,5 @@ vi.mock("@/services/items/actions", () => ({ saveItem: vi.fn().mockResolvedValue
 const calls = fakeApi({ "POST items": { status: 201, body: row } });   // stubs fetch, records each call
 renderWithQuery(<ItemsClient />);
 ```
+
+**How to check:** `scripts/scan.sh` lists `vi.mock`/`vi.doMock` in test files of a module under `services/` or `src/api/`, or of an `actions` module. It misses a mock of the registry or transport by a relative path that names neither (`vi.mock("../index")`).

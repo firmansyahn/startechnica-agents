@@ -2,7 +2,7 @@
 title: Use an existing primitive or composite before writing markup
 impact: HIGH
 tags: shadcn, composites, accessibility
-check: review
+check: eslint, review
 ---
 
 ## Use an existing primitive or composite before writing markup
@@ -23,4 +23,4 @@ Before building a table, dialog, drawer, dropdown, notice, empty state or confir
 <Dialog open={open} onOpenChange={setOpen}><DialogContent>...</DialogContent></Dialog>
 ```
 
-**How to check:** look for hand-built overlays (`fixed inset-0`), `<table>` or dropdown markup where a primitive or composite exists.
+**How to check:** The kit's `eslint.config.mjs` (nextjs-new-app) reports raw `<select>` and `<dialog>` in `app/` and `components/` (raw tables under ui-table-primitive) and warns on a `fixed inset-0` layer, a hand-built overlay; the shadcn primitives are exempt. Hand-built dropdowns, notices, empty states and confirmations stay review.

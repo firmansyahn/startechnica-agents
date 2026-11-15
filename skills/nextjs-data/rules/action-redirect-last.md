@@ -2,7 +2,7 @@
 title: Call redirect() last, outside try/catch
 impact: MEDIUM
 tags: server-actions, redirect
-check: review
+check: eslint
 ---
 
 ## Call redirect() last, outside try/catch
@@ -32,4 +32,4 @@ revalidatePath("/items");
 redirect("/items");
 ```
 
-**How to check:** look for `redirect(` inside `try` blocks or followed by more statements.
+**How to check:** the kit's `eslint.config.mjs` (`nextjs-new-app/assets`) flags `redirect()` or `permanentRedirect()` inside a `try` block (unless the `catch` calls `unstable_rethrow()`), and any statement after a `redirect(...);` in the same block.

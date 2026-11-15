@@ -2,7 +2,7 @@
 title: Write Conventional Commits with the component as scope
 impact: LOW
 tags: commit-message, conventional-commits
-check: review
+check: scan, hook, review
 ---
 
 ## Write Conventional Commits with the component as scope
@@ -28,4 +28,4 @@ feat(api)!: drop the v1 list endpoints
 BREAKING CHANGE: clients must page with /v2/items.
 ```
 
-**How to check:** `git log --format=%s <base>..HEAD | grep -vE '^(feat|fix|build|chore|ci|docs|perf|refactor|revert|style|test)(\([^)]+\))?!?: |^Merge '` prints nothing.
+**How to check:** `scripts/scan.sh` lists the subjects in `<base>..HEAD` that aren't `<type>(<scope>)!: <description>` (merges excepted), and the `assets/hooks/commit-msg` git hook refuses such a subject at commit time (it lets `fixup!`/`squash!`/`amend!` commits through, which an autosquash rebase folds away). Neither can tell whether the scope names the component touched, or whether the description says what changed: that stays review.

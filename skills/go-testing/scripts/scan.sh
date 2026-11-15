@@ -46,6 +46,34 @@ LOGRE='(^|[^A-Za-z0-9_])(log|logger|lg|l|slog|zap\.L\(\)|zap\.S\(\))[A-Za-z]*\.(
 # test-no-sleep
 g "$TLIST" 'time\.Sleep\(' | emit test-no-sleep
 
+# test-real-database: SQL mocks (exact), then tests that call t.Parallel() in a package whose tests share one
+# package-level database handle (candidates: confirm each parallel test uses that handle)
+g "$TLIST" '"github\.com/(DATA-DOG/go-sqlmock|pashagolub/pgxmock)(/v[0-9]+)?"|\.Expect(Query|Exec|Begin|Prepare|Commit|Rollback)\(' \
+  | emit test-real-database
+SHARED="$TMP/shared"
+a "$TLIST" '
+  /^var[[:space:]]*\([[:space:]]*$/ { inblock=1; next }
+  inblock && /^\)/ { inblock=0; next }
+  {
+    line=$0
+    if (!inblock) { if (line !~ /^var[[:space:]]/) next; sub(/^var[[:space:]]+/, "", line) }
+    if (line ~ /^[[:space:]]*[A-Za-z_][A-Za-z0-9_]*[[:space:]]+\*?(sql\.DB|sqlx\.DB|pgxpool\.Pool|pgx\.Conn|gorm\.DB)([[:space:]]|$)/) {
+      sub(/^[[:space:]]+/, "", line); split(line, w, /[[:space:]]+/)
+      d=FILENAME; sub(/\/[^\/]*$/, "", d); if (d == FILENAME) d="."
+      print d " " w[1]
+    }
+  }
+' | sort -u > "$SHARED"
+while read -r dir name; do
+  [ -n "$name" ] || continue
+  if [ "$dir" = "." ]; then re='^[^/]+_test\.go$'; else re="^$(printf '%s' "$dir" | sed 's/[.[\*^$]/\\&/g')/[^/]+_test\.go\$"; fi
+  for f in $(grep -E "$re" "$TLIST"); do
+    grep -qE "(^|[^A-Za-z0-9_.])$name\." "$f" || continue
+    grep -nHE 't\.Parallel\(\)' "$f" | nocomment | head -1 \
+      | sed "s/\$/  (tests here share the package-level $name: give each parallel test its own database)/" | emit test-real-database
+  done
+done < "$SHARED"
+
 if [ ! -s "$OUT" ]; then echo "no findings"; exit 0; fi
 sort -u "$OUT"
 echo

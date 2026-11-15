@@ -30,6 +30,20 @@ git worktree list --porcelain | sed -n 's/^worktree //p' | while IFS= read -r wt
   [ -d "$wt" ] || echo "$wt: worktree folder is gone (git worktree prune)"
 done | emit wt-remove-after-merge
 
+# wt-remove-after-merge: worktrees and local branches whose upstream branch is gone from the remote
+# (GitLab deletes the source branch on merge, squash merges included). As current as the last
+# `git fetch --prune`; a branch pushed without an upstream (-u) isn't seen.
+git for-each-ref --format='%(refname) %(upstream:track)' refs/heads | sed -n 's/ \[gone\]$//p' > "$TMP/gone"
+if [ -s "$TMP/gone" ]; then
+  git worktree list --porcelain | awk '/^worktree / { wt=substr($0, 10) } /^branch / { print substr($0, 8) "\t" wt }' > "$TMP/wtb"
+  while IFS= read -r ref; do
+    b="${ref#refs/heads/}"
+    wt="$(awk -F '\t' -v r="$ref" '$1 == r { print $2; exit }' "$TMP/wtb")"
+    if [ -n "$wt" ]; then echo "$wt: worktree on $b, whose upstream is gone (merged?): remove the worktree and the branch"
+    else echo "branch $b: its upstream is gone (merged?): delete it (git branch -D $b)"; fi
+  done < "$TMP/gone" | emit wt-remove-after-merge
+fi
+
 # wt-own-dependencies: dependency links, replace/go.work pointing outside, in every worktree
 git worktree list --porcelain | sed -n 's/^worktree //p' | while IFS= read -r wt; do
   [ -d "$wt" ] || continue

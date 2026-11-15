@@ -2,7 +2,7 @@
 title: Writes answer 405, except allow-listed uploads
 impact: CRITICAL
 tags: proxy
-check: review
+check: scan, test, review
 ---
 
 ## Writes answer 405, except allow-listed uploads
@@ -27,3 +27,5 @@ export const GET = handleApi;
 export const HEAD = handleApi;
 export const POST = handleApi;   // handleApi answers 405 unless the path is on the upload allow-list
 ```
+
+**How to check:** `scripts/scan.sh` reports a `PUT`, `PATCH` or `DELETE` export in the reads proxy's catch-all route (`app/**/api/[...path]/route.ts`); other route handlers, such as webhooks, are left alone. The proxy test `bff-test-writes-405` asks for covers what the exports can't show: `PATCH`, `PUT`, `DELETE` and a `POST` to a path off the upload allow-list answer 405 with `Allow: GET, HEAD`.

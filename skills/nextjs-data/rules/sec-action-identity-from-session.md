@@ -2,7 +2,7 @@
 title: Take identity from the session, never from action arguments
 impact: CRITICAL
 tags: server-actions, auth, authorization
-check: review
+check: scan (candidates), review
 ---
 
 ## Take identity from the session, never from action arguments
@@ -31,4 +31,4 @@ export async function deleteUser(input: unknown) {
 }
 ```
 
-**How to check:** in every `"use server"` file, look for parameters describing the caller (`actorId`, `role`, `isAdmin`, `token`, `accessToken`, `sessionId`) and for authorization decisions made from input fields.
+**How to check:** `scripts/scan.sh` lists fields that describe the caller (`actorId`, `actorRole`, `role`, `isAdmin`, any `...Token`, `sessionId`, `permissions`) in "use server" files, the schemas they import and `src/services/*/input.ts`; a role that is data being written (an invite's role) is a false positive. Review the rest: authorization decisions made from input fields.

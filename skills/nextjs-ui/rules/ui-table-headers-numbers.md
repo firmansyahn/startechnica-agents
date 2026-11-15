@@ -2,7 +2,7 @@
 title: Every column has a header; numbers right-aligned
 impact: LOW
 tags: tables, accessibility
-check: review
+check: eslint, review
 ---
 
 ## Every column has a header; numbers right-aligned
@@ -26,4 +26,4 @@ Headers name the column (including an actions column, visually hidden if needed)
 <TableCell className="text-right tabular-nums">{formatNumber(row.sessions)}</TableCell>
 ```
 
-**How to check:** look for empty `TableHead`s and numeric columns without `text-right tabular-nums` on the cell and its header.
+**How to check:** The kit's `eslint.config.mjs` (nextjs-new-app) reports an empty `TableHead` (no text, element or expression inside). Right alignment and `tabular-nums` on numeric cells and their headers stay review.

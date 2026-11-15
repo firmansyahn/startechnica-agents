@@ -27,4 +27,4 @@ requestHeaders.set("Content-Security-Policy", csp);
 response.headers.set("Content-Security-Policy", csp);
 ```
 
-**How to check:** an end-to-end test loads a real page of the production build and asserts the `Content-Security-Policy` header has a nonce or hash, no `'unsafe-inline'`/`'unsafe-eval'` in `script-src`, and a different nonce on a second request (`e2e-check-headers-csp`). In review, look for a constant nonce and for inline `<script>` tags without `nonce`.
+**How to check:** `assets/e2e/security-headers.spec.ts` (copy it to `tests/e2e/`), an end-to-end test, loads a real page of the production build and asserts the `Content-Security-Policy` header has a nonce or hash, no `'unsafe-inline'`/`'unsafe-eval'` in `script-src`, and a different nonce on a second request (`e2e-check-headers-csp`). In review, look for a constant nonce and for inline `<script>` tags without `nonce`.

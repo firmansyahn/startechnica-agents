@@ -2,7 +2,7 @@
 title: Authenticate and authorize in every route handler, check the origin on writes, and never change state on GET
 impact: CRITICAL
 tags: route-handlers, auth, csrf
-check: review
+check: test, review
 ---
 
 ## Authenticate and authorize in every route handler, check the origin on writes, and never change state on GET
@@ -39,4 +39,4 @@ export async function GET(req: Request, { params }: Ctx) {
 }
 ```
 
-**How to check:** in review, open every `route.ts` in the diff: a session check before data access, an origin check in every non-GET export, and no write in a GET. The BFF reads proxy has its own rules (`sec-proxy-*`).
+**How to check:** `assets/tests/route-handlers.test.ts` (copy it to `tests/`, set the session and origin helper names at its top) fails when an `app/**/route.*` never calls the session check, when a POST/PUT/PATCH/DELETE export doesn't call the origin check, or when a GET calls `signOut(`, sets or deletes a cookie, or writes through `db`/`prisma`; its `PUBLIC`, `NO_ORIGIN` and `GET_WRITE_ALLOWED` lists hold the exceptions with a reason and fail when stale. In review, check that the session check comes before data access and that the caller's right to the resource is checked (in the data layer); a check or write inside a helper the handler calls is invisible to the test. The BFF reads proxy has its own rules (`sec-proxy-*`).

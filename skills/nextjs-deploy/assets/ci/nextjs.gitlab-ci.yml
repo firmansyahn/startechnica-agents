@@ -93,7 +93,19 @@ include:
 <app>:install:
   extends: .<app>
   stage: prepare
-  cache: *yarn-cache
+  # Only the integration branch writes the yarn cache; every other pipeline reads it
+  # (gitlab-ci ci-cache-write-once).
+  variables:
+    YARN_CACHE_POLICY: pull
+  cache:
+    <<: *yarn-cache
+    policy: $YARN_CACHE_POLICY
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      changes: *app-changes
+      variables:
+        YARN_CACHE_POLICY: pull-push
+    - changes: *app-changes
   script:
     - yarn install --immutable
   artifacts:
@@ -147,13 +159,21 @@ include:
     - changes: *app-changes
       when: manual
   allow_failure: true
+  variables:
+    PLAYWRIGHT_JUNIT_OUTPUT_FILE: results/junit.xml
   script:
-    - yarn test:e2e
+    # In CI the config writes blob reports (nextjs-e2e playwright.config.ts); merge them into the
+    # HTML report and a JUnit file, also when the tests failed (nextjs-e2e e2e-keep-traces).
+    - yarn test:e2e || status=$?
+    - yarn playwright merge-reports --reporter html,junit ./blob-report
+    - exit "${status:-0}"
   artifacts:
     when: always
     paths:
       - <app>/playwright-report/
       - <app>/test-results/
+    reports:
+      junit: <app>/results/junit.xml
     expire_in: 10 days
 
 # The org template sets needs: [], which would start the build beside the tests. Tag pipelines

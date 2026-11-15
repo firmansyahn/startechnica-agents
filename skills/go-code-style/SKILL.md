@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.2.0"
+  version: "0.3.0"
 ---
 
 # Go code style (team)
@@ -48,7 +48,7 @@ Related: [go-error-handling](../go-error-handling/SKILL.md) (error style), [go-c
 ## Team decisions
 
 1. **No `samber/lo`, `samber/mo` or other `samber/*` helper libraries**, whatever upstream recommends: standard library `slices`, `maps` and plain loops.
-2. **Linter config:** [references/lint.md](references/lint.md)'s `assets/lint/.golangci.yml` is a starting point to propose, not to add to a project as a side effect. The linters worth enabling, when a project has none: `errcheck`, `govet`, `staticcheck`, `errorlint`, `gosec`, `bodyclose`, `noctx`, `sqlclosecheck`, `rowserrcheck`, `contextcheck`, `gochecknoinits`, `musttag`; they turn most `scan (candidates)` checks in the go-<topic> skills into exact lint findings. Upstream's config in `assets/lint/.golangci.yml` lacks `contextcheck` and `musttag` and disables `gochecknoinits`: add them when proposing it.
+2. **Linter config:** [references/lint.md](references/lint.md)'s `assets/lint/.golangci.yml` is a starting point to propose, not to add to a project as a side effect. The linters worth enabling, when a project has none: `errcheck`, `govet`, `staticcheck`, `errorlint`, `gosec`, `bodyclose`, `noctx`, `sqlclosecheck`, `rowserrcheck`, `contextcheck`, `gochecknoinits`, `musttag`, and `depguard` with the file's `no-sql-mocks` rule (go-testing `test-real-database`); they turn most `scan (candidates)` checks in the go-<topic> skills into exact lint findings. Upstream's config in `assets/lint/.golangci.yml` lacks `contextcheck` and `musttag` and disables `gochecknoinits`: add them when proposing it.
 3. **Modernizing:** `go.mod` (`go` and `toolchain` lines) decides which features are available; modernize in its own change, not inside an unrelated one.
 4. **zap, not slog:** upstream's `log/slog` examples are written with zap; building the logger (ECS json, the `logging` block) is in [go-observability](../go-observability/SKILL.md).
 5. **Metrics, tracing and profiling** (Prometheus, OpenTelemetry, Pyroscope) only where the project already has them; otherwise suggest, don't add.

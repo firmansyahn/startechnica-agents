@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.1.1"
+  version: "0.2.0"
 ---
 
 # Go tests (team)
@@ -51,7 +51,7 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 |---|---|---|---|
 | [test-no-sleep](rules/test-no-sleep.md) | Wait on signals in tests, never on time.Sleep | MEDIUM | scan |
 | [test-race-and-parallel](rules/test-race-and-parallel.md) | Run tests with -race; parallel tests share nothing | MEDIUM | test (CI) |
-| [test-real-database](rules/test-real-database.md) | Test database code against a real database, one per test | MEDIUM | review |
+| [test-real-database](rules/test-real-database.md) | Test database code against a real database, one per test | MEDIUM | scan (shared database: candidates), lint (depguard), review |
 | [test-table-driven](rules/test-table-driven.md) | Write table tests with tt, give/want and t.Run | LOW | review |
 
 ## Reviewing

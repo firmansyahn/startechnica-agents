@@ -2,7 +2,7 @@
 title: Reach GitLab through glab, never a pasted token
 impact: MEDIUM
 tags: glab, credentials
-check: review
+check: scan, hook, review
 ---
 
 ## Reach GitLab through glab, never a pasted token
@@ -25,4 +25,4 @@ glab api projects/:id/jobs/456/trace
 glab repo clone <group>/<project>
 ```
 
-**How to check:** no `PRIVATE-TOKEN`, `glpat-` or `oauth2:` in commands, scripts or docs.
+**How to check:** `scripts/scan.sh` lists `PRIVATE-TOKEN` headers, `glpat-` tokens and `oauth2:` credentials in URLs in tracked files. The `guard-glab-token.mjs` hook (`assets/hooks/`) covers commands: it refuses a Bash command carrying a `PRIVATE-TOKEN` header, a `glpat-` token or credentials in a URL (anywhere in the command, a commit message included), or running `curl`/`wget` against `/api/v4/`. Neither sees a token pasted into chat or typed in a terminal outside the agent, or another tool reaching the API: review those.

@@ -2,7 +2,7 @@
 title: Make the image build wait for its checks
 impact: MEDIUM
 tags: templates, needs, build
-check: review
+check: ci, scan (candidates), review
 ---
 
 ## Make the image build wait for its checks
@@ -27,4 +27,4 @@ web:build:
       optional: true
 ```
 
-**How to check:** in the pipeline graph the build starts after its checks; a deliberate `needs: []` (checks still manual) has a comment saying so.
+**How to check:** `scripts/check-merged.sh` (run by the `ci:rules` job in `assets/ci-rules.gitlab-ci.yml`) reads the merged configuration, templates included, and reports every build job (`BUILD_JOBS`, default `(^|:)build$`) whose `needs` is `[]`; a deliberate one goes in `NEEDS_EMPTY_OK`, since the merged view drops the comment. `scripts/scan.sh` reads the raw files and lists build jobs with no `needs:` of their own, or `needs: []` without a comment above it; a local build job with no template behind it is a false positive there. Neither checks that the listed `needs` are the right checks: in review, the pipeline graph starts the build after them.

@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for OAuth 2.1 authorization servers and clients.
 metadata:
   author: firmansyahn
-  version: "0.1.1"
+  version: "0.2.0"
 ---
 
 # OAuth / OIDC authorization server
@@ -74,7 +74,7 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
-| [oauth-opaque-hashed-tokens](rules/oauth-opaque-hashed-tokens.md) | Store tokens, codes and secrets only as hashes | HIGH | review |
+| [oauth-opaque-hashed-tokens](rules/oauth-opaque-hashed-tokens.md) | Store tokens, codes and secrets only as hashes | HIGH | test, scan (candidates), lint (gosec G404), review |
 | [oauth-refresh-rotation-reuse](rules/oauth-refresh-rotation-reuse.md) | Rotate refresh tokens and revoke the family on reuse | HIGH | test |
 | [oauth-session-ends-first-party-tokens](rules/oauth-session-ends-first-party-tokens.md) | End first-party tokens with the sign-in session that produced them | MEDIUM | test |
 | [oauth-signing-key-overlap](rules/oauth-signing-key-overlap.md) | Rotate signing keys with an overlap in JWKS | MEDIUM | test |
@@ -85,7 +85,7 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 |---|---|---|---|
 | [oauth-one-resource-per-token](rules/oauth-one-resource-per-token.md) | Issue each token for one resource and refuse it everywhere else | CRITICAL | test |
 | [oauth-scopes-narrow-roles](rules/oauth-scopes-narrow-roles.md) | Let scopes narrow what a role allows, never widen it | CRITICAL | test |
-| [oauth-one-verifier](rules/oauth-one-verifier.md) | Verify bearer tokens in one function for every API surface | HIGH | review |
+| [oauth-one-verifier](rules/oauth-one-verifier.md) | Verify bearer tokens in one function for every API surface | HIGH | test, scan (candidates), review |
 | [oauth-consent-third-party](rules/oauth-consent-third-party.md) | Ask consent for third-party and MCP clients, and let users revoke it | HIGH | test |
 | [oauth-scope-ceiling-refuses](rules/oauth-scope-ceiling-refuses.md) | Refuse scopes beyond the client's ceiling instead of trimming them | MEDIUM | test |
 
@@ -96,15 +96,16 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 | [oauth-issuer-from-config](rules/oauth-issuer-from-config.md) | Take the issuer and metadata URLs from configuration | HIGH | test |
 | [oauth-harden-signin-pages](rules/oauth-harden-signin-pages.md) | Keep the sign-in and consent pages unframeable and check Origin on their POSTs | HIGH | test |
 | [oauth-throttle-signin](rules/oauth-throttle-signin.md) | Throttle sign-in by address and by account | HIGH | test |
-| [oauth-never-log-credentials](rules/oauth-never-log-credentials.md) | Never log codes, tokens, secrets, verifiers or passwords | HIGH | review |
+| [oauth-never-log-credentials](rules/oauth-never-log-credentials.md) | Never log codes, tokens, secrets, verifiers or passwords | HIGH | test, scan (candidates), review |
 | [oauth-no-oracle-replies](rules/oauth-no-oracle-replies.md) | Answer refusals uniformly so endpoints don't reveal what exists | MEDIUM | test |
 
 ## 5. Reviewing
 
 1. **Scope:** the diff, or the authorization server package, its HTTP mounting, the API guards and the sign-in and consent pages.
-2. **Run the tests** for the refusals in [references/endpoints-and-security.md](references/endpoints-and-security.md) ("Tests to keep"); a rule whose check is `test` with no such test is a gap to report.
-3. **Read the code against the rules** below; the `review` ones (library, hashes, one verifier, logging) only reading finds. Open each rule you cite and match its "Incorrect" shape.
-4. **Report** each finding with its rule ID, impact and site, in the format of `agent-skills-authoring`. The authorization server is an authentication path: don't lower an impact.
+2. **Run the tests** for the refusals in [references/endpoints-and-security.md](references/endpoints-and-security.md) ("Tests to keep"); a rule whose check is `test` with no such test is a gap to report. [assets/oauth_flow_test.go](assets/oauth_flow_test.go) is a ready-to-copy Go template for three of them (no credentials in the logs, one verifier on every surface, only hashes stored): the project fills in a small harness (`newFlowHarness`) and the tests drive the whole flow through it.
+3. **Scan** (a Go server): `bash <this skill>/scripts/scan.sh <module-root>` lists candidates for the rules with `scan` in their check (set `VERIFIER_DIRS` to the verifier's and the storage adapter's folders). On a diff, keep the ones in changed lines; open the rule and confirm each before reporting it.
+4. **Read the code against the rules** below; the `review` parts (library, hashes, one verifier, logging) only reading finds. Open each rule you cite and match its "Incorrect" shape.
+5. **Report** each finding with its rule ID, impact and site, in the format of `agent-skills-authoring`. The authorization server is an authentication path: don't lower an impact.
 
 ## 6. Checklist
 

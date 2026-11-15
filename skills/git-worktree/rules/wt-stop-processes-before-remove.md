@@ -2,7 +2,7 @@
 title: Stop processes running from the worktree before removing it
 impact: MEDIUM
 tags: worktree, processes, cleanup
-check: review
+check: hook, review
 ---
 
 ## Stop processes running from the worktree before removing it
@@ -37,4 +37,4 @@ Then:
 git worktree remove .worktrees/x
 ```
 
-**How to check:** after removal, the folder is gone, `git worktree list` doesn't show it, and `pgrep -af '.worktrees/x'` (or the PowerShell query) finds nothing.
+**How to check:** the `guard-worktree-remove.mjs` hook (`assets/hooks/`) refuses `git worktree remove` while a process's command line names the worktree's path (every platform) or, on Linux and macOS (with `lsof`), its working directory is inside it, and lists the pids. On Windows it misses a process that only `cd`'d in and was started with a relative path; `REMOVE_WITH_PROCESSES=1` in front lets a removal through when the processes it names aren't running from the worktree. Whose processes they are is yours to decide: stop your own only. After removal, the folder is gone, `git worktree list` doesn't show it, and `pgrep -af '.worktrees/x'` (or the PowerShell query) finds nothing.

@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for git repositories hosted on GitLab.
 metadata:
   author: firmansyahn
-  version: "0.1.1"
+  version: "0.2.0"
 ---
 
 # Merge requests: the team's overlay
@@ -37,7 +37,7 @@ Related team skills: `git-worktree` (where the branch lives; cleanup after the m
   - Diff against the MR's target (`git diff origin/<base>...HEAD`), not upstream's `origin/HEAD`, which is often `main`.
   - The project's `.gitlab/merge_request_templates/Default.md` wins when it exists; otherwise upstream's template.
   - Always fill **how it was checked**: the tests and checks run (name them), the pages looked at, and what was *not* checked, including manual CI jobs not run. Upstream omits sections without evidence; this one is never omitted.
-  - Reference issues by full URL, as `glab` asks. Write the body to a file first and pass it with `--description "$(cat "$FILE")"`.
+  - Reference issues by full URL, as `glab` asks. Write the body to a file first and pass it with `--description "$(cat <file>)"`, by its literal path, so `guard-public-text.mjs` can read it.
 
 ## 2. Review before asking for a merge
 
@@ -98,25 +98,35 @@ One file per rule in `rules/`; the file name is the rule ID. Sections and impact
 |---|---|---|---|
 | [mr-merge-after-green-pipeline](rules/mr-merge-after-green-pipeline.md) | Merge only after the MR's own pipeline passed | HIGH | hook (`guard-mr-merge.mjs`) |
 | [mr-new-pipeline-after-retarget](rules/mr-new-pipeline-after-retarget.md) | Run a new pipeline when a stacked MR is retargeted | HIGH | hook, review |
-| [mr-no-internal-details-public](rules/mr-no-internal-details-public.md) | Keep internal details out of public MRs | CRITICAL | scan (`REPO_PUBLIC=1`: IPv4 and `INTERNAL_PATTERNS` in messages and added lines), review (MR text, branch name) |
-| [mr-glab-for-gitlab](rules/mr-glab-for-gitlab.md) | Reach GitLab through glab, never a pasted token | MEDIUM | scan (tokens in tracked files), review |
+| [mr-no-internal-details-public](rules/mr-no-internal-details-public.md) | Keep internal details out of public MRs | CRITICAL | scan (candidates), hook (candidates), review |
+| [mr-glab-for-gitlab](rules/mr-glab-for-gitlab.md) | Reach GitLab through glab, never a pasted token | MEDIUM | scan, hook, review |
 
 ## Reviewing
 
 1. **Scope:** the MR (its target branch as base) or a branch before it becomes one.
-2. **Scan:** `bash <this skill>/scripts/scan.sh <base> [--strict]` from anywhere in the repo. For a public repo (or one you can't confirm is private) add `REPO_PUBLIC=1` and `INTERNAL_PATTERNS='<the project's internal names>'`. Every line is a candidate: open the rule and confirm it.
-3. **Read what the scan can't**, with `glab`: the target branch, title, description and branch name, and the head pipeline's status for the MR's current sha. Say whether the repo installed the hook (`guard-mr-merge.mjs`) or relies on review.
+2. **Scan:** `bash <this skill>/scripts/scan.sh <base> [--strict]` from anywhere in the repo. For a public repo (or one you can't confirm is private) add `REPO_PUBLIC=1` and `INTERNAL_PATTERNS='<the project's internal names>'`; with `glab` and `jq` it also reads the current branch's MR (title, description, source branch, notes; `MR=<iid>` picks another). Every line is a candidate: open the rule and confirm it.
+3. **Read what the scan can't**, with `glab`: the target branch, what the MR text says in prose about products and network setup, and the head pipeline's status for the MR's current sha. Say whether the repo installed the hooks (`guard-mr-merge.mjs`, `guard-glab-token.mjs`, `guard-public-text.mjs`) or relies on review.
 4. **Report** each finding in the team's format (`agent-skills-authoring`), ordered by impact; raise it one level when the repo is public or the MR targets the production branch.
 
 ## Enforce it in Claude Code
 
-[assets/hooks/guard-mr-merge.mjs](assets/hooks/guard-mr-merge.mjs) is a `PreToolUse` hook for the `Bash` tool. It refuses `glab mr merge` without an MR number, while that MR's head pipeline isn't `success`, or when the passing pipeline is for an older commit than the MR's head. An MR with no pipeline merges only with `MERGE_WITHOUT_PIPELINE=1` in front of the command, written on purpose. Copy it to `tools/agent-hooks/` and register it in `.claude/settings.json`:
+Three `PreToolUse` hooks for the `Bash` tool (Node; Linux, macOS and Windows):
+
+- [assets/hooks/guard-mr-merge.mjs](assets/hooks/guard-mr-merge.mjs) refuses `glab mr merge` without an MR number, while that MR's head pipeline isn't `success`, or when the passing pipeline is for an older commit than the MR's head. An MR with no pipeline merges only with `MERGE_WITHOUT_PIPELINE=1` in front of the command, written on purpose.
+- [assets/hooks/guard-glab-token.mjs](assets/hooks/guard-glab-token.mjs) refuses a command that carries a GitLab token (a `PRIVATE-TOKEN` header, a `glpat-` token, credentials in a URL) or calls the REST API with `curl`/`wget` instead of `glab api` (`mr-glab-for-gitlab`).
+- [assets/hooks/guard-public-text.mjs](assets/hooks/guard-public-text.mjs) reads the repo's visibility and, when it is public or unknown, refuses `glab mr create|update|note`, `glab release create`, `gh pr create|edit|comment` and `git push` whose text carries an IPv4 address outside the documentation ranges, a non-noreply email or an `INTERNAL_PATTERNS` match (`mr-no-internal-details-public`). Set `INTERNAL_PATTERNS` in the `env` block of `.claude/settings.local.json` (never committed); `PUBLIC_TEXT_OK=1` in front passes a false positive.
+
+Copy them to `tools/agent-hooks/` and register them in `.claude/settings.json`:
 
 ```json
 {
   "hooks": {
     "PreToolUse": [
-      { "matcher": "Bash", "hooks": [ { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/tools/agent-hooks/guard-mr-merge.mjs\"", "timeout": 40 } ] }
+      { "matcher": "Bash", "hooks": [
+        { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/tools/agent-hooks/guard-mr-merge.mjs\"", "timeout": 40 },
+        { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/tools/agent-hooks/guard-glab-token.mjs\"", "timeout": 10 },
+        { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/tools/agent-hooks/guard-public-text.mjs\"", "timeout": 40 }
+      ] }
     ]
   }
 }

@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go projects that load settings with koanf v2.
 metadata:
   author: firmansyahn
-  version: "0.2.1"
+  version: "0.2.2"
 ---
 
 # koanf: loading a Go service's settings

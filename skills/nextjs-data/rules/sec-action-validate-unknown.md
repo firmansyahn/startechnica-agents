@@ -2,7 +2,7 @@
 title: Parse action input from unknown with the shared schema
 impact: CRITICAL
 tags: server-actions, validation, zod
-check: review
+check: test, review (the shared schema)
 ---
 
 ## Parse action input from unknown with the shared schema
@@ -30,4 +30,4 @@ export async function saveItem(input: unknown): Promise<Result<Item>> {
 }
 ```
 
-**How to check:** every exported function in a `"use server"` file has an `unknown` or `FormData` parameter and calls `safeParse`/`parse` before using it; ids in paths go through `encodeURIComponent`.
+**How to check:** `assets/tests/use-server-exports.test.ts` fails on an exported action in a "use server" file whose parameter is typed (or untyped, or destructured) instead of `unknown` or `FormData` (with useActionState, `(prevState, formData: FormData)`), or that never passes that parameter to `.safeParse`/`.parse`; the file, line and fix are in the message. Review that the schema is the one the form shares and that the parsed value, not the raw input, reaches the backend. Encoded path segments: `action-encode-path-segments`.

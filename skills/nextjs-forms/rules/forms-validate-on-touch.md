@@ -2,7 +2,7 @@
 title: Validate on touch, and let zod be the only validator
 impact: MEDIUM
 tags: validation
-check: review
+check: eslint, review
 ---
 
 ## Validate on touch, and let zod be the only validator
@@ -24,3 +24,5 @@ check: review
 <form onSubmit={onSubmit} noValidate>
   <Input type="email" {...field} aria-invalid={fieldState.invalid} />
 ```
+
+**How to check:** the kit's `eslint.config.mjs` (`nextjs-new-app/assets`) flags a `useForm(...)` call without `mode: "onTouched"` (options passed as a variable are skipped) and a `<form>` without `noValidate` (one with a spread is skipped). Left to review: validation rules passed to `register` or `Controller` instead of the schema.

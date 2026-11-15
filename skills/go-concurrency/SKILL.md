@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.2.0"
+  version: "0.2.1"
 ---
 
 # Go concurrency and lifecycle (team)

@@ -2,7 +2,7 @@
 title: Clear the cache once, at the provider, on a scope switch
 impact: HIGH
 tags: tanstack-query, multi-tenant, cache
-check: review
+check: scan, review (what the listener does)
 ---
 
 ## Clear the cache once, at the provider, on a scope switch
@@ -26,4 +26,4 @@ useEffect(() => onTenantSwitch(() => { queryClient.removeQueries(); setEpoch((n)
 return <Fragment key={epoch}>{children}</Fragment>;
 ```
 
-**How to check:** grep for the scope-switch subscription; it should appear only in the provider.
+**How to check:** `scripts/scan.sh` lists every call of the scope-switch subscription outside a `providers.tsx` (set the project's name in `SCOPE_SWITCH`, default `onTenantSwitch|onScopeChange`). Review the provider's listener: it removes all queries and remounts the subtree, and sign-out clears the whole client.

@@ -2,7 +2,7 @@
 title: Go through the services registry, not fetch, in pages and components
 impact: HIGH
 tags: services, bff, data-fetching
-check: eslint
+check: scan, eslint
 ---
 
 ## Go through the services registry, not fetch, in pages and components

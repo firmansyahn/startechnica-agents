@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for HTTP APIs between a Go backend and a TypeScript frontend.
 metadata:
   author: firmansyahn
-  version: "0.1.1"
+  version: "0.2.0"
 ---
 
 # API contract: Go backend ↔ TypeScript frontend
@@ -51,21 +51,21 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 | [contract-doc-types-same-mr](rules/contract-doc-types-same-mr.md) | The frontend copy and types change in the same merge request | MEDIUM | test |
 | [contract-doc-generated-reply-types](rules/contract-doc-generated-reply-types.md) | Reply types come from the document, never hand-written | MEDIUM | review |
 | [contract-doc-shared-failure-response](rules/contract-doc-shared-failure-response.md) | One shared Failure response, referenced by every operation | MEDIUM | test |
-| [contract-doc-stable-operation-ids](rules/contract-doc-stable-operation-ids.md) | Operation ids are stable names | LOW | review |
-| [contract-doc-deprecate-before-removing](rules/contract-doc-deprecate-before-removing.md) | Nothing is removed or renamed without a deprecation first | HIGH | review |
+| [contract-doc-stable-operation-ids](rules/contract-doc-stable-operation-ids.md) | Operation ids are stable names | LOW | test, ci, review |
+| [contract-doc-deprecate-before-removing](rules/contract-doc-deprecate-before-removing.md) | Nothing is removed or renamed without a deprecation first | HIGH | ci, review |
 | [contract-doc-version-for-redesigns](rules/contract-doc-version-for-redesigns.md) | Surface versions are for redesigns, not for one field | LOW | review |
 
 ### Envelope and errors
 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
-| [contract-envelope-one-helper](rules/contract-envelope-one-helper.md) | Every JSON reply uses the envelope, written by one helper | HIGH | review |
+| [contract-envelope-one-helper](rules/contract-envelope-one-helper.md) | Every JSON reply uses the envelope, written by one helper | HIGH | scan (candidates), test, review |
 | [contract-status-matches-envelope](rules/contract-status-matches-envelope.md) | The HTTP status and the envelope's status agree | HIGH | test |
 | [contract-field-errors-json-path](rules/contract-field-errors-json-path.md) | Field errors are a 422 keyed by the field's JSON path | HIGH | test |
 | [contract-400-vs-422](rules/contract-400-vs-422.md) | 400 for unreadable requests, 422 for invalid values | MEDIUM | test |
 | [contract-other-scope-404](rules/contract-other-scope-404.md) | Another scope's record is a 404, not a 403 | HIGH | test |
 | [contract-guard-only-www-authenticate](rules/contract-guard-only-www-authenticate.md) | Only the guard's 401 carries WWW-Authenticate | HIGH | test |
-| [contract-generic-5xx-message](rules/contract-generic-5xx-message.md) | A 5xx message is generic; the details go to the log with the request id | HIGH | review |
+| [contract-generic-5xx-message](rules/contract-generic-5xx-message.md) | A 5xx message is generic; the details go to the log with the request id | HIGH | scan, review |
 | [contract-user-facing-messages](rules/contract-user-facing-messages.md) | Refusal messages are for users | MEDIUM | review |
 | [contract-frontend-from-envelope](rules/contract-frontend-from-envelope.md) | The frontend maps every reply through fromEnvelope | MEDIUM | review |
 | [contract-429-retry-after](rules/contract-429-retry-after.md) | 429 carries Retry-After | LOW | test |
@@ -74,18 +74,18 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
-| [contract-snake-case-names](rules/contract-snake-case-names.md) | One spelling for every name: snake_case on the wire and in the frontend | MEDIUM | review |
-| [contract-opaque-encoded-ids](rules/contract-opaque-encoded-ids.md) | Ids are opaque strings, encoded in paths | HIGH | review |
-| [contract-list-parameters](rules/contract-list-parameters.md) | Lists take offset, limit, sort, q and named filters, and answer total | MEDIUM | review |
-| [contract-cap-limit-whitelist-sort](rules/contract-cap-limit-whitelist-sort.md) | The server caps limit and whitelists sort fields | HIGH | review |
+| [contract-snake-case-names](rules/contract-snake-case-names.md) | One spelling for every name: snake_case on the wire and in the frontend | MEDIUM | eslint, test, review |
+| [contract-opaque-encoded-ids](rules/contract-opaque-encoded-ids.md) | Ids are opaque strings, encoded in paths | HIGH | scan (candidates), eslint (candidates), test, review |
+| [contract-list-parameters](rules/contract-list-parameters.md) | Lists take offset, limit, sort, q and named filters, and answer total | MEDIUM | test, review |
+| [contract-cap-limit-whitelist-sort](rules/contract-cap-limit-whitelist-sort.md) | The server caps limit and whitelists sort fields | HIGH | test, lint (gosec G201, G202), review |
 | [contract-patch-changed-only](rules/contract-patch-changed-only.md) | PATCH sends only changed fields; absent and null differ | MEDIUM | test |
 | [contract-go-patch-opt](rules/contract-go-patch-opt.md) | A Go PATCH type tells absent from null | MEDIUM | review |
 | [contract-create-201-whole-row](rules/contract-create-201-whole-row.md) | A create answers 201 with the whole row | MEDIUM | test |
-| [contract-rfc3339-utc-times](rules/contract-rfc3339-utc-times.md) | Times are RFC 3339 in UTC | MEDIUM | review |
+| [contract-rfc3339-utc-times](rules/contract-rfc3339-utc-times.md) | Times are RFC 3339 in UTC | MEDIUM | test, review |
 | [contract-money-not-float](rules/contract-money-not-float.md) | Money is never a float | HIGH | review |
 | [contract-enum-unknown-values](rules/contract-enum-unknown-values.md) | Enums are listed strings, and clients render unknown values | MEDIUM | review |
 | [contract-empty-list-not-null](rules/contract-empty-list-not-null.md) | Empty lists are [], never null | MEDIUM | test |
-| [contract-scope-header](rules/contract-scope-header.md) | The scope travels in one header | HIGH | review |
+| [contract-scope-header](rules/contract-scope-header.md) | The scope travels in one header | HIGH | test, scan (candidates), review |
 
 ### Testing
 
@@ -131,9 +131,10 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 ## Reviewing
 
 1. **Scope.** The diff (`git diff <base>...HEAD`), a merge request's files or the whole app, read for what this skill covers: the OpenAPI document, the handlers' replies, the generated types and the frontend's reply handling.
-2. **Read** the changed code against the Rules above. Open each rule you cite and match its "Incorrect" shape, not just its title.
-3. **Report** each finding in the format of `agent-skills-authoring` ("Scan scripts and findings"): impact, rule ID, file and line, what to change citing the rule's "Correct" shape; ordered by impact. Raise the impact one level on an authentication, payment or deletion path.
-4. **Say what's not covered:** rules whose check is `test` or `eslint` but the project has no such test or lint rule. `kit` in the Check column means a ready-to-copy check exists (`nextjs-new-app`, references/enforcement-kit.md).
+2. **Scan:** `bash <this skill>/scripts/scan.sh <module-root>` lists candidates for the rules with `scan` in their check (set `ENVELOPE_DIRS` to the envelope helper's folder and the endpoints that answer outside the envelope). On a diff, keep the ones in changed lines; open the rule and confirm each before reporting it.
+3. **Read** the changed code against the Rules above. Open each rule you cite and match its "Incorrect" shape, not just its title.
+4. **Report** each finding in the format of `agent-skills-authoring` ("Scan scripts and findings"): impact, rule ID, file and line, what to change citing the rule's "Correct" shape; ordered by impact. Raise the impact one level on an authentication, payment or deletion path.
+5. **Say what's not covered:** rules whose check is `test`, `ci` or `eslint` but the project has no such test, job or lint rule. Ready-to-copy checks: [assets/openapi_rules_test.go](assets/openapi_rules_test.go) (the rules the document itself proves, one walk of `api/<surface>.openapi.json`), [assets/openapi_lists_test.go](assets/openapi_lists_test.go) (limit clamp and sort allow-list through the real handler), [assets/ci/openapi-breaking.sh](assets/ci/openapi-breaking.sh) (the breaking-change step against the target branch); `kit` in the Check column means one in `nextjs-new-app` (references/enforcement-kit.md).
 
 ## Checklist
 

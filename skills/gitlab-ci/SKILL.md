@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for git repositories hosted on GitLab.
 metadata:
   author: firmansyahn
-  version: "0.1.1"
+  version: "0.2.0"
 ---
 
 # GitLab CI: the team's overlay
@@ -43,6 +43,7 @@ Related: `gitlab-mr` (opening, checking and merging merge requests; waiting for 
 | `nextjs-deploy` [assets/ci/root.gitlab-ci.yml](../nextjs-deploy/assets/ci/root.gitlab-ci.yml) | `.gitlab-ci.yml` (the root: tiers and includes) |
 | `nextjs-deploy` [assets/ci/nextjs.gitlab-ci.yml](../nextjs-deploy/assets/ci/nextjs.gitlab-ci.yml) | `<app>/.gitlab-ci.yml` (a Next.js app) |
 | [assets/go.gitlab-ci.yml](assets/go.gitlab-ci.yml) | `<go-app>/.gitlab-ci.yml` (a Go service: vet, test against a PostgreSQL service, kaniko build, chart release) |
+| [assets/ci-rules.gitlab-ci.yml](assets/ci-rules.gitlab-ci.yml) and [scripts/check-merged.sh](scripts/check-merged.sh) | `ci/ci-rules.gitlab-ci.yml` (included from the root) and `tools/ci/check-merged.sh`: a job that checks the merged configuration, templates included, in MRs that change CI files and nightly. It needs a read-only token in `CI_RULES_TOKEN` (the file's header says how) |
 
 Fill in `<org>`, `<app>`, the chart path and the runner tag. Add the child to the root's `include:` with its inputs.
 
@@ -67,23 +68,23 @@ One file per rule in `rules/`; the file name is the rule ID. Sections and impact
 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
-| [ci-mr-pipeline-only](rules/ci-mr-pipeline-only.md) | Run the MR pipeline, not a second branch pipeline | MEDIUM | review |
+| [ci-mr-pipeline-only](rules/ci-mr-pipeline-only.md) | Run the MR pipeline, not a second branch pipeline | MEDIUM | scan, ci, review |
 | [ci-changes-per-app](rules/ci-changes-per-app.md) | Gate each app's jobs on that app's changes | MEDIUM | dry-run, review |
-| [ci-per-app-vars-in-child](rules/ci-per-app-vars-in-child.md) | Keep per-app variables in the app's child file | HIGH | review |
+| [ci-per-app-vars-in-child](rules/ci-per-app-vars-in-child.md) | Keep per-app variables in the app's child file | HIGH | scan, review |
 | [ci-job-variables-replace-template](rules/ci-job-variables-replace-template.md) | Restate the template variables a job still needs | HIGH | review |
 | [ci-tests-block-merge](rules/ci-tests-block-merge.md) | Run test suites automatically and let them block the merge | HIGH | scan (test jobs with `when: manual` or `allow_failure: true`), review |
-| [ci-cache-write-once](rules/ci-cache-write-once.md) | Let one job on the integration branch write the cache | MEDIUM | review (MR job traces have no cache upload) |
-| [ci-build-needs-checks](rules/ci-build-needs-checks.md) | Make the image build wait for its checks | MEDIUM | review |
-| [ci-manual-allow-failure](rules/ci-manual-allow-failure.md) | Give manual jobs in rules allow_failure: true | MEDIUM | scan (jobs made manual with no `allow_failure` of their own), review |
-| [ci-tag-before-sha](rules/ci-tag-before-sha.md) | Don't let a zero BEFORE_SHA rule block tag releases | HIGH | review |
-| [ci-forward-pipeline-variables](rules/ci-forward-pipeline-variables.md) | Forward workflow-set variables to the triggered pipeline | HIGH | review |
-| [ci-pin-images](rules/ci-pin-images.md) | Pin job images, pull them through the mirror, and use maintained tools | LOW | scan (`:latest`, bare `:debug`, untagged, `gcr.io/kaniko-project`) |
+| [ci-cache-write-once](rules/ci-cache-write-once.md) | Let one job on the integration branch write the cache | MEDIUM | ci, scan (candidates), review |
+| [ci-build-needs-checks](rules/ci-build-needs-checks.md) | Make the image build wait for its checks | MEDIUM | ci, scan (candidates), review |
+| [ci-manual-allow-failure](rules/ci-manual-allow-failure.md) | Give manual jobs in rules allow_failure: true | MEDIUM | scan, ci, review |
+| [ci-tag-before-sha](rules/ci-tag-before-sha.md) | Don't let a zero BEFORE_SHA rule block tag releases | HIGH | ci, review |
+| [ci-forward-pipeline-variables](rules/ci-forward-pipeline-variables.md) | Forward workflow-set variables to the triggered pipeline | HIGH | scan, ci, review |
+| [ci-pin-images](rules/ci-pin-images.md) | Pin job images, pull them through the mirror, and use maintained tools | LOW | scan (`:latest`, bare `:debug`, untagged, `gcr.io/kaniko-project`), review |
 
 ## Reviewing
 
 1. **Scope:** the changed CI files, or every `.gitlab-ci.yml` in the repo.
 2. **Lint:** `glab ci lint`; for changed rules, `glab ci lint --dry-run --ref <branch> --include-jobs` and compare the job list with what you expect.
-3. **Scan:** `bash <this skill>/scripts/scan.sh [--strict]` from anywhere in the repo. Every line is a candidate: open the rule and confirm it.
+3. **Scan:** `bash <this skill>/scripts/scan.sh [--strict]` from anywhere in the repo reads the raw files. Then `bash <this skill>/scripts/check-merged.sh --ref <pushed branch or sha>` (needs `glab`, `jq` and mikefarah's `yq` v4) checks the merged configuration, where the org templates' `needs`, `rules`, `cache` and `allow_failure` are visible; pass a saved `merged.yml` instead of `--ref` to check one offline. Every line is a candidate: open the rule and confirm it.
 4. **Read what the scan can't:** the rules checked only in review, against each changed job.
 5. **Report** each finding in the team's format (`agent-skills-authoring`), ordered by impact; raise it one level when the job builds or releases to production.
 

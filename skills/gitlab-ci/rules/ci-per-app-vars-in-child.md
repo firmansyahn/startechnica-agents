@@ -2,7 +2,7 @@
 title: Keep per-app variables in the app's child file
 impact: HIGH
 tags: monorepo, variables, precedence
-check: review
+check: scan, review
 ---
 
 ## Keep per-app variables in the app's child file
@@ -32,4 +32,4 @@ web:build:
     <<: *web-app-vars
 ```
 
-**How to check:** the root `variables:` hold only values shared by all apps (tier regexes, registry mirror, `APP_IMAGE_TAG_LATEST`); each build job's log prints its own destination.
+**How to check:** `scripts/scan.sh` reports per-app names (`PER_APP_VARS`, default `APP_IMAGE_REPOSITORY|APP_REGISTRY_IMAGE|APP_NAME`) set in the root `.gitlab-ci.yml`'s top-level `variables:` or in its `workflow:rules` variables, when the root includes child files; a single-app repo is skipped. Names the project adds per app go in `PER_APP_VARS`. In review, the root `variables:` hold only values shared by all apps (tier regexes, registry mirror, `APP_IMAGE_TAG_LATEST`), and each build job's log prints its own destination.

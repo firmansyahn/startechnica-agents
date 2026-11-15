@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Next.js apps.
 metadata:
   author: firmansyahn
-  version: "0.1.1"
+  version: "0.2.0"
 ---
 
 # New Next.js app
@@ -91,19 +91,20 @@ yarn dlx shadcn@<shadcn-v> add button dialog field input sonner      # lands in 
 ```sh
 yarn add @tanstack/react-query zod react-hook-form @hookform/resolvers next-intl pino server-only
 yarn add -D vitest @vitejs/plugin-react jsdom @testing-library/react @testing-library/dom \
-  @testing-library/user-event @testing-library/jest-dom vite-tsconfig-paths @playwright/test pino-pretty
+  @testing-library/user-event @testing-library/jest-dom vite-tsconfig-paths @playwright/test pino-pretty   eslint-plugin-testing-library eslint-plugin-playwright axe-core
 ```
 
 ## 7. Copy the skeleton
 
 | Asset | To | Owner |
 |---|---|---|
-| [assets/app/layout.tsx](assets/app/layout.tsx), [page.tsx](assets/app/page.tsx), [HomeClient.tsx](assets/app/HomeClient.tsx), [HomeClient.test.tsx](assets/app/HomeClient.test.tsx) | `app/` | `nextjs-app-structure` (thin server page + client component) |
+| [assets/app/layout.tsx](assets/app/layout.tsx), [page.tsx](assets/app/page.tsx), [HomeClient.tsx](assets/app/HomeClient.tsx), [page.test.tsx](assets/app/page.test.tsx), [global-error.tsx](assets/app/global-error.tsx) | `app/` | `nextjs-app-structure` (thin server page + client component, a test beside each page), `nextjs-logging` (the last-resort error page) |
 | [assets/src/providers/QueryProvider.tsx](assets/src/providers/QueryProvider.tsx) | `src/providers/` | `nextjs-data` |
 | [assets/src/services/client.ts](assets/src/services/client.ts) | `src/services/` (`serviceKey`, `read`, `runAction`) | `nextjs-data` |
 | [assets/src/api/result.ts](assets/src/api/result.ts) | `src/api/` (`Result`, `ApiError`, `fromEnvelope`) | `go-nextjs-api-contract`, `nextjs-bff` |
 | [assets/src/i18n/request.ts](assets/src/i18n/request.ts), [assets/src/messages/en.json](assets/src/messages/en.json) | `src/i18n/`, `src/messages/` | `nextjs-app-structure` Strings rules |
-| [assets/src/libs/logger.ts](assets/src/libs/logger.ts), [assets/instrumentation.ts](assets/instrumentation.ts) | `src/libs/`, `<app-root>/` | `nextjs-logging` |
+| [assets/src/libs/logger.ts](assets/src/libs/logger.ts), [logger.test.ts](assets/src/libs/logger.test.ts), [assets/instrumentation.ts](assets/instrumentation.ts) | `src/libs/`, `<app-root>/` | `nextjs-logging` |
+| The `README.md` in each `assets/src/<kind>/` | each `src/<kind>/` | `nextjs-app-structure` (`struct-src-folder-readme`) |
 | [assets/vitest.config.ts](assets/vitest.config.ts), [assets/tests/setup-dom.ts](assets/tests/setup-dom.ts), [assets/tests/render.tsx](assets/tests/render.tsx) | `<app-root>/`, `tests/` (`renderWithQuery`, `fakeApi`) | `nextjs-app-structure` references/testing.md |
 
 Adjust `READS_BASE` and the sign-in path in `src/services/client.ts` to the app's.
@@ -112,7 +113,7 @@ Adjust `READS_BASE` and the sign-in path in `src/services/client.ts` to the app'
 
 Copy from `nextjs-deploy/assets/`:
 
-- `src/configs/runtime-config.ts`
+- `src/configs/runtime-config.ts` and `src/configs/README.md`
 - `src/libs/health.ts`, `app/livez/route.ts`, `app/readyz/route.ts`
 - `src/libs/build.ts`
 - `Dockerfile` → `<app>/shrine/Dockerfile.production`, and the same file without the `NODE_ENV=production` line → `<app>/shrine/Dockerfile.default`
@@ -130,15 +131,19 @@ Add the rest of `src/api/` (session store, OAuth flow, forwarding, `apiAction`),
 
 ## 10. Playwright (`nextjs-e2e`)
 
-Copy `nextjs-e2e/assets/playwright.config.ts` and set its `webServer` to the app's start command and health route (`/livez`). Specs go in `tests/e2e/`.
+Copy `nextjs-e2e/assets/playwright.config.ts` and set its `webServer` to the app's start command and health route (`/livez`). Specs go in `tests/e2e/`. Add `/**/__screenshots__/ @<team>` to `CODEOWNERS` and require code-owner approval (`e2e-review-baseline-updates`), and keep the CI job's Playwright image at the installed `@playwright/test` version.
 
 ## 11. Enforcement ([references/enforcement-kit.md](references/enforcement-kit.md))
 
 - `nextjs-new-app/assets/eslint.config.mjs` → `<app-root>/eslint.config.mjs`. It replaces the generated config and includes Next's.
-- `nextjs-ui/assets/tests/theme-tokens.test.ts`, `nextjs-bff/assets/tests/server-only.test.ts`, `nextjs-data/assets/tests/{no-effect-fetch,use-server-exports}.test.ts` and `nextjs-app-structure/templates/locale-parity.test.ts` → `tests/`.
-- `nextjs-app-structure/templates/src-layout.test.ts` → `tests/`.
+- `nextjs-ui/assets/tests/{theme-tokens,size-shorthand}.test.ts` and `axe.ts` → `tests/`.
+- `nextjs-bff/assets/tests/server-only.test.ts` → `tests/`.
+- `nextjs-data/assets/tests/{no-effect-fetch,use-server-exports,action-calls,optimistic-updates,stores}.test.ts` → `tests/`.
+- `nextjs-app-structure/templates/{locale-parity,metadata-translated,src-layout,test-layout,page-tests}.test.ts` → `tests/`.
+- `nextjs-security/assets/tests/route-handlers.test.ts` and `nextjs-e2e/assets/tests/e2e-setup.test.ts` → `tests/`.
+- `nextjs-security/assets/e2e/security-headers.spec.ts` and `nextjs-e2e/assets/layout.spec.ts` → `tests/e2e/`, with the app's pages in their settings.
 
-The skeleton passes all of them. Every module that imports `next/headers` or `node:*` starts with `import "server-only"`.
+The opt-in tests (the access map, the form overlay, the client-error endpoint) go in once the app has what they check; the enforcement kit lists them. The skeleton passes all of the default set and lints clean. Every module that imports `next/headers` or `node:*` starts with `import "server-only"`.
 
 ## 12. Scripts, repo files, first commit
 

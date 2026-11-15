@@ -24,7 +24,9 @@
 //                 headings that exist (code blocks and assets/ templates are skipped)
 //   rules         rule files (rules/<id>.md) have title, impact, tags and check; IDs are unique across
 //                 skills; each is linked from its skill's SKILL.md; its prefix is registered in
-//                 agent-skills-authoring references/rule-prefixes.md
+//                 agent-skills-authoring references/rule-prefixes.md; its check names known mechanisms
+//                 (scan, lint, vet, eslint, test, hook, ci, dry-run, review), the same ones as the
+//                 Check column of its row in the SKILL.md Rules table
 //   routed        every skill is named by some other team skill (no orphans)
 //   eol           no CRLF line endings in any text file
 //   portable      team skills name no install location (no path into a skills folder such as
@@ -49,7 +51,7 @@ const warn = (file, line, check, msg) => warnings.push(`${rel(file)}${line ? ":"
 
 const read = (p) => fs.readFileSync(p, "utf8");
 const exists = (p) => fs.existsSync(p);
-const TEXT = /\.(md|mjs|js|cjs|ts|sh|py|json|ya?ml|txt|bats)$|^(LICENSE|SKILL\.md|post-checkout|worktreeinclude)$/;
+const TEXT = /\.(md|mjs|js|cjs|ts|tsx|go|css|sh|py|json|ya?ml|txt|bats)$|^(LICENSE|SKILL\.md|Dockerfile|dockerignore|gitattributes|post-checkout|commit-msg|pre-commit|worktreeinclude)$/;
 
 function walk(dir) {
   const out = [];
@@ -232,6 +234,22 @@ const prefixFile = path.join(root, "agent-skills-authoring", "references", "rule
 const prefixText = exists(prefixFile) ? read(prefixFile) : "";
 const ruleOwner = {};
 const IMPACT = /^(CRITICAL|HIGH|MEDIUM-HIGH|MEDIUM|LOW)$/;
+// What can catch a violation. A check value lists one or more, each with an optional note in
+// brackets: "scan (candidates), test". Only the mechanism names are compared.
+const MECHANISMS = new Set(["scan", "lint", "vet", "eslint", "test", "hook", "ci", "dry-run", "review"]);
+const mechanisms = (v) =>
+  [...new Set(String(v).replace(/\([^)]*\)/g, "").replace(/`[^`]*`/g, "").split(/[,;+|]|\band\b/)
+    .map((x) => x.trim().split(/\s+/)[0].replace(/:$/, "").toLowerCase()).filter(Boolean))].sort().join(",");
+// The Check column (the last one) of each "| [id](rules/id.md) | ... |" row of a skill's Rules table.
+const tableCache = new Map();
+const rulesTable = (s, text) => {
+  if (!tableCache.has(s)) {
+    const rows = new Map();
+    for (const m of text.matchAll(/^\|\s*\[([a-z0-9-]+)\]\(rules\/\1\.md\)\s*\|.*\|\s*([^|]*?)\s*\|\s*$/gm)) rows.set(m[1], m[2]);
+    tableCache.set(s, rows);
+  }
+  return tableCache.get(s);
+};
 for (const s of skills.filter((s) => kind[s] === "team")) {
   const rdir = path.join(root, s, "rules");
   if (!exists(rdir)) continue;
@@ -248,6 +266,12 @@ for (const s of skills.filter((s) => kind[s] === "team")) {
       if (parsed.fm.impact && !IMPACT.test(parsed.fm.impact)) err(f, 1, "rules", `impact '${parsed.fm.impact}' is not CRITICAL, HIGH, MEDIUM or LOW`);
     }
     if (!skillText.includes(`rules/${name}`)) err(path.join(root, s, "SKILL.md"), 0, "rules", `rule ${id} is not in the Rules index`);
+    if (parsed && parsed.fm.check) {
+      const fmMech = mechanisms(parsed.fm.check);
+      for (const m of fmMech.split(",")) if (m && !MECHANISMS.has(m)) err(f, 1, "rules", `check '${m}' is not one of ${[...MECHANISMS].join(", ")}`);
+      const row = rulesTable(s, skillText).get(id);
+      if (row !== undefined && mechanisms(row) !== fmMech) err(f, 1, "rules", `check says '${fmMech}' but the SKILL.md Rules table says '${mechanisms(row)}'`);
+    }
     const prefix = id.split("-")[0] + "-";
     if (prefixText && !prefixText.includes("`" + prefix) && !prefixText.includes(" " + prefix)) warn(f, 0, "rules", `prefix ${prefix} not in agent-skills-authoring references/rule-prefixes.md`);
   }

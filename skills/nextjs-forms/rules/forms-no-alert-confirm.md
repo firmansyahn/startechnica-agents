@@ -2,7 +2,7 @@
 title: Use the confirm dialog and toasts, never alert() or confirm()
 impact: MEDIUM
 tags: forms, dialogs, feedback
-check: eslint
+check: scan, eslint
 ---
 
 ## Use the confirm dialog and toasts, never alert() or confirm()

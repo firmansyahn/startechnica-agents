@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Next.js apps.
 metadata:
   author: firmansyahn
-  version: "0.1.1"
+  version: "0.2.0"
 ---
 
 # Next.js UI: Tailwind, shadcn, Base UI and themes
@@ -50,15 +50,15 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 |---|---|---|---|
 | [ui-theme-tokens-only](rules/ui-theme-tokens-only.md) | Color with semantic tokens only | MEDIUM | test: kit (eslint warns; scan candidates) |
 | [ui-status-color-map](rules/ui-status-color-map.md) | Status colors through one map of tokens | MEDIUM | review |
-| [ui-no-dark-overrides](rules/ui-no-dark-overrides.md) | No manual dark: color overrides | MEDIUM | review |
+| [ui-no-dark-overrides](rules/ui-no-dark-overrides.md) | No manual dark: color overrides | MEDIUM | eslint |
 | [ui-classname-layout-only](rules/ui-classname-layout-only.md) | className on primitives is for layout | MEDIUM | review |
-| [ui-cn-merge-classes](rules/ui-cn-merge-classes.md) | cn() for conditional and overridable classes | LOW | review |
-| [ui-literal-class-names](rules/ui-literal-class-names.md) | Write class names as complete literal strings | MEDIUM | review |
-| [ui-gap-not-space](rules/ui-gap-not-space.md) | gap-*, not space-x-* / space-y-* | LOW | review |
-| [ui-size-shorthand](rules/ui-size-shorthand.md) | size-* when width and height match | LOW | review |
+| [ui-cn-merge-classes](rules/ui-cn-merge-classes.md) | cn() for conditional and overridable classes | LOW | eslint, review |
+| [ui-literal-class-names](rules/ui-literal-class-names.md) | Write class names as complete literal strings | MEDIUM | eslint |
+| [ui-gap-not-space](rules/ui-gap-not-space.md) | gap-*, not space-x-* / space-y-* | LOW | eslint |
+| [ui-size-shorthand](rules/ui-size-shorthand.md) | size-* when width and height match | LOW | test |
 | [ui-tabular-nums](rules/ui-tabular-nums.md) | Numbers use tabular-nums | LOW | review |
 | [ui-no-arbitrary-values](rules/ui-no-arbitrary-values.md) | No arbitrary values where the scale has one | LOW | review |
-| [ui-no-overlay-z-index](rules/ui-no-overlay-z-index.md) | No z-index on overlays | MEDIUM | review |
+| [ui-no-overlay-z-index](rules/ui-no-overlay-z-index.md) | No z-index on overlays | MEDIUM | eslint |
 | [ui-third-party-follows-mode](rules/ui-third-party-follows-mode.md) | Make toasts and charts follow the theme | LOW | scan |
 | [ui-no-theme-flash](rules/ui-no-theme-flash.md) | Paint the theme before first render, with one owner for .dark | LOW | review |
 
@@ -66,10 +66,10 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
-| [ui-existing-primitive-first](rules/ui-existing-primitive-first.md) | Use an existing primitive or composite before writing markup | HIGH | review |
+| [ui-existing-primitive-first](rules/ui-existing-primitive-first.md) | Use an existing primitive or composite before writing markup | HIGH | eslint, review |
 | [ui-composite-on-second-use](rules/ui-composite-on-second-use.md) | A pattern used twice becomes a composite | MEDIUM | review |
 | [ui-one-primary-button](rules/ui-one-primary-button.md) | One primary button per view | LOW | review |
-| [ui-button-pending-state](rules/ui-button-pending-state.md) | Buttons show pending state through disabled and a spinner, not a prop | MEDIUM | review |
+| [ui-button-pending-state](rules/ui-button-pending-state.md) | Buttons show pending state through disabled and a spinner, not a prop | MEDIUM | eslint, review |
 | [ui-notice-composite](rules/ui-notice-composite.md) | Callouts and form-level messages use the notice composite | LOW | review |
 | [ui-parts-inside-parents](rules/ui-parts-inside-parents.md) | Tabs, groups and items stay inside their parents | MEDIUM | review |
 | [ui-base-ui-composition](rules/ui-base-ui-composition.md) | Compose Base UI parts with render, and set nativeButton for non-buttons | MEDIUM | scan |
@@ -80,12 +80,12 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
-| [ui-icon-library-lucide](rules/ui-icon-library-lucide.md) | lucide-react only | LOW | review |
-| [ui-button-icon-data-icon](rules/ui-button-icon-data-icon.md) | Icons in buttons use data-icon, no size classes | LOW | review |
-| [ui-icon-no-size-in-primitives](rules/ui-icon-no-size-in-primitives.md) | No size classes on icons inside primitives | LOW | review |
+| [ui-icon-library-lucide](rules/ui-icon-library-lucide.md) | lucide-react only | LOW | eslint, review |
+| [ui-button-icon-data-icon](rules/ui-button-icon-data-icon.md) | Icons in buttons use data-icon, no size classes | LOW | eslint, review |
+| [ui-icon-no-size-in-primitives](rules/ui-icon-no-size-in-primitives.md) | No size classes on icons inside primitives | LOW | eslint |
 | [ui-dialog-title](rules/ui-dialog-title.md) | Title every dialog and name every icon button | MEDIUM | test |
 | [ui-icon-decorative-hidden](rules/ui-icon-decorative-hidden.md) | Decorative icons stay hidden from screen readers | LOW | review |
-| [ui-icon-color-from-text](rules/ui-icon-color-from-text.md) | Icon color comes from the text token | LOW | review |
+| [ui-icon-color-from-text](rules/ui-icon-color-from-text.md) | Icon color comes from the text token | LOW | test: kit (`theme-tokens.test.ts`), eslint (palette warning), review |
 | [ui-status-not-color-alone](rules/ui-status-not-color-alone.md) | Status is never shown by icon or color alone | MEDIUM | review |
 
 ### Overlays
@@ -93,9 +93,9 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
 | [ui-overlay-by-task](rules/ui-overlay-by-task.md) | Choose the overlay by what the user does in it | MEDIUM | review |
-| [ui-confirm-composite](rules/ui-confirm-composite.md) | Destructive confirmations use the confirm composite | MEDIUM | review |
+| [ui-confirm-composite](rules/ui-confirm-composite.md) | Destructive confirmations use the confirm composite | MEDIUM | eslint, review |
 | [ui-overlay-locked-while-pending](rules/ui-overlay-locked-while-pending.md) | An overlay with a pending write can't be dismissed | MEDIUM | review |
-| [ui-overlay-form-state](rules/ui-overlay-form-state.md) | Forms in overlays keep their state on failure and reset on open | MEDIUM | review |
+| [ui-overlay-form-state](rules/ui-overlay-form-state.md) | Forms in overlays keep their state on failure and reset on open | MEDIUM | test, review |
 | [ui-tooltip-not-sole-info](rules/ui-tooltip-not-sole-info.md) | Tooltips only add, never hold, information | MEDIUM | review |
 | [ui-toast-for-outcomes](rules/ui-toast-for-outcomes.md) | Toasts for outcomes, not for questions or form errors | MEDIUM | review |
 
@@ -115,37 +115,37 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
-| [ui-table-primitive](rules/ui-table-primitive.md) | Tables are the Table primitive plus the list composites | MEDIUM | review |
-| [ui-table-headers-numbers](rules/ui-table-headers-numbers.md) | Every column has a header; numbers right-aligned | LOW | review |
-| [ui-table-row-actions](rules/ui-table-row-actions.md) | Row actions sit in the last column as ghost icon buttons or a menu | MEDIUM | review |
+| [ui-table-primitive](rules/ui-table-primitive.md) | Tables are the Table primitive plus the list composites | MEDIUM | eslint, review |
+| [ui-table-headers-numbers](rules/ui-table-headers-numbers.md) | Every column has a header; numbers right-aligned | LOW | eslint, review |
+| [ui-table-row-actions](rules/ui-table-row-actions.md) | Row actions sit in the last column as ghost icon buttons or a menu | MEDIUM | eslint, review |
 | [ui-table-truncate-full-value](rules/ui-table-truncate-full-value.md) | Long text truncates with the full value available | LOW | review |
-| [ui-table-scroll-container](rules/ui-table-scroll-container.md) | Wide tables scroll inside their container | MEDIUM | review |
+| [ui-table-scroll-container](rules/ui-table-scroll-container.md) | Wide tables scroll inside their container | MEDIUM | test (e2e), review |
 | [ui-table-selection](rules/ui-table-selection.md) | Selection uses checkboxes with a select-all and a bulk action bar | MEDIUM | review |
-| [ui-dates-formatted](rules/ui-dates-formatted.md) | Dates and times are formatted, localised and absolute | LOW | review |
+| [ui-dates-formatted](rules/ui-dates-formatted.md) | Dates and times are formatted, localised and absolute | LOW | eslint, review |
 
 ### Layout
 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
-| [ui-page-title-component](rules/ui-page-title-component.md) | Every page starts with the page title component | LOW | review |
+| [ui-page-title-component](rules/ui-page-title-component.md) | Every page starts with the page title component | LOW | eslint, review |
 | [ui-spacing-steps](rules/ui-spacing-steps.md) | Spacing comes from a small set of steps | LOW | review |
-| [ui-mobile-first](rules/ui-mobile-first.md) | Mobile first, and no horizontal page scroll | MEDIUM | review |
+| [ui-mobile-first](rules/ui-mobile-first.md) | Mobile first, and no horizontal page scroll | MEDIUM | test (e2e), review |
 | [ui-content-width](rules/ui-content-width.md) | Content width is constrained for reading | LOW | review |
-| [ui-cards-group-not-decorate](rules/ui-cards-group-not-decorate.md) | Cards group, they don't decorate | LOW | review |
-| [ui-heading-hierarchy](rules/ui-heading-hierarchy.md) | Headings follow the page hierarchy | MEDIUM | review |
+| [ui-cards-group-not-decorate](rules/ui-cards-group-not-decorate.md) | Cards group, they don't decorate | LOW | eslint, review |
+| [ui-heading-hierarchy](rules/ui-heading-hierarchy.md) | Headings follow the page hierarchy | MEDIUM | test, review |
 
 ### Accessibility
 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
-| [ui-keyboard-operable](rules/ui-keyboard-operable.md) | Everything works with the keyboard | HIGH | review |
-| [ui-focus-visible](rules/ui-focus-visible.md) | Focus is always visible | HIGH | review |
-| [ui-visible-labels](rules/ui-visible-labels.md) | Names come from visible labels | HIGH | review |
+| [ui-keyboard-operable](rules/ui-keyboard-operable.md) | Everything works with the keyboard | HIGH | eslint, review |
+| [ui-focus-visible](rules/ui-focus-visible.md) | Focus is always visible | HIGH | scan (candidates), review |
+| [ui-visible-labels](rules/ui-visible-labels.md) | Names come from visible labels | HIGH | eslint, test, review |
 | [ui-announce-changes](rules/ui-announce-changes.md) | Errors and changes are announced | MEDIUM | review |
 | [ui-reduced-motion](rules/ui-reduced-motion.md) | Motion respects reduced-motion | LOW | review |
 | [ui-contrast-aa](rules/ui-contrast-aa.md) | Contrast meets AA in every theme | MEDIUM | test |
 | [ui-links-vs-buttons](rules/ui-links-vs-buttons.md) | Links go places, buttons do things | MEDIUM | review |
-| [ui-test-by-role](rules/ui-test-by-role.md) | Tests query by role and name | LOW | review |
+| [ui-test-by-role](rules/ui-test-by-role.md) | Tests query by role and name | LOW | eslint, review |
 
 If the upstream shadcn skill is installed too, its rules apply as well; where they differ, these win for the team.
 
@@ -157,6 +157,10 @@ If the upstream shadcn skill is installed too, its rules apply as well; where th
 | `assets/theme-presets.css` | Ready OKLCH preset pairs (light + dark) to rename and adapt |
 | `assets/appearance.ts` | Theme mechanism C (choice saved on the account, painted by the server): option lists, cookie parser, layout attributes, constant mode script, `applyAppearance`. Proven shape |
 | `assets/ThemeProvider.tsx`, `assets/set-appearance.action.ts` | Theme mechanism B (next-themes for mode, session for preset/font). Plan-derived: validate on first use |
+| `assets/tests/theme-tokens.test.ts`, `assets/tests/size-shorthand.test.ts` | Rule tests to copy into `<app-root>/tests/`: literal colors (`ui-theme-tokens-only`), `w-N h-N` pairs (`ui-size-shorthand`) |
+| `assets/tests/axe.ts` | `expectAccessible()` for page tests: axe in jsdom for `ui-heading-hierarchy` and the labels half of `ui-visible-labels` (needs `axe-core`) |
+| `assets/tests/form-overlay.test.tsx` | The four state cases of the form drawer/dialog composite (`ui-overlay-form-state`); copy beside the composite and adapt its harness |
+| `scripts/scan.sh` | Read-only scan for the rules whose check includes `scan` (candidates) |
 
 ## Rules that hold everywhere
 

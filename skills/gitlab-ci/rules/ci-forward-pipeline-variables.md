@@ -2,7 +2,7 @@
 title: Forward workflow-set variables to the triggered pipeline
 impact: HIGH
 tags: trigger, release, variables
-check: review
+check: scan, ci, review
 ---
 
 ## Forward workflow-set variables to the triggered pipeline
@@ -30,4 +30,4 @@ A trigger job forwards only its YAML variables by default. Variables set by `wor
       pipeline_variables: true
 ```
 
-**How to check:** the downstream chart pipeline's variables (`glab ci get -R <chart-project> -p <id> --with-variables`) include the tier and the app's image tag.
+**How to check:** when a CI file's `workflow:rules` set `variables:`, `scripts/scan.sh` reports every job with a `trigger:` and no `pipeline_variables: true`; `scripts/check-merged.sh` (the `ci:rules` job in `assets/ci-rules.gitlab-ci.yml`) does the same over the merged configuration, so a trigger job from a template counts too. A downstream that truly needs none of the variables is a false positive: forward them anyway. In review, the downstream chart pipeline's variables (`glab ci get -R <chart-project> -p <id> --with-variables`) include the tier and the app's image tag.

@@ -2,7 +2,7 @@
 title: Actions live in the domain's actions file, never inline in components
 impact: HIGH
 tags: actions
-check: review
+check: test, scan, review
 ---
 
 ## Actions live in the domain's actions file, never inline in components
@@ -25,3 +25,5 @@ export default function Page({ id }: Props) {
 ```tsx
 <Button onClick={() => remove.mutate({ id, scope })}>{t("delete")}</Button>   // remove = useMutation over deleteItem
 ```
+
+**How to check:** the kit's `use-server-exports.test.ts` fails on an inline `"use server"` function, on its own line or opening a one-line body, and `scripts/scan.sh` lists the same shapes. Whether a `"use server"` file is the domain's `actions.ts` is left to review.

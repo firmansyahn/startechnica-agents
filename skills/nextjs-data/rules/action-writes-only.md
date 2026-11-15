@@ -2,7 +2,7 @@
 title: Use server actions for writes only, one at a time
 impact: MEDIUM
 tags: server-actions, performance
-check: review
+check: test, scan, review (sequential loops of actions)
 ---
 
 ## Use server actions for writes only, one at a time
@@ -25,4 +25,4 @@ const { data } = useQuery(items.list(scope, params));
 await runAction(() => deleteItems({ ids, scope }));      // one action, one backend call
 ```
 
-**How to check:** look for actions called from `queryFn`, `useEffect` or `Promise.all`, and for `File`/`Blob` in action inputs.
+**How to check:** `assets/tests/action-calls.test.ts` fails on an action (a name imported from an `actions` module) called in a `queryFn` or in `Promise.all`/`Promise.allSettled`, and `assets/tests/no-effect-fetch.test.ts` on one called in a `useEffect`. `scripts/scan.sh` lists `z.file()`, `z.instanceof(File)`/`Blob` and `instanceof File` in "use server" files and the schemas they import (uploads through an action). Review the rest: actions called one after another in a loop, and an action passed through a variable or prop before it is called.

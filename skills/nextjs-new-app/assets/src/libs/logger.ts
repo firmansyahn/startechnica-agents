@@ -4,7 +4,7 @@ import "server-only";
 import pino, { type Logger } from "pino";
 import { headers } from "next/headers";
 
-const REDACT = [
+export const REDACT = [
   "*.authorization", "*.cookie", "*.password", "*.secret", "*.token", "*.access", "*.refresh",
   "*.code", "*.client_secret", "*.apiKey",
   "req.headers.authorization", "req.headers.cookie", 'res.headers["set-cookie"]',

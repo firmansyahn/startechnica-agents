@@ -2,14 +2,16 @@ import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 
-// Rule data-no-effect-fetch: client components read server data with useQuery and write
-// with useMutation, never in a useEffect: directly, through one of the file's own functions
-// (`load()`), through an imported helper that fetches, or through a server action. Place this file
-// in <app-root>/tests/; root then resolves to the app.
+// Rules data-no-effect-fetch and data-no-writes-in-effects: client components read server data
+// with useQuery and write with useMutation from a user event, never in a useEffect: no fetch there,
+// directly, through one of the file's own functions (`load()`), through an imported helper that
+// fetches or through a server action, and no mutation fired there (`save.mutate(v)`,
+// `mutateAsync(v)`, a `mutate` destructured from a mutation hook). Place this file in
+// <app-root>/tests/; root then resolves to the app.
 //
 // It reads source text, not a syntax tree: it follows function names within a file and exported
-// helpers across files, which catches the usual shapes. A fetch hidden behind a hook or a callback
-// prop isn't seen; review catches those.
+// helpers across files, which catches the usual shapes. A fetch or write hidden behind a hook or a
+// callback prop isn't seen, nor a write during render; review catches those.
 const root = path.resolve(__dirname, "..");
 
 // Where components and pages live (checked), and where shared helpers live (followed).
@@ -40,6 +42,9 @@ function sources(dir: string): string[] {
 const read = (rel: string) => fs.readFileSync(path.join(root, rel), "utf8");
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const NETWORK = new RegExp(String.raw`(?<![\w.$])(?:${NETWORK_CALLS.map(escape).join("|")})\s*\(`);
+// A mutation fired: `save.mutate(v)`, `remove.mutateAsync(id)`.
+const MUTATE = /\.mutate(?:Async)?\s*\(/;
+const reaches = (text: string) => NETWORK.test(text) || MUTATE.test(text);
 const calls = (name: string) => new RegExp(String.raw`(?<![\w.$])${escape(name)}\s*\(`);
 const names = (name: string) => new RegExp(String.raw`(?<![\w.$])${escape(name)}(?![\w$])`);
 
@@ -88,7 +93,7 @@ function fetchingFunctions(src: string, known: Set<string> = new Set()): Set<str
     grew = false;
     for (const [name, text] of bodies) {
       if (fetching.has(name)) continue;
-      if (NETWORK.test(text) || [...fetching].some((f) => calls(f).test(text))) {
+      if (reaches(text) || [...fetching].some((f) => calls(f).test(text))) {
         fetching.add(name);
         grew = true;
       }
@@ -124,18 +129,34 @@ function exportedFetchers(files: string[]): Set<string> {
   return result;
 }
 
-/** Whether any useEffect in `src` reaches the network, given the helpers known to fetch. */
-function effectFetches(src: string, helpers: Set<string>): boolean {
-  const known = new Set<string>();
-  for (const [name, from] of imported(src)) if (helpers.has(name) || ACTION_MODULE.test(from)) known.add(name);
-  const fetching = fetchingFunctions(src, known);
-  return [...src.matchAll(/\buseEffect\s*\(/g)].some((m) => {
-    const effect = balanced(src, m.index! + m[0].length - 1);
-    return NETWORK.test(effect) || [...fetching].some((f) => names(f).test(effect));
-  });
+/** The local names of `mutate`/`mutateAsync` destructured from a mutation hook: `const { mutate: save } = useMutation(...)`. */
+function mutateLocals(src: string): Set<string> {
+  const found = new Set<string>();
+  for (const m of src.matchAll(/\bconst\s*\{([^}]*)\}\s*=\s*use[\w$]*Mutation\s*\(/g)) {
+    for (const part of m[1].split(",")) {
+      const [key, local] = part.split(":").map((s) => s.trim());
+      if (key === "mutate" || key === "mutateAsync") found.add(local || key);
+    }
+  }
+  return found;
 }
 
-describe("server data goes through TanStack Query (rule data-no-effect-fetch)", () => {
+/** The lines of the useEffect calls in `src` that fetch or write, given the helpers known to fetch. */
+function effectLines(src: string, helpers: Set<string>): number[] {
+  const known = mutateLocals(src);
+  for (const [name, from] of imported(src)) if (helpers.has(name) || ACTION_MODULE.test(from)) known.add(name);
+  const fetching = fetchingFunctions(src, known);
+  return [...src.matchAll(/\buseEffect\s*\(/g)]
+    .filter((m) => {
+      const effect = balanced(src, m.index! + m[0].length - 1);
+      return reaches(effect) || [...fetching].some((f) => names(f).test(effect));
+    })
+    .map((m) => src.slice(0, m.index!).split("\n").length);
+}
+
+const effectFetches = (src: string, helpers: Set<string>) => effectLines(src, helpers).length > 0;
+
+describe("server data goes through TanStack Query, not effects (rules data-no-effect-fetch, data-no-writes-in-effects)", () => {
   it("finds a fetch in an effect, directly or through the file's own functions", () => {
     expect(effectFetches(`useEffect(() => { fetch("/x").then(set); }, []);`, new Set())).toBe(true);
     expect(effectFetches(`const load = async () => set(await (await fetch("/x")).json()); useEffect(() => { load(); }, []);`, new Set())).toBe(true);
@@ -150,17 +171,24 @@ describe("server data goes through TanStack Query (rule data-no-effect-fetch)", 
     expect(effectFetches(`import { cn } from "@/libs/utils"; useEffect(() => { cn("a"); }, []);`, helpers)).toBe(false);
   });
 
+  it("finds a mutation fired in an effect (rule data-no-writes-in-effects)", () => {
+    expect(effectFetches(`const save = useSaveItem(); useEffect(() => { if (dirty) save.mutate(v); }, [dirty]);`, new Set())).toBe(true);
+    expect(effectFetches(`const { mutateAsync: save } = useMutation(opts); useEffect(() => { void save(v); }, [v]);`, new Set())).toBe(true);
+    expect(effectFetches(`const autosave = () => save.mutateAsync(v); useEffect(() => { autosave(); }, [v]);`, new Set())).toBe(true);
+    expect(effectLines(`const save = useSaveItem();\nuseEffect(() => { form.reset(row); }, [row]);\nconst onClick = () => save.mutate(v);`, new Set())).toEqual([]);
+  });
+
   const checked = CHECKED_DIRS.flatMap(sources);
   const helpers = exportedFetchers([...checked, ...HELPER_DIRS.flatMap(sources)]);
-  const found = checked.filter((file) => effectFetches(read(file), helpers));
+  const found = checked.map((file) => ({ file, lines: effectLines(read(file), helpers) })).filter(({ lines }) => lines.length > 0);
 
-  it("has no useEffect that fetches, outside the exempt list", () => {
-    const report = found.filter((f) => !(f in EXEMPT));
-    expect(report, `Read with useQuery and write with useMutation (nextjs-data), not in a useEffect:\n${report.join("\n")}`).toEqual([]);
+  it("has no useEffect that fetches or writes, outside the exempt list", () => {
+    const report = found.filter(({ file }) => !(file in EXEMPT)).map(({ file, lines }) => `${file}:${lines.join(",")}`);
+    expect(report, `Read with useQuery, and write with useMutation from the user's event (submit, click, confirm), not in a useEffect (nextjs-data):\n${report.join("\n")}`).toEqual([]);
   });
 
   it("has no stale exemption", () => {
-    const stale = Object.keys(EXEMPT).filter((f) => !found.includes(f));
-    expect(stale, "these no longer fetch in an effect: remove them from EXEMPT").toEqual([]);
+    const stale = Object.keys(EXEMPT).filter((f) => !found.some(({ file }) => file === f));
+    expect(stale, "these no longer fetch or write in an effect: remove them from EXEMPT").toEqual([]);
   });
 });

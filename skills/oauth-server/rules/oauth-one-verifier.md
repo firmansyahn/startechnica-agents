@@ -2,7 +2,7 @@
 title: Verify bearer tokens in one function for every API surface
 impact: HIGH
 tags: verifier, resource-server, revocation
-check: review
+check: test, scan (candidates), review
 ---
 
 ## Verify bearer tokens in one function for every API surface
@@ -29,4 +29,4 @@ if err != nil {
 }
 ```
 
-**How to check:** in review, search for code that reads the `Authorization` header or the token table outside the verifier; tests revoke a token and check every surface refuses it at once.
+**How to check:** `assets/oauth_flow_test.go` (`TestOAuthOneVerifierEverySurface`) gets a token for each API surface, checks it is accepted, then revokes it (and, in separate cases, ends the session and disables the client) and checks every surface answers 401 with `WWW-Authenticate: Bearer resource_metadata=`, the same header for each refused token, and the same for an unknown or missing token. `scripts/scan.sh` lists code reading the `Authorization` header, cutting a `Bearer ` prefix or querying the token tables outside `VERIFIER_DIRS` (the verifier and the library's storage adapter). In review: surfaces missing from the test's list.

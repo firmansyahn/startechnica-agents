@@ -11,4 +11,4 @@ check: test
 
 Every documented refusal (`400`, `401`, `403`, `404`, `409`, `422`, `429`, `5xx`) points at one `components/responses/Failure` with the envelope schema, so the frontend's `fromEnvelope` has one shape to trust and the reply check covers refusals too.
 
-**How to check:** a document test asserts every documented 4xx/5xx response is a `$ref` to `components/responses/Failure`.
+**How to check:** the OpenAPI document test (`assets/openapi_rules_test.go`) fails any 4xx, 5xx or `default` response that isn't a `$ref` to `components/responses/Failure`.

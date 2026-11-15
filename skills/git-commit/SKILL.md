@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for git repositories hosted on GitLab.
 metadata:
   author: firmansyahn
-  version: "0.2.1"
+  version: "0.3.0"
 ---
 
 # Committing
@@ -80,24 +80,33 @@ One file per rule in `rules/`; the file name is the rule ID. Sections and impact
 
 | ID | Rule | Impact | Check |
 |---|---|---|---|
-| [commit-conventional](rules/commit-conventional.md) | Write Conventional Commits with the component as scope | LOW | scan |
-| [commit-stage-by-name](rules/commit-stage-by-name.md) | Stage files by name; never commit ignored or secret files | HIGH | scan (secret and local files added in the range) |
-| [commit-lf-endings](rules/commit-lf-endings.md) | Commit LF line endings, enforced by .gitattributes | LOW | scan (`.gitattributes`, `git ls-files --eol`) |
-| [commit-ci-skip-without-code](rules/commit-ci-skip-without-code.md) | Use [ci skip] only on commits without code | MEDIUM | scan |
-| [commit-identity-public](rules/commit-identity-public.md) | Commit to public repos with a noreply identity | MEDIUM | scan (`REPO_PUBLIC=1`) |
+| [commit-conventional](rules/commit-conventional.md) | Write Conventional Commits with the component as scope | LOW | scan, hook, review |
+| [commit-stage-by-name](rules/commit-stage-by-name.md) | Stage files by name; never commit ignored or secret files | HIGH | scan (secret and local files added in the range), review |
+| [commit-lf-endings](rules/commit-lf-endings.md) | Commit LF line endings, enforced by .gitattributes | LOW | scan (`.gitattributes`, `git ls-files --eol`), review |
+| [commit-ci-skip-without-code](rules/commit-ci-skip-without-code.md) | Use [ci skip] only on commits without code | MEDIUM | scan, review |
+| [commit-identity-public](rules/commit-identity-public.md) | Commit to public repos with a noreply identity | MEDIUM | scan (`REPO_PUBLIC=1`), hook, review |
 | [commit-no-backslash-escaped-backticks](rules/commit-no-backslash-escaped-backticks.md) | Do not backslash-escape backticks in text passed through PowerShell | MEDIUM | scan |
 
 ## Reviewing
 
 1. **Scope:** the commits in `<base>..HEAD`, with the MR's target as base.
 2. **Scan:** `bash <this skill>/scripts/scan.sh <base> [--strict]` from anywhere in the repo; add `REPO_PUBLIC=1` for a public repo (or one you can't confirm is private). Every line is a candidate: open the rule and confirm it.
-3. **Read what the scan can't:** every added file belongs in the commit, each message says what changed and why, and the scope names the component touched.
+3. **Read what the scan can't:** every added file belongs in the commit, each message says what changed and why, and the scope names the component touched. Say whether the repo installed the git hooks (`commit-msg`, `pre-commit`) or relies on the scan and review.
 4. **Report** each finding in the team's format (`agent-skills-authoring`), ordered by impact; raise it one level in a public repo:
 
    ```
    [HIGH] commit-stage-by-name  commit 3f2a91c
    .env.local was committed; remove it from the branch (git rm --cached), rotate anything it held, add it to .gitignore.
    ```
+
+## Enforce it with git hooks
+
+Two git hooks (POSIX `sh`: Linux, macOS, Git Bash on Windows) catch these rules at commit time, for people and agents alike:
+
+- [assets/hooks/commit-msg](assets/hooks/commit-msg) refuses a subject that isn't a Conventional Commit (`commit-conventional`); merges and `fixup!`/`squash!`/`amend!` commits pass.
+- [assets/hooks/pre-commit](assets/hooks/pre-commit), in a repo whose origin is on github.com, asks `gh` for the visibility and refuses a commit without the noreply address when the repo is public or `gh` can't tell (`commit-identity-public`). `COMMIT_IDENTITY_OK=1 git commit ...` passes once you've checked the repo is private.
+
+Copy them into the repo's hooks folder (`tools/git-hooks/`, next to `git-worktree`'s `post-checkout`), commit them executable (`git update-index --chmod=+x tools/git-hooks/commit-msg tools/git-hooks/pre-commit`; on Linux and macOS a hook without the bit is ignored), and enable the folder once per clone with `git config core.hooksPath tools/git-hooks`.
 
 ## Checklist
 
