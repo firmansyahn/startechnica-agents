@@ -64,6 +64,8 @@ bash skills/git-commit/scripts/scan.sh origin/main
 
 Every line is a candidate: open the rule file and confirm it before reporting.
 
+Each rule's `check` says what catches a violation: `scan`, `lint`, `eslint`, `test`, `hook`, `ci` or `review`. The checks that fail a build instead of waiting for a review ship as files to copy into a project: the Next.js lint config and rule tests (`nextjs-new-app` references/enforcement-kit.md), Go test templates and CI scripts in the Go skills' `assets/`, and git and agent hooks in `git-commit`, `git-worktree` and `gitlab-mr` `assets/hooks/`.
+
 ## Checking the skills
 
 ```sh
