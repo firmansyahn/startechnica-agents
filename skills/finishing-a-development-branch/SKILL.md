@@ -1,19 +1,41 @@
 ---
 name: finishing-a-development-branch
-description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work
+description: "Use when implementation is complete and tests have passed, to verify branch state, choose the correct hosted integration workflow, finish a pull or merge request, and clean up without losing uncommitted work."
+user-invocable: true
+license: MIT
+compatibility: Designed for coding agents and repositories using Git.
+metadata:
+  author: firmansyahn
+  version: "0.1.0"
 ---
 
-# Finishing a Development Branch
+# Finishing A Development Branch (team)
 
-## Overview
+**Principle:** Finish only after verifying the exact branch, test results and repository workflow; never discard uncommitted work.
+
+Related: [git-worktree](../git-worktree/SKILL.md) (branch and cleanup policy), [gitlab-mr](../gitlab-mr/SKILL.md) (GitLab merge requests).
+
+## Team decisions
+
+- Use the repository and forge instructions to choose between a pull request, merge request or local integration; do not assume one forge from the generic upstream menu.
+- For worktrees and hosted merges, follow [git-worktree](../git-worktree/SKILL.md) and the forge-specific workflow. The project wins when it differs from upstream.
+- Preserve the worktree and branch while hosted review is in progress; remove them only after the merge is confirmed and the worktree is safe to remove.
+
+## In depth
+
+The upstream guidance below is adapted from obra/superpowers `finishing-a-development-branch`; its source, pinned commit and license are recorded in [UPSTREAM.md](UPSTREAM.md). The team decisions above take precedence.
+
+## Finishing a Development Branch
+
+### Overview
 
 **Core principle:** Verify tests → Detect environment → Present options → Execute choice → Clean up.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
-## Step 1: Verify Tests
+### Step 1: Verify Tests
 
-Run the project's full test suite (`npm test` / `cargo test` / `pytest` / `go test ./...`).
+Run the project's full test suite with its documented package manager and commands. For team Next.js apps, follow [nextjs-package-manager](../nextjs-package-manager/SKILL.md) and use Yarn 4, not npm.
 
 **If tests fail**, report the failures and stop — the menu comes after a green suite:
 
@@ -25,13 +47,13 @@ Tests failing (<N> failures). Must fix before completing:
 
 **If tests pass:** continue to Step 2.
 
-## Step 2: Detect Environment
+### Step 2: Detect Environment
 
 ```bash
 GIT_DIR=$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd -P)
 GIT_COMMON=$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd -P)
-# Capture now, while still inside the workspace — Step 5 changes directory
-# before cleanup (Step 6) needs this value
+## Capture now, while still inside the workspace — Step 5 changes directory
+## before cleanup (Step 6) needs this value
 WORKTREE_PATH=$(git rev-parse --show-toplevel)
 ```
 
@@ -43,93 +65,59 @@ This determines which menu to show and how cleanup works:
 | `GIT_DIR != GIT_COMMON`, named branch | Standard 3 options | Provenance-based (see Step 6) |
 | `GIT_DIR != GIT_COMMON`, detached HEAD | Reduced 2 options (no merge) | Externally managed — leave in place |
 
-## Step 3: Determine Base Branch
+### Step 3: Determine Base Branch
 
 The base branch is whatever this work forked from — usually named in the
 plan, the conversation, or the branch's upstream. If it is not already
 known, ask: "This branch split from <your best guess> - is that correct?"
 Confirm before merging: merging into the wrong base is expensive to undo.
 
-## Step 4: Present Options
+### Step 4: Present Options
 
-**Normal repo and named-branch worktree — present exactly these 3 options:**
+Use the repository's forge instructions and [git-worktree](../git-worktree/SKILL.md) policy for the choices shown to the user. On this team, GitLab work must go through a merge request; do not present the upstream local-merge option.
 
 ```
 Implementation complete. What would you like to do?
 
-1. Merge back to <base-branch> locally
-2. Push and create a Pull Request
-3. Keep the branch as-is (I'll handle it later)
+1. Push and create a merge request targeting <base-branch>
+2. Keep the branch as-is (I'll handle it later)
 
 Which option?
 ```
 
-**Detached HEAD — present exactly these 2 options:**
+**Detached HEAD — follow the forge's supported flow and the team worktree policy; do not offer local integration.**
 
 ```
-Implementation complete. You're on a detached HEAD (externally managed workspace).
-
-1. Push as new branch and create a Pull Request
-2. Keep as-is (I'll handle it later)
-
-Which option?
+Implementation complete. You're on a detached HEAD (externally managed workspace). Follow the repository's merge-request workflow to publish a named branch, or keep the workspace as-is.
 ```
 
-Present the menu exactly as written — concise, with every option coming
-from the list above. Discarding the work happens only in response to your
-human partner explicitly asking for it (see "If your human partner asks to
-discard the work" below). Wait for their answer; the integration decision
-is theirs.
+Present only choices allowed by the repository's workflow. Discarding the work happens only in response to the user explicitly asking for it (see "If your human partner asks to discard the work" below). Wait for their answer before taking an optional action.
 
-## Step 5: Execute Choice
+### Step 5: Execute Choice
 
-### Option 1: Merge Locally
+#### Local integration
 
-```bash
-# Get main repo root for CWD safety
-MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-toplevel)
-cd "$MAIN_ROOT"
+Do not use this option when [git-worktree](../git-worktree/SKILL.md) or the repository requires merge requests. Otherwise, follow the project's explicit local integration procedure.
 
-# Merge first — verify success before removing anything
-git checkout <base-branch>
-git pull
-git merge <feature-branch>
-
-# Verify tests on merged result
-<test command>
-```
-
-If tests fail on the merged result: stop, leave the worktree and branch in
-place, and investigate — nothing has been pushed, so the merge is local
-and recoverable.
-
-Once the merged result is green: clean up the worktree (Step 6), then
-delete the branch:
-
-```bash
-git branch -d <feature-branch>
-```
-
-### Option 2: Push and Create PR
+#### Option 1: Push and create a hosted review
 
 ```bash
 git push -u origin <feature-branch>
-# From a detached HEAD, name the new branch on the remote:
-# git push origin HEAD:refs/heads/<new-branch>
+## From a detached HEAD, name the new branch on the remote:
+## git push origin HEAD:refs/heads/<new-branch>
 ```
 
 Then create the pull/merge request against <base-branch> with the forge's
-tooling — its CLI if one is available, or the creation URL most forges
-print when you push — following the repo's PR template and conventions if
-present, and report the URL to your human partner.
+workflow skill and tooling, following the repository's template and
+conventions, and report the URL to the user.
 
 Keep the worktree — your human partner iterates on PR feedback there.
 
-### Option 3: Keep As-Is
+#### Option 2: Keep As-Is
 
 Report: "Keeping branch <name>. Worktree preserved at <path>."
 
-### If your human partner asks to discard the work
+#### If your human partner asks to discard the work
 
 This path exists only as a response to an explicit request to throw the
 work away. Confirm first:
@@ -156,7 +144,7 @@ Then clean up the worktree (Step 6) and force-delete the branch:
 git branch -D <feature-branch>
 ```
 
-## Step 6: Cleanup Workspace
+### Step 6: Cleanup Workspace
 
 **Runs for Option 1 and confirmed discards.** Options 2 and 3 always
 preserve the worktree. Both callers have already changed directory to the
@@ -200,7 +188,7 @@ Carry out the choice, then remove the worktree.
 **Otherwise:** The host environment owns this workspace — leave it in
 place. If your platform provides a workspace-exit tool, use it.
 
-## Quick Reference
+### Quick Reference
 
 | Option | Merge | Push | Keep Worktree | Cleanup Branch |
 |--------|-------|------|---------------|----------------|
@@ -209,7 +197,7 @@ place. If your platform provides a workspace-exit tool, use it.
 | 3. Keep as-is | - | - | yes | - |
 | Discard (explicit request only) | - | - | - | yes (force) |
 
-## Common Rationalizations
+### Common Rationalizations
 
 | Excuse | Reality |
 |--------|---------|

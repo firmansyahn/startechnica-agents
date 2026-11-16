@@ -1,18 +1,19 @@
+import { Plugin } from "@opencode/plugin";
 import { fileURLToPath } from "node:url";
-import { loadSkillCatalog, searchSkills } from "./catalog.js";
+import { loadSkillCatalog, searchSkills } from "../lib/catalog.js";
 
-const skillsDirectory = fileURLToPath(new URL("../skills/", import.meta.url));
+const skillsDirectory = fileURLToPath(new URL("../../skills/", import.meta.url));
 
 function formatSkillList(skills) {
   return skills.map((skill) => `- ${skill.id}: ${skill.description}`).join("\n");
 }
 
 function formatSkill(skill) {
-  const directory = fileURLToPath(new URL(`../skills/${skill.id}/`, import.meta.url));
+  const directory = fileURLToPath(new URL(`../../skills/${skill.id}/`, import.meta.url));
   return `Skill directory: ${directory}\nResolve relative references, assets, scripts, and sibling skills from this directory.\n\n${skill.content}`;
 }
 
-export default {
+export default Plugin.define({
   id: "startechnica-agents",
   async setup(ctx) {
     const skills = await loadSkillCatalog(skillsDirectory);
@@ -104,4 +105,4 @@ export default {
       });
     });
   },
-};
+});

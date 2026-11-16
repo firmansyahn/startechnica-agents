@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { loadSkillCatalog, searchSkills } from "../catalog.js";
+import { loadSkillCatalog, searchSkills } from "../lib/catalog.js";
 
 test("loads the repository skill catalog", async () => {
   const skillsDirectory = fileURLToPath(new URL("../../skills/", import.meta.url));

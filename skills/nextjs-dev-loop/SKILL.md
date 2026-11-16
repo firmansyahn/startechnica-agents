@@ -1,14 +1,31 @@
 ---
-name: next-dev-loop
-description: >
-  Verify Next.js runtime behavior after editing app code. Use this
-  skill to confirm a change actually works in a running app — not
-  just that it compiles or type-checks. Combines /_next/mcp
-  (Next.js's view) with agent-browser (the browser's view).
-  Requires a running `next dev`.
+name: nextjs-dev-loop
+description: "Use when verifying a Next.js edit in a running development server, using the Next.js dev MCP and a browser-driven check to confirm the requested behavior."
+user-invocable: true
+license: MIT
+compatibility: Designed for coding agents and repositories using Git.
+metadata:
+  author: firmansyahn
+  version: "0.2.0"
 ---
 
-# next-dev-loop
+# Next.js Dev Loop (team)
+
+**Principle:** Verify a small, explicit change in the running app and report what was actually observed.
+
+Related: [nextjs-how-to](../nextjs-how-to/SKILL.md) (routing and team-wide Next.js conventions), [nextjs-package-manager](../nextjs-package-manager/SKILL.md) (Yarn commands), [nextjs-e2e](../nextjs-e2e/SKILL.md) (automated browser tests).
+
+## Team decisions
+
+- Use the installed Next.js version and follow [nextjs-package-manager](../nextjs-package-manager/SKILL.md); upstream npm or pnpm commands do not override the project package manager.
+- Do not install global tools or alter project dependencies without authorization. If a browser tool is unavailable, state which part of the loop could not be verified.
+- The dev loop supplements, rather than replaces, applicable automated tests and accessibility or visual checks.
+
+## In depth
+
+The upstream guidance below is adapted from vercel/next.js `next-dev-loop`; its source, pinned commit and license are recorded in [UPSTREAM.md](UPSTREAM.md). The team decisions above take precedence.
+
+## next-dev-loop
 
 The edit/verify rhythm during `next dev` — make a change, then
 confirm it actually works at runtime, not only that the types or
@@ -28,7 +45,7 @@ You verify through two views of the same running app:
 
 The two views cross-check each other.
 
-## requires
+### requires
 
 - Next.js **16.3+** with **Turbopack** — `/_next/mcp` plus the
   proactive compile check via `get_compilation_issues`.
@@ -40,15 +57,14 @@ tell the user how to upgrade and stop. Don't fall back to grepping
 source or to a weaker probe — this skill assumes both views are live
 at the versions above.
 
-- Upgrade Next.js: `pnpm next upgrade` (or `npx next upgrade`).
-  Docs: https://nextjs.org/docs/app/getting-started/upgrading
-  (version-16 guide:
-  https://nextjs.org/docs/app/guides/upgrading/version-16)
-- Install or upgrade `agent-browser`: `npm i -g agent-browser@latest`.
-  If the CLI isn't on `PATH`, install it before continuing — preflight
-  expects to invoke it directly.
+- If Next.js is below the required version, stop and follow
+  [nextjs-upgrade](../nextjs-upgrade/SKILL.md) with the project package
+  manager; do not upgrade as part of this verification workflow.
+- If `agent-browser` is missing or below the required version, stop and
+  report the prerequisite. Do not install global tools or alter project
+  dependencies without authorization.
 
-## preflight
+### preflight
 
 Once per session, confirm both views are live.
 
@@ -57,7 +73,7 @@ Once per session, confirm both views are live.
    this checkout and use it for every `agent-browser` command:
 
    ```bash
-   SESSION="$(agent-browser session id --scope worktree --prefix next-dev-loop)"
+   SESSION="$(agent-browser session id --scope worktree --prefix nextjs-dev-loop)"
    export AGENT_BROWSER_SESSION="$SESSION"
    export AGENT_BROWSER_RESTORE="$SESSION"
    ```
@@ -100,16 +116,16 @@ Once per session, confirm both views are live.
    user is on webpack. Refuse — Turbopack is required.
 4. `get_routes` → your route map for the rest of the session.
 
-## loop
+### loop
 
-### before the edit — narrow the scope
+#### before the edit — narrow the scope
 
 Ask the running app, not the codebase. `/_next/mcp` knows which
 files rendered the current route; use those as your search scope.
 Runtime introspection stays cheap as the codebase grows; agentic
 search doesn't.
 
-### after the edit — verify
+#### after the edit — verify
 
 Four failure modes. Check each:
 
@@ -128,7 +144,7 @@ Four failure modes. Check each:
 Pick the specific tool from `tools/list` or the agent-browser
 manual rather than from memory.
 
-## gotchas
+### gotchas
 
 - **Preserve `.next` while the development server is running.** Moving or
   deleting it disconnects the server from its generated state and discards
@@ -169,13 +185,13 @@ manual rather than from memory.
 - `get_errors` and `get_page_metadata` need at least one navigation
   to populate.
 
-## reference
+### reference
 
 All tools below are present once preflight passes. If `tools/list`
 is missing any of them, preflight should have refused — re-check.
 
 ```
-# /_next/mcp                 notes
+## /_next/mcp                 notes
 get_project_metadata         projectPath, devServerUrl, bundler
 get_routes                   fs-scan; no browser session needed
 get_errors                   runtime + build; needs a browser session;
@@ -190,14 +206,14 @@ get_compilation_issues       Turbopack only; errors on webpack
                              ("Turbopack project is not available")
 ```
 
-## teardown
+### teardown
 
 Close the session with the same session and restore context:
 `agent-browser --session "$SESSION" --restore close`. `close` saves
 that session's cookies and storage so the next loop's `--restore` open
 keeps the user logged in. Leave `next dev` up for the next loop.
 
-## Report Next.js friction
+### Report Next.js friction
 
 Only participate in agent feedback when managed Next.js feedback instructions
 are already loaded for the project. Their presence means the feature is

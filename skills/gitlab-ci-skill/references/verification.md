@@ -158,12 +158,12 @@ Concrete templates the agent should mirror when reporting that a tier was skippe
 > To unblock:
 >
 > ```
-> git add -A && git commit -m "Initial commit"
+> Create an initial commit with the intended files, following `git-commit`.
 > ```
 >
 > Then re-run: `bash scripts/verify.sh auto -f .gitlab-ci.yml`
 
-Do not paraphrase the install commands; copy them from verify.sh stderr. Different OSes get different commands (macOS shows Colima + Docker Desktop options; Linux shows get.docker.com).
+Do not paraphrase the install guidance; copy it from verify.sh stderr. macOS gets Colima and Docker Desktop options; non-RHEL Linux gets the Docker Engine installer; RHEL-family Linux gets Podman compatibility guidance, not Docker Engine installation.
 
 ### No shell access
 
@@ -180,7 +180,7 @@ Manual installs via `sudo mv` can preserve a non-executable mode and silently pr
 
 ## Degradation when Docker is missing or unreachable
 
-Lint and show do not need Docker; they keep working. Simulate and run exit 2 if `docker info` fails. The error tells the user to start Docker Desktop (or the daemon). For a deeper environment report, the user can run `glci doctor`, which checks Docker reachability, daemon state, token configuration, CI config parsing, and the git repository.
+Lint and show do not need a container engine; they keep working. Simulate and run exit 2 if `docker info` fails. The error tells the user to start the supported engine or its compatible API service. On RHEL-family systems, use Podman compatibility rather than Docker Engine. For a deeper environment report, the user can run `glci doctor`, which checks engine reachability, daemon state, token configuration, CI config parsing, and the git repository.
 
 Note: `glci doctor` exits 0 even when individual checks fail (it reports pass/fail symbols but doesn't gate exit code on the results). `verify.sh` does not rely on doctor's exit code; instead it uses a cheap `docker info` check before invoking simulate or run, then surfaces glci's own error if simulate or run fails for any other reason.
 
@@ -275,4 +275,4 @@ When the YAML uses any of the above, tell the user explicitly: "Verification pas
 
 ## Further reading
 
-For the long tail of glci flags, configuration keys, and behaviors (`.glciconfig.toml` schema, named pipeline presets, embedded registry, daemon management, `glci artifacts diff`, environment variables, troubleshooting), read glci's own Agent Skill at `.claude/skills/glci/SKILL.md` in the `gitlab-org/ci-cd/runner-tools/glci` project. That file is the authoritative reference; this file documents only what `scripts/verify.sh` itself uses and how the skill should react.
+For the long tail of glci flags, configuration keys, and behaviors (`.glciconfig.toml` schema, named pipeline presets, embedded registry, daemon management, `glci artifacts diff`, environment variables, troubleshooting), read glci's own Agent Skill in the `gitlab-org/ci-cd/runner-tools/glci` project. That skill is the authoritative reference; this file documents only what `scripts/verify.sh` itself uses and how this skill should react.

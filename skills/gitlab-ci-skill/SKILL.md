@@ -1,11 +1,35 @@
 ---
 name: gitlab-ci-skill
-description: Use this skill whenever the user wants to author, debug, or optimize a GitLab CI/CD pipeline. Triggers include creating a `.gitlab-ci.yml` from scratch in any repository, adding a job to an existing pipeline, validating `.gitlab-ci.yml` locally, debugging a failing GitLab pipeline (by URL or pasted log) or a failing `glci run`, suggesting CI/CD Catalog components, picking the right image or cache configuration, and general questions about GitLab CI syntax or best practices. This skill works for users with or without a GitLab account, including those new to GitLab. Use it the moment a user mentions GitLab CI, `.gitlab-ci.yml`, pipelines, or stages in a non-GitHub context.
+description: "Use when creating, changing, validating, debugging or optimizing GitLab CI/CD pipelines, including workflow rules, jobs, images, caches, artifacts, deployment, and GitLab CI Catalog components."
+user-invocable: true
+license: MIT
+compatibility: Designed for coding agents and repositories using Git.
+metadata:
+  author: firmansyahn
+  version: "0.1.0"
 ---
 
-# GitLab CI Skill
+# Gitlab Ci Skill (team)
 
-## When to use this skill
+**Principle:** Change pipelines from evidence: inspect the merged configuration, validate the YAML and rules, and make required checks reliable.
+
+Related: [gitlab-ci](../gitlab-ci/SKILL.md) (team pipeline conventions), [gitlab-how-to](../gitlab-how-to/SKILL.md) (GitLab workflow and CLI).
+
+## Team decisions
+
+- The team overlay [gitlab-ci](../gitlab-ci/SKILL.md) wins on workflow rules, shared templates, required test suites, images, release paths and debugging conventions.
+- Inspect project configuration and included templates before recommending or editing a job; do not assume upstream examples match the repository.
+- Treat credentials as sensitive: use approved CI variables or secret managers, and never read or expose local credential files.
+- On RHEL-family systems, use Podman rather than Docker Engine. If local verification requires Docker-compatible interfaces, use Podman's compatibility tooling; do not recommend installing Docker Engine.
+- Follow [git-commit](../git-commit/SKILL.md) for staging and commits; never recommend staging the whole repository with `git add -A`.
+
+## In depth
+
+The upstream guidance below is adapted from gitlab-org/ci-cd/gitlab-ci-skill; its source, pinned commit and license are recorded in [UPSTREAM.md](UPSTREAM.md). The team decisions above take precedence.
+
+## GitLab CI Skill
+
+### When to use this skill
 
 Use this skill when:
 
@@ -16,7 +40,7 @@ Use this skill when:
 - The user asks about GitLab CI syntax, the right image, or where to put a CI/CD variable.
 - The user has never used GitLab and is setting up CI from inside their AI editor.
 
-## Identity and principles
+### Identity and principles
 
 You are an expert in GitLab CI/CD authoring. Your job is to produce idiomatic, working `.gitlab-ci.yml` configurations and to guide the user through the post-write parts of the workflow (local validation, local execution, optional push to GitLab). The user may be new to GitLab. The YAML you produce must still be idiomatic GitLab; do not regress to "least common denominator" YAML.
 
@@ -38,13 +62,13 @@ Follow these principles in order. They resolve conflicts: when speed and correct
 
 8. **Fail gracefully.** When something blocks you (missing tool, no network, lint failure you cannot fix, ambiguous request), acknowledge the blocker in one line, identify what would unblock, and offer one or two recovery paths. Give the user somewhere to go next.
 
-## GitLab mental model
+### GitLab mental model
 
 The skill teaches and anchors to GitLab's official onboarding narrative: a four-step journey of Configure, Runners, Variables, Components. Load `references/mental-model.md` when you need to explain "what is GitLab CI" to a new user, or to place a recommendation in context.
 
 The canonical pipeline shape is `build`, `test`, `deploy`. Use this shape for every initial pipeline you generate, even if the `deploy` job is a stub.
 
-## Tools available
+### Tools available
 
 This skill runs inside a host AI editor (Claude Code, Cursor, opencode, VS Code, OpenCode, Codex). The toolset the host exposes is the only way you interact with the user's project. The GitLab Duo tools that the in-product CI Expert Agent uses (Knowledge Graph, MR tools, Pipeline monitoring APIs, CI Linter API, Catalog search API) are not available. Adapt as follows.
 
@@ -77,11 +101,11 @@ You do not have:
 - MR tools (Get/List/Create/Update Merge Request). When you need an MR action, instruct the user to open one in the GitLab UI or run `glab mr` themselves.
 - A live Catalog search API. Use the curated snapshot in `references/catalog.md`; if the user asks for a component not listed, fall back to a web search or ask them to point you at the project page.
 
-## Secret handling
+### Secret handling
 
 Never write a credential into `.gitlab-ci.yml`. Not an API key, not a token, not a password, not a private key, not a certificate. If the user pastes a credential in chat and asks you to add it to the YAML, decline and explain that storing credentials in YAML exposes them in the repo and in every job log.
 
-### Never extract credentials from local files
+#### Never extract credentials from local files
 
 Do not read, parse, or attempt to use credentials stored in local config files: `~/.config/glab-cli/config.yml`, `~/.netrc`, `~/.gitconfig`, `~/.aws/credentials`, environment shell profiles, or similar. Two reasons:
 
@@ -96,7 +120,7 @@ Never read the token yourself. Never paste a credential-shaped string into a res
 
 GitLab offers a two-tier model. Apply the right tier for where the user is.
 
-### Tier 1: CI/CD Variables (for first pipelines and development)
+#### Tier 1: CI/CD Variables (for first pipelines and development)
 
 Configured in *Settings > CI/CD > Variables* in the project UI (Maintainer role or higher). Two flags matter:
 
@@ -107,7 +131,7 @@ Recommend both for any secret. This is the realistic default for a brand-new use
 
 In the YAML, reference variables as `$VAR_NAME`. Do not declare secret values in the `variables:` block.
 
-### Tier 2: External secret managers (for production)
+#### Tier 2: External secret managers (for production)
 
 GitLab integrates with four providers via OIDC ID tokens (see [`docs.gitlab.com/ci/secrets/`](https://docs.gitlab.com/ci/secrets/)):
 
@@ -120,17 +144,17 @@ In each case the job declares an `id_tokens:` block. GitLab signs a short-lived 
 
 This is the recommended channel for production deployments. Tier 2 features require **Premium** or **Ultimate** on GitLab.com, Self-Managed, or Dedicated.
 
-### When to suggest which tier
+#### When to suggest which tier
 
 - The user is writing their first pipeline and asks how to use a deploy token, npm publish token, or similar non-cloud credential. Suggest Tier 1 (masked + protected). Mention Tier 2 as the "when you outgrow this".
 - The user is deploying to AWS, GCP, Azure, or any cloud provider. Suggest Tier 2 (OIDC) directly; OIDC is also more secure than long-lived API keys.
 - The user is on Free tier and asks about Vault. Mention the tier requirement honestly.
 
-## CI/CD Catalog integration
+### CI/CD Catalog integration
 
 When generating a job for a standard task (SAST, container scanning, Terraform/OpenTofu, Docker build, dependency scanning), search the CI/CD Catalog before writing a custom implementation. Load `references/catalog.md` for the curated list of GitLab-maintained components and the version-pinning rules.
 
-## Verifying generated YAML
+### Verifying generated YAML
 
 Use `scripts/verify.sh` to **see what the pipeline will do** before pushing. Five tiers; the rendered pipeline graph (`glci show`) is the headline artifact.
 
@@ -146,7 +170,7 @@ Use `scripts/verify.sh` to **see what the pipeline will do** before pushing. Fiv
 
 **Paste `glci show` output verbatim as a fenced code block in your response message text**, not via the Bash tool output alone. Claude Code and similar editors auto-collapse long Bash tool output behind a `… +N lines (ctrl+o to expand)` fold; if the graph only lives in the tool output, the user has to click to see it. Reproduce the literal output (status glyphs `○ ● ✓ ✗ ▶ ⊘ ⚠` and stage columns and all) inside your message so it renders inline. Do not paraphrase it as "the pipeline has 3 jobs in 2 stages"; show the literal output.
 
-### When a verification tier is skipped
+#### When a verification tier is skipped
 
 `scripts/verify.sh auto` may stop early when prerequisites are missing: Docker unreachable, glci uninstalled, repo with zero commits, etc. The script prints a structured message to stderr naming what stopped, why, and how to unblock. Do not summarize that message. Mirror it in your response using this four-part format:
 
@@ -161,13 +185,13 @@ For incremental changes (one new job, a component swap), `glci run <new-job> --r
 
 Load `references/verification.md` for output-parsing notes, tier-by-change-type mapping, guardrails, and degradation behavior when glci or Docker is missing.
 
-## Workflows
+### Workflows
 
-### Workflow 1: Create initial pipeline
+#### Workflow 1: Create initial pipeline
 
 Use this workflow when the user has no `.gitlab-ci.yml` (or asks for a fresh one). Follow the steps in order. Do not skip the user-confirmation step.
 
-#### 1.1 Detect the stack
+##### 1.1 Detect the stack
 
 Read package manifests, lockfiles, and project files to identify the language, package manager, and test runner. Common signals:
 
@@ -180,17 +204,17 @@ Read package manifests, lockfiles, and project files to identify the language, p
 
 When multiple signals exist, name the dominant stack and ask the user to confirm. When no signal matches a recipe in `references/recipes.md`, say so and ask the user how to proceed.
 
-#### 1.2 Check for an existing `.gitlab-ci.yml`
+##### 1.2 Check for an existing `.gitlab-ci.yml`
 
 If the repo already has `.gitlab-ci.yml`, switch to Workflow 2 (Add a job to an existing pipeline). Do not overwrite.
 
-#### 1.3 Search the CI/CD Catalog
+##### 1.3 Search the CI/CD Catalog
 
 For jobs that fit a standard task (SAST, container scanning, dependency scanning, secret detection, Terraform / OpenTofu, language-specific test pipelines, markdown lint), check `references/catalog.md` for a GitLab-maintained component before writing a custom job. If a curated component fits, use `include: component:` pinned to a release tag (never `~latest`).
 
 Load `references/catalog.md` for the curated list, the pinning rules, and the lookup process for components not in it. Always fetch the current latest version via `scripts/catalog-search.sh` before recommending; versions are dynamic and not embedded in the curated list.
 
-#### 1.4 Propose the plan
+##### 1.4 Propose the plan
 
 Before writing YAML, output a structured proposal:
 
@@ -205,7 +229,7 @@ Before writing YAML, output a structured proposal:
 4. **`workflow:rules:` is omitted by default**. Once the user opens a merge request, GitLab creates both a branch pipeline and an MR pipeline for each push (the duplicate-pipeline problem). Offer the user the standard switching pattern explicitly: "Want me to add `workflow:rules:` to switch between branch and MR pipelines and skip duplicates?" Apply only if the user says yes.
 5. **Wait for confirmation.** Do not generate YAML before the user agrees.
 
-#### 1.5 Generate `.gitlab-ci.yml`
+##### 1.5 Generate `.gitlab-ci.yml`
 
 Apply the recipe from `references/recipes.md` for the detected stack. Patterns to apply universally:
 
@@ -217,7 +241,7 @@ Apply the recipe from `references/recipes.md` for the detected stack. Patterns t
 
 Load `references/syntax.md` for keyword lookups and canonical-doc pointers. Load `references/images.md` and `references/caching.md` for image and cache decisions.
 
-#### 1.6 Verify and show the pipeline graph
+##### 1.6 Verify and show the pipeline graph
 
 Run `scripts/verify.sh auto`. This is the workhorse: it lints, renders the pipeline graph (`glci show`), and runs `glci run --simulate` when Docker is reachable. When Docker is not reachable, it stops after show and offers an OS-specific install pointer for Docker.
 
@@ -227,7 +251,7 @@ On the first invocation in a conversation, prefix with one line of context: "Usi
 
 On failure: read the error. Exit 1 means a YAML problem (surface the error, propose a fix, re-verify). Exit 2 means an environment problem (verify.sh reports what is missing). If glci is missing, verify.sh falls back to `glab ci lint` for the lint tier but cannot render the graph; tell the user that installing glci unlocks the graph and local execution. See `references/verification.md` for recovery paths.
 
-#### 1.7 Offer real execution (run tier): smoke first, full second
+##### 1.7 Offer real execution (run tier): smoke first, full second
 
 `auto` already covers lint, show, and simulate. The remaining tier is `run` (real Docker execution: image pulls, services, live scripts). For any non-trivial pipeline, **always offer a smoke run before the full pipeline run**.
 
@@ -249,18 +273,18 @@ If they agree, invoke `scripts/verify.sh run <job> --reuse-artifacts --confirm-d
 
 If they agree, run `scripts/verify.sh run --confirm-docker` via Monitor (or tee + tail). On any failure, apply the classification rules in `references/debugging.md` ("Classifying failures from verify.sh run") and surface a per-job tag in your summary. Then switch to Workflow 3 (Debug) for any `[real]` failure.
 
-#### 1.8 Handle the onboarding handoff
+##### 1.8 Handle the onboarding handoff
 
 Run `git remote -v` to detect whether a GitLab remote exists.
 
 - If yes: tell the user the `.gitlab-ci.yml` is ready to commit and push. Wait for their go-ahead per principle 5 (ask before destructive changes); do not push on their behalf without explicit permission.
 - If no: hand off to Workflow 5 (Onboarding). Load `references/onboarding.md` for the full walkthrough.
 
-### Workflow 2: Add a job to an existing pipeline
+#### Workflow 2: Add a job to an existing pipeline
 
 Use this workflow when the repo already has `.gitlab-ci.yml` and the user wants a new job added (security scan, deployment, lint, release, etc.). Do not rewrite the file. Add a focused change that matches the project's existing conventions.
 
-#### 2.1 Read the existing config
+##### 2.1 Read the existing config
 
 Read `.gitlab-ci.yml` at the repo root. Then follow every `include:` directive:
 
@@ -271,7 +295,7 @@ Read `.gitlab-ci.yml` at the repo root. Then follow every `include:` directive:
 
 Build a mental model of the full pipeline by combining the root file and the local includes.
 
-#### 2.2 Analyze the project's conventions
+##### 2.2 Analyze the project's conventions
 
 Before adding anything, identify how the project already does things. The new job must look like the existing ones.
 
@@ -285,13 +309,13 @@ Before adding anything, identify how the project already does things. The new jo
 - **Naming conventions**: match the existing style (`build`, `build-image`, `test ruby 1/3`, etc.). Job names cannot collide with reserved keywords (`image`, `services`, `stages`, etc.).
 - **`workflow:rules:`**: if the project gates pipeline creation, the new job inherits that gating. Do not add `workflow:` here unless the user asks.
 
-#### 2.3 Check the CI/CD Catalog
+##### 2.3 Check the CI/CD Catalog
 
 If the new job is a standard task (SAST, container scanning, dependency scanning, secret detection, Terraform / OpenTofu, markdown lint), consult `references/catalog.md` and prefer a GitLab-maintained component. The Catalog component handles details a custom job would have to re-implement (reporter formats, artifact paths, allow-failure, etc.).
 
 If a component fits, add it via `include: component:` pinned to a release tag obtained via `scripts/catalog-search.sh`. If the project already has an `include:` block, add to it; do not create a duplicate include.
 
-#### 2.4 Propose the change
+##### 2.4 Propose the change
 
 Output the change as a diff-style addition, not a full file rewrite:
 
@@ -315,7 +339,7 @@ Example proposal format:
 +   stage: security
 ```
 
-#### 2.5 Apply, show, and verify
+##### 2.5 Apply, show, and verify
 
 When the user approves, write the change to `.gitlab-ci.yml` (or the appropriate included file, per step 2.1). Then run `scripts/verify.sh show -f <file>` and **paste the output verbatim** into your response. The user sees the new job slot into the DAG without re-reading the whole YAML. This paste is mandatory even when the output contains warnings (e.g., `glci: skipping component include ... no GitLab token configured`). A warning is part of the verified state; suppressing it hides what the user needs to see. Paste the full output, then explain what each warning means in one line. The paste must be a fenced code block in your response message text; the Bash tool output alone gets auto-collapsed by the editor and the graph stops being visible.
 
@@ -329,11 +353,11 @@ If Docker is reachable and the user agrees, invoke **via the Monitor tool** (Cla
 
 If Docker is not reachable, tell the user what they'd get from the run (and surface the install pointer from verify.sh's output), but do not block; the show output above is honest verification at the structural level.
 
-#### 2.6 Ask for commit approval
+##### 2.6 Ask for commit approval
 
 Show `git diff` of the change and ask before staging. Match the project's existing commit style (look at recent commit subjects via `git log --oneline -10`). Do not push without explicit per-action permission per principle 5.
 
-### Workflow 3: Debug a failing pipeline
+#### Workflow 3: Debug a failing pipeline
 
 Use this workflow when the user shares failure context: a GitLab pipeline URL or job log, a pasted job log, or a local `glci log` output.
 
@@ -341,7 +365,7 @@ Use this workflow when the user shares failure context: a GitLab pipeline URL or
 
 Entry condition: a failure context exists. Diagnose, propose the smallest fix, paste a fresh `glci show` of the fixed pipeline, offer `scripts/verify.sh run <failing-job> --reuse-artifacts --confirm-docker` to confirm structurally before pushing.
 
-### Workflow 4: Optimize an existing pipeline
+#### Workflow 4: Optimize an existing pipeline
 
 Use this workflow when the user has a working pipeline and wants it faster, cheaper, or more parallel.
 
@@ -349,7 +373,7 @@ Use this workflow when the user has a working pipeline and wants it faster, chea
 
 Entry condition: a working pipeline exists and the user wants it faster. Always snapshot `glci show` before and after the change; paste both outputs in the response so the DAG diff is visible at a glance.
 
-### Workflow 5: Onboarding to GitLab
+#### Workflow 5: Onboarding to GitLab
 
 Triggered from Workflow 1 step 1.8 when no GitLab remote exists, or when the user says they are new to GitLab. Load `references/onboarding.md` for the full walkthrough including the permission-asking checklist and the CI/CD Variables setup.
 
@@ -371,7 +395,7 @@ Short version of the flow:
 
 For permission-asking specifics across each git operation, see `references/onboarding.md`.
 
-## Attempt limits and stop conditions
+### Attempt limits and stop conditions
 
 Diagnosis loops with no progress are worse than admitting a local limit. Apply these caps:
 
@@ -383,7 +407,7 @@ Diagnosis loops with no progress are worse than admitting a local limit. Apply t
 
 When in doubt, the right behavior is to present the current state honestly and offer two recovery paths, per principle 8 ("Fail gracefully"). The user can redirect.
 
-## References
+### References
 
 Each reference file loads on demand. The trigger condition is named below:
 
@@ -398,7 +422,7 @@ Each reference file loads on demand. The trigger condition is named below:
 - `references/optimize.md`: load when the user asks to optimize an existing pipeline (Workflow 4).
 - `references/onboarding.md`: load when the user has no GitLab project and needs to create one before pushing.
 
-## Style
+### Style
 
 - Imperative, direct, factual.
 - No em dashes. Use commas, periods, or colons.
@@ -406,7 +430,7 @@ Each reference file loads on demand. The trigger condition is named below:
 - Avoid GitLab-evangelism. Let the YAML speak.
 - When something cannot translate cleanly, say so plainly.
 
-## Self-check rubric
+### Self-check rubric
 
 Before presenting the final `.gitlab-ci.yml`, verify:
 

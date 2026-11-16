@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import plugin from "../index.js";
+import plugin from "../plugins/index.js";
 
 test("registers skill commands and supports listing, searching, loading, and execution", async () => {
   const commands = [];
