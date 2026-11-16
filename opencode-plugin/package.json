@@ -1,0 +1,9 @@
+{
+  "name": "startechnica-agents-opencode",
+  "version": "1.2.0",
+  "description": "OpenCode commands and a skill lookup tool for Startechnica agent skills",
+  "type": "module",
+  "exports": {
+    ".": "./index.js"
+  }
+}
