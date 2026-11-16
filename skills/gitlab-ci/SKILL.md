@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for git repositories hosted on GitLab.
 metadata:
   author: firmansyahn
-  version: "0.2.0"
+  version: "0.2.1"
 ---
 
 # GitLab CI: the team's overlay
@@ -42,7 +42,7 @@ Related: `gitlab-mr` (opening, checking and merging merge requests; waiting for 
 |---|---|
 | `nextjs-deploy` [assets/ci/root.gitlab-ci.yml](../nextjs-deploy/assets/ci/root.gitlab-ci.yml) | `.gitlab-ci.yml` (the root: tiers and includes) |
 | `nextjs-deploy` [assets/ci/nextjs.gitlab-ci.yml](../nextjs-deploy/assets/ci/nextjs.gitlab-ci.yml) | `<app>/.gitlab-ci.yml` (a Next.js app) |
-| [assets/go.gitlab-ci.yml](assets/go.gitlab-ci.yml) | `<go-app>/.gitlab-ci.yml` (a Go service: vet, test against a PostgreSQL service, kaniko build, chart release) |
+| [assets/go.gitlab-ci.yml](assets/go.gitlab-ci.yml) | `<go-app>/.gitlab-ci.yml` (a Go service: module/vulnerability checks, lint, vet, tests against a PostgreSQL service, kaniko build, chart release) |
 | [assets/ci-rules.gitlab-ci.yml](assets/ci-rules.gitlab-ci.yml) and [scripts/check-merged.sh](scripts/check-merged.sh) | `ci/ci-rules.gitlab-ci.yml` (included from the root) and `tools/ci/check-merged.sh`: a job that checks the merged configuration, templates included, in MRs that change CI files and nightly. It needs a read-only token in `CI_RULES_TOKEN` (the file's header says how) |
 
 Fill in `<org>`, `<app>`, the chart path and the runner tag. Add the child to the root's `include:` with its inputs.

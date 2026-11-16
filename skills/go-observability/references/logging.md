@@ -139,7 +139,7 @@ When logs ship over OTLP instead of being collected from stdout, the [`otelzap`]
 
 ## Request Logging
 
-One access line per request, from middleware, with ECS field names. Probe requests are skipped unless `logging.probe.enabled` is on.
+One access line per request, from middleware, with ECS field names. Kubernetes probe requests to `/livez` and `/readyz` are skipped unless `logging.probe.enabled` is on; `/healthz` is not a probe route.
 
 ```go
 func AccessLog(log *zap.Logger, logProbes bool) func(http.Handler) http.Handler {

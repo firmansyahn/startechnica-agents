@@ -1,6 +1,6 @@
 # Application Configuration with Cobra + Viper
 
-> **Team:** settings are loaded with koanf by one `internal/config` package in the Platform layer, not Viper in `cmd/`; `main` calls `config.Load` and hands each block to the constructors. See the `go-knadh-koanf` skill, which wins where this page differs. The Viper shape below is upstream's, kept for reading a project that already uses it.
+> **Team:** settings are loaded with koanf by one `internal/config` package in the Platform layer, not Viper in `cmd/`; `main` calls `config.Load` and hands each block to the constructors. See the [go-knadh-koanf](../../go-knadh-koanf/SKILL.md) skill, which wins where this page differs. The Viper shape below is upstream's, kept for reading a project that already uses it.
 
 ## Where Config Lives
 

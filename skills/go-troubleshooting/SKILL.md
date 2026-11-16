@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.3"
 ---
 
 # Go troubleshooting (team)
@@ -19,14 +19,14 @@ Related: [go-observability](../go-observability/SKILL.md) (the logs, metrics, tr
 
 ## Team decisions
 
-1. **Production evidence comes from the `go-observability` setup:** zap logs with `trace.id`, Prometheus metrics, traces, and pprof on the internal port, switched on by a setting; upstream's basic-auth-plus-environment-variable pprof setup is the fallback for a service that has neither.
-2. **A fix starts with a failing test** that reproduces the bug (`go-testing`), and the test stays.
+1. **Production evidence comes from the [go-observability](../go-observability/SKILL.md) setup:** zap logs with `trace.id`, Prometheus metrics, traces, and pprof on the internal port, switched on by a setting; upstream's basic-auth-plus-environment-variable pprof setup is the fallback for a service that has neither.
+2. **A fix starts with a failing test** that reproduces the bug ([go-testing](../go-testing/SKILL.md)), and the test stays.
 3. **Read-only in production:** inspecting pods, logs and profiles is fine; restarting, scaling or changing a deployment is the user's decision.
-4. Links to upstream skills that aren't absorbed (`samber/cc-skills-golang@golang-samber-*`, `-uber-*`, `-google-wire`, `-popular-libraries`, `-gopls`, `-pkg-go-dev`, `-continuous-integration` and the rest in `go-how-to` rule 9) are skipped, and so are their install commands.
+4. Links to upstream skills that aren't absorbed (`samber/cc-skills-golang@golang-samber-*`, `-uber-*`, `-google-wire`, `-popular-libraries`, `-gopls`, `-pkg-go-dev` and the rest in [go-how-to](../go-how-to/SKILL.md) rule 9) are skipped, and so are their install commands.
 
 ## In depth
 
-The material below is `samber/cc-skills-golang@golang-troubleshooting`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: `go-how-to` (rule 1) maps each to the team skill that absorbed it.
+The material below is `samber/cc-skills-golang@golang-troubleshooting`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: [go-how-to](../go-how-to/SKILL.md) (rule 1) maps each to the team skill that absorbed it.
 
 **Persona:** You are a Go systems debugger. You follow evidence, not intuition — instrument, reproduce, and trace root causes systematically.
 
@@ -157,7 +157,7 @@ Before flagging a bug or proposing a fix, trace the data flow and check for upst
 
 ##### 7. Start Simple
 
-Sometimes `fmt.Println` IS the right tool for local debugging. Escalate tools only when simpler approaches fail. NEVER use `fmt.Println` for production debugging — use the injected `*zap.Logger` with typed fields (`go-observability`).
+Sometimes `fmt.Println` IS the right tool for local debugging. Escalate tools only when simpler approaches fail. NEVER use `fmt.Println` for production debugging — use the injected `*zap.Logger` with typed fields ([go-observability](../go-observability/SKILL.md)).
 
 #### Red Flags: You're Debugging Wrong
 
@@ -195,7 +195,7 @@ If any of these are happening, stop and return to Step 1:
 
 #### Cross-References
 
-- → See `samber/cc-skills-golang@golang-performance` skill for optimization patterns after identifying bottlenecks
-- → See `samber/cc-skills-golang@golang-observability` skill for metrics, alerting, and Grafana dashboards for Go runtime monitoring
-- → See `samber/cc-skills@promql-cli` skill for querying Prometheus metrics during production incident investigation
-- → See `samber/cc-skills-golang@golang-concurrency`, `samber/cc-skills-golang@golang-safety`, `samber/cc-skills-golang@golang-error-handling` skills
+- → See [go-performance](../go-performance/SKILL.md) skill for optimization patterns after identifying bottlenecks
+- → See [go-observability](../go-observability/SKILL.md) skill for metrics, alerting, and Grafana dashboards for Go runtime monitoring
+- → Use the Prometheus UI/API or the project's documented CLI tooling to query metrics during production incident investigation
+- → See [go-concurrency](../go-concurrency/SKILL.md), [go-safety](../go-safety/SKILL.md), [go-error-handling](../go-error-handling/SKILL.md) skills

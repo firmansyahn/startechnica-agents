@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.3"
 ---
 
 # Go performance (team)
@@ -19,15 +19,15 @@ Related: [go-testing](../go-testing/SKILL.md) (benchmarks are tests, beside the 
 
 ## Team decisions
 
-1. **Logging in hot paths goes through zap** (`go-observability`): upstream's `slog.LogAttrs` advice becomes zap's typed fields, with `log.Check(level, msg)` guarding a field that is expensive to build.
-2. **Profiling endpoints and continuous profiling** are set up as `go-observability` says: pprof on an internal port, never the public one, and Pyroscope behind a setting.
-3. **No `samber/*` libraries** (`go-code-style`, decision 1): the standard library, and `golang.org/x/sync/singleflight` for request coalescing.
-4. **Benchmarks live beside the code** under `go-testing`'s rules, and CI benchmark checks run in GitLab CI (`gitlab-ci`), not GitHub Actions.
-5. Links to upstream skills that aren't absorbed (`samber/cc-skills-golang@golang-samber-*`, `-uber-*`, `-google-wire`, `-popular-libraries`, `-gopls`, `-pkg-go-dev`, `-continuous-integration` and the rest in `go-how-to` rule 9) are skipped, and so are their install commands.
+1. **Logging in hot paths goes through zap** ([go-observability](../go-observability/SKILL.md)): upstream's `slog.LogAttrs` advice becomes zap's typed fields, with `log.Check(level, msg)` guarding a field that is expensive to build.
+2. **Profiling endpoints and continuous profiling** are set up as [go-observability](../go-observability/SKILL.md) says: pprof on an internal port, never the public one, and Pyroscope behind a setting.
+3. **No `samber/*` libraries** ([go-code-style](../go-code-style/SKILL.md), decision 1): the standard library, and `golang.org/x/sync/singleflight` for request coalescing.
+4. **Benchmarks live beside the code** under [go-testing](../go-testing/SKILL.md)'s rules, and CI benchmark checks run in GitLab CI ([gitlab-ci](../gitlab-ci/SKILL.md)), not GitHub Actions.
+5. Links to upstream skills that aren't absorbed (`samber/cc-skills-golang@golang-samber-*`, `-uber-*`, `-google-wire`, `-popular-libraries`, `-gopls`, `-pkg-go-dev` and the rest in [go-how-to](../go-how-to/SKILL.md) rule 9) are skipped, and so are their install commands.
 
 ## In depth
 
-The material below is `samber/cc-skills-golang@golang-performance`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. `golang-benchmark` is in [references/benchmark.md](references/benchmark.md). The team's decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: `go-how-to` (rule 1) maps each to the team skill that absorbed it.
+The material below is `samber/cc-skills-golang@golang-performance`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. `golang-benchmark` is in [references/benchmark.md](references/benchmark.md). The team's decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: [go-how-to](../go-how-to/SKILL.md) (rule 1) maps each to the team skill that absorbed it.
 
 **Persona:** You are a Go performance engineer. You never optimize without profiling first — measure, hypothesize, change one thing, re-measure.
 
@@ -49,7 +49,7 @@ The material below is `samber/cc-skills-golang@golang-performance`, absorbed int
 
 #### Core Philosophy
 
-1. **Profile before optimizing** — intuition about bottlenecks is wrong ~80% of the time. Use pprof to find actual hot spots (→ See `samber/cc-skills-golang@golang-troubleshooting` skill)
+1. **Profile before optimizing** — intuition about bottlenecks is wrong ~80% of the time. Use pprof to find actual hot spots (→ See [go-troubleshooting](../go-troubleshooting/SKILL.md) skill)
 2. **Allocation reduction yields the biggest ROI** — Go's GC is fast but not free. Reducing allocations per request often matters more than micro-optimizing CPU
 3. **Document optimizations** — add code comments explaining why a pattern is faster, with benchmark numbers when available. Future readers need context to avoid reverting an "unnecessary" optimization
 
@@ -59,14 +59,14 @@ Before optimizing Go code, verify the bottleneck is in your process — if 90% o
 
 **Diagnose:** 1- `fgprof` — captures on-CPU and off-CPU (I/O wait) time; if off-CPU dominates, the bottleneck is external 2- `go tool pprof` (goroutine profile) — many goroutines blocked in `net.(*conn).Read` or `database/sql` = external wait 3- Distributed tracing (OpenTelemetry) — span breakdown shows which upstream is slow
 
-**When external:** optimize that component instead — query tuning, caching, connection pools, circuit breakers (→ See `samber/cc-skills-golang@golang-database` skill, [Caching Patterns](references/caching.md)).
+**When external:** optimize that component instead — query tuning, caching, connection pools, circuit breakers (→ See [go-database](../go-database/SKILL.md) skill, [Caching Patterns](references/caching.md)).
 
 #### Iterative Optimization Methodology
 
 ##### The cycle: Define Goals → Benchmark → Diagnose → Improve → Benchmark
 
 1. **Define your metric** — latency, throughput, memory, or CPU? Without a target, optimizations are random
-2. **Write an atomic benchmark** — isolate one function per benchmark to avoid result contamination (→ See `samber/cc-skills-golang@golang-benchmark` skill)
+2. **Write an atomic benchmark** — isolate one function per benchmark to avoid result contamination (→ See [go-performance](SKILL.md) skill)
 3. **Measure baseline** — `go test -bench=BenchmarkMyFunc -benchmem -count=6 ./pkg/... | tee /tmp/report-1.txt`
 4. **Diagnose** — use the **Diagnose** lines in each deep-dive section to pick the right tool
 5. **Improve** — apply ONE optimization at a time with an explanatory comment
@@ -76,7 +76,7 @@ Before optimizing Go code, verify the bottleneck is in your process — if 90% o
 
 Refer to library documentation for known patterns before inventing custom solutions. Keep all `/tmp/report-*.txt` files as an audit trail.
 
-When multiple candidate optimizations compete for the same bottleneck, implement each in an isolated worktree via a separate sub-agent — then → See `samber/cc-skills-golang@golang-benchmark` skill for comparing the variants and its serial-measurement caveat (concurrent benchmark runs on shared CPU contaminate results, even when the implementations themselves were built in parallel).
+When multiple candidate optimizations compete for the same bottleneck, implement each in an isolated worktree via a separate sub-agent — then → See [go-performance](SKILL.md) skill for comparing the variants and its serial-measurement caveat (concurrent benchmark runs on shared CPU contaminate results, even when the implementations themselves were built in parallel).
 
 #### Decision Tree: Where Is Time Spent?
 
@@ -88,8 +88,8 @@ When multiple candidate optimizations compete for the same bottleneck, implement
 | Network / I/O latency | goroutines blocked on I/O | [I/O & networking](references/io-networking.md) |
 | Repeated expensive work | same computation/fetch multiple times | [Caching patterns](references/caching.md) |
 | Wrong algorithm | O(n²) where O(n) exists | [Algorithmic complexity](references/caching.md#algorithmic-complexity) |
-| Lock contention | mutex/block profile hot | → See `samber/cc-skills-golang@golang-concurrency` skill |
-| Slow queries | DB time dominates traces | → See `samber/cc-skills-golang@golang-database` skill |
+| Lock contention | mutex/block profile hot | → See [go-concurrency](../go-concurrency/SKILL.md) skill |
+| Slow queries | DB time dominates traces | → See [go-database](../go-database/SKILL.md) skill |
 
 #### Common Mistakes
 
@@ -114,14 +114,14 @@ When multiple candidate optimizations compete for the same bottleneck, implement
 
 #### CI Regression Detection
 
-Automate benchmark comparison in CI to catch regressions before they reach production. → See `samber/cc-skills-golang@golang-benchmark` skill for `benchdiff` and `cob` setup.
+Automate benchmark comparison in CI to catch regressions before they reach production. → See [go-performance](SKILL.md) skill for `benchdiff` and `cob` setup.
 
 #### Cross-References
 
-- → See `samber/cc-skills-golang@golang-benchmark` skill for benchmarking methodology, `benchstat`, and `b.Loop()` (Go 1.24+)
-- → See `samber/cc-skills-golang@golang-troubleshooting` skill for pprof workflow, escape analysis diagnostics, and performance debugging
-- → See `samber/cc-skills-golang@golang-data-structures` skill for slice/map preallocation and `strings.Builder`
-- → See `samber/cc-skills-golang@golang-concurrency` skill for worker pools, `sync.Pool` API, goroutine lifecycle, and lock contention
-- → See `samber/cc-skills-golang@golang-safety` skill for defer in loops, slice backing array aliasing
-- → See `samber/cc-skills-golang@golang-database` skill for connection pool tuning and batch processing
-- → See `samber/cc-skills-golang@golang-observability` skill for continuous profiling in production
+- → See [go-performance](SKILL.md) skill for benchmarking methodology, `benchstat`, and `b.Loop()` (Go 1.24+)
+- → See [go-troubleshooting](../go-troubleshooting/SKILL.md) skill for pprof workflow, escape analysis diagnostics, and performance debugging
+- → See [go-data-structures](../go-data-structures/SKILL.md) skill for slice/map preallocation and `strings.Builder`
+- → See [go-concurrency](../go-concurrency/SKILL.md) skill for worker pools, `sync.Pool` API, goroutine lifecycle, and lock contention
+- → See [go-safety](../go-safety/SKILL.md) skill for defer in loops, slice backing array aliasing
+- → See [go-database](../go-database/SKILL.md) skill for connection pool tuning and batch processing
+- → See [go-observability](../go-observability/SKILL.md) skill for continuous profiling in production

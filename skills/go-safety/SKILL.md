@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.3"
 ---
 
 # Go safety (team)
@@ -19,12 +19,12 @@ Related: [go-error-handling](../go-error-handling/SKILL.md) (errors, panics and 
 
 ## Team decisions
 
-1. **Errors and panics follow `go-error-handling`:** no `panic` in request or worker paths, and errors handled once; the defensive patterns here never swallow an error to avoid a crash.
-2. Links to upstream skills that aren't absorbed (`samber/cc-skills-golang@golang-samber-*`, `-uber-*`, `-google-wire`, `-popular-libraries`, `-gopls`, `-pkg-go-dev`, `-continuous-integration` and the rest in `go-how-to` rule 9) are skipped, and so are their install commands.
+1. **Errors and panics follow [go-error-handling](../go-error-handling/SKILL.md):** no `panic` in request or worker paths, and errors handled once; the defensive patterns here never swallow an error to avoid a crash.
+2. Links to upstream skills that aren't absorbed (`samber/cc-skills-golang@golang-samber-*`, `-uber-*`, `-google-wire`, `-popular-libraries`, `-gopls`, `-pkg-go-dev` and the rest in [go-how-to](../go-how-to/SKILL.md) rule 9) are skipped, and so are their install commands.
 
 ## In depth
 
-The material below is `samber/cc-skills-golang@golang-safety`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: `go-how-to` (rule 1) maps each to the team skill that absorbed it.
+The material below is `samber/cc-skills-golang@golang-safety`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: [go-how-to](../go-how-to/SKILL.md) (rule 1) maps each to the team skill that absorbed it.
 
 **Persona:** You are a defensive Go engineer. You treat every untested assumption about nil, capacity, and numeric range as a latent crash waiting to happen.
 
@@ -115,7 +115,7 @@ b := append(a[:len(a):len(a)], 4)
 
 ##### Map concurrent access
 
-Maps MUST NOT be accessed concurrently — → see `samber/cc-skills-golang@golang-concurrency` for sync primitives.
+Maps MUST NOT be accessed concurrently — → see [go-concurrency](../go-concurrency/SKILL.md) for sync primitives.
 
 See **[Slice and Map Deep Dive](references/slice-map-safety.md)** for range pitfalls, subslice memory retention, and `slices.Clone`/`maps.Clone`.
 
@@ -160,7 +160,7 @@ func avg(total, count int) (int, error) {
 }
 ```
 
-For integer overflow as a security vulnerability, see the `samber/cc-skills-golang@golang-security` skill section.
+For integer overflow as a security vulnerability, see the [go-security](../go-security/SKILL.md) skill section.
 
 #### Resource Safety
 
@@ -190,7 +190,7 @@ func processOne(path string) error {
 
 ##### Goroutine leaks
 
-→ See `samber/cc-skills-golang@golang-concurrency` for goroutine lifecycle and leak prevention.
+→ See [go-concurrency](../go-concurrency/SKILL.md) for goroutine lifecycle and leak prevention.
 
 #### Immutability & Defensive Copying
 
@@ -247,11 +247,11 @@ func (db *DB) connection() (*sql.DB, error) {
 
 ##### init() function pitfalls
 
-→ See `samber/cc-skills-golang@golang-design-patterns` for why init() should be avoided in favor of explicit constructors.
+→ See [go-project-layout](../go-project-layout/SKILL.md) for why init() should be avoided in favor of explicit constructors.
 
 #### Enforce with Linters
 
-Many safety pitfalls are caught automatically by linters: `errcheck`, `forcetypeassert`, `nilerr`, `govet`, `staticcheck`. See the `samber/cc-skills-golang@golang-lint` skill for configuration and usage.
+Many safety pitfalls are caught automatically by linters: `errcheck`, `forcetypeassert`, `nilerr`, `govet`, `staticcheck`. See the [go-code-style](../go-code-style/SKILL.md) skill for configuration and usage.
 
 ##### Go 1.25+ reflection type assertions
 
@@ -277,13 +277,13 @@ if s, ok := reflect.TypeAssert[string](v); ok {
 | Comparing floats with `==` | IEEE 754 representation is not exact (`0.1+0.2 != 0.3`). Use `math.Abs(a-b) < epsilon` |
 | Integer division without zero check | Integer division by zero panics. Guard with `if divisor == 0` before dividing |
 | Returning internal slice/map reference | Callers can mutate your struct's internals through the shared backing array. Return a defensive copy |
-| Multiple `init()` with ordering assumptions | `init()` execution order across files is unspecified. → See `samber/cc-skills-golang@golang-design-patterns` — use explicit constructors |
+| Multiple `init()` with ordering assumptions | `init()` execution order across files is unspecified. → See [go-project-layout](../go-project-layout/SKILL.md) — use explicit constructors |
 | Blocking forever on nil channel | Nil channels block on both send and receive. Always initialize before use |
 
 #### Cross-References
 
-- → See `samber/cc-skills-golang@golang-concurrency` skill for concurrent access patterns and sync primitives
-- → See `samber/cc-skills-golang@golang-data-structures` skill for slice/map internals, capacity growth, and container/ packages
-- → See `samber/cc-skills-golang@golang-error-handling` skill for nil error interface trap
-- → See `samber/cc-skills-golang@golang-security` skill for security-relevant safety issues (memory safety, integer overflow)
-- → See `samber/cc-skills-golang@golang-troubleshooting` skill for debugging panics and race conditions
+- → See [go-concurrency](../go-concurrency/SKILL.md) skill for concurrent access patterns and sync primitives
+- → See [go-data-structures](../go-data-structures/SKILL.md) skill for slice/map internals, capacity growth, and container/ packages
+- → See [go-error-handling](../go-error-handling/SKILL.md) skill for nil error interface trap
+- → See [go-security](../go-security/SKILL.md) skill for security-relevant safety issues (memory safety, integer overflow)
+- → See [go-troubleshooting](../go-troubleshooting/SKILL.md) skill for debugging panics and race conditions

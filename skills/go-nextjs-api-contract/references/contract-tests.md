@@ -34,7 +34,7 @@ contract.Check(t, doc, "GET", "/items", rec)   // status declared? body matches 
 
 - Use a JSON Schema 2020-12 validator (3.1 schemas are 2020-12) in the helper; compile each operation's schema once per test binary.
 - Check refusals too: a 422 test asserts the `errors` paths (`rules.2.value`), a 404 test asserts the envelope, a guard 401 test asserts `WWW-Authenticate`.
-- Database-backed handler tests run on real PostgreSQL (`go-testing`), so the reply reflects real column types (a `NULL` that the schema says can't be null fails here).
+- Database-backed handler tests run on real PostgreSQL ([go-testing](../../go-testing/SKILL.md)), so the reply reflects real column types (a `NULL` that the schema says can't be null fails here).
 
 **4. Requests the document allows are accepted.** For write operations, a test sends the documented example (or a minimal valid body built from the schema) and expects a non-400. This catches a handler that requires a field the document marks optional.
 
@@ -42,7 +42,7 @@ contract.Check(t, doc, "GET", "/items", rec)   // status declared? body matches 
 
 **1. Types are current:** `yarn gen:api --check` in CI, then `yarn tsc --noEmit`.
 
-**2. Fixtures pass the reply check.** The test network fake (`fakeApi`) runs every answer through the same validator the BFF uses (`src/api/validate.ts`, `nextjs-bff`) and fails the test on a mismatch, so a fixture the backend could never send can't make a test pass:
+**2. Fixtures pass the reply check.** The test network fake (`fakeApi`) runs every answer through the same validator the BFF uses (`src/api/validate.ts`, [nextjs-bff](../../nextjs-bff/SKILL.md)) and fails the test on a mismatch, so a fixture the backend could never send can't make a test pass:
 
 ```ts
 const calls = fakeApi({

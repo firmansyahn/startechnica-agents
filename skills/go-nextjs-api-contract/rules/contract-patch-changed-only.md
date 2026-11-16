@@ -9,7 +9,7 @@ check: test
 
 **Impact: MEDIUM** (sending the whole form overwrites fields someone else changed meanwhile)
 
-Absent = unchanged, `null` = clear, a value = set (JSON Merge Patch). The frontend sends the form's dirty fields only (`nextjs-forms` `pickDirty`); sending the whole form overwrites a field someone else changed meanwhile.
+Absent = unchanged, `null` = clear, a value = set (JSON Merge Patch). The frontend sends the form's dirty fields only ([nextjs-forms](../../nextjs-forms/SKILL.md) `pickDirty`); sending the whole form overwrites a field someone else changed meanwhile.
 
 **Incorrect:**
 

@@ -279,4 +279,4 @@ Service tests verify business logic, not SQL. They run fast and need no database
 - Tests MUST use the standard library `testing` package only.
 - NEVER test against production databases.
 
-→ See `go-testing` skill for general test patterns, `t.Parallel()` and the race detector, and `gitlab-ci` for the CI job.
+→ See [go-testing](../../go-testing/SKILL.md) skill for general test patterns, `t.Parallel()` and the race detector, and [gitlab-ci](../../gitlab-ci/SKILL.md) for the CI job.

@@ -210,4 +210,4 @@ func (c *Cache) Set(key string, val any) {
 }
 ```
 
-→ See `samber/cc-skills-golang@golang-error-handling` skill for nil error comparison pitfalls.
+→ See [go-error-handling](../../go-error-handling/SKILL.md) skill for nil error comparison pitfalls.

@@ -1,6 +1,6 @@
 # Metrics with Prometheus
 
-→ See `samber/cc-skills-golang@golang-troubleshooting` skill for using metrics to diagnose production issues. → See `samber/cc-skills@promql-cli` skill for executing and testing PromQL queries via CLI.
+For diagnosing production issues with metrics, see [go-troubleshooting](../../go-troubleshooting/SKILL.md). Use the Prometheus UI/API or the project's documented CLI tooling to execute and validate PromQL queries.
 
 When using the Prometheus client library, refer to the library's official documentation for up-to-date API signatures and examples.
 
@@ -155,11 +155,15 @@ myapp_http_requests_total{method="POST"}
 
 ## Exposing Metrics
 
+Configure the endpoint with the service's typed `metrics` settings (`metrics.enabled`, `metrics.port`, `metrics.path`); see [go-knadh-koanf](../../go-knadh-koanf/SKILL.md#4c-the-metrics-block). Run it only when enabled, on a dedicated internal listener, and register the handler at the configured path. The default path is `/metrics`; don't hard-code it when the application supports a configured path.
+
 ```go
 import "github.com/prometheus/client_golang/prometheus/promhttp"
 
-mux.Handle("/metrics", promhttp.Handler())
+mux.Handle(cfg.Metrics.Path, promhttp.Handler())
 ```
+
+Use the configured port when starting the dedicated listener. Keep it separate from the public application listener and restrict access at the network boundary; a non-public port alone is not authorization.
 
 ## Document Metrics with PromQL Comments
 

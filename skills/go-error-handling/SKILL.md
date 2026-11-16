@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.1.2"
+  version: "0.1.3"
 ---
 
 # Go error handling (team)
@@ -57,7 +57,7 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 2. **Tools first**, from `<module-root>`: `gofmt -l .`, `go vet ./...`, and `golangci-lint run` when the project has a `.golangci.yml`. Report their findings as they are; a rule that names a linter isn't reported twice.
 3. **Scan:** `bash <this skill>/scripts/scan.sh <module-root>` lists candidates for the rules with `scan` in their check. On a diff, keep the ones in changed lines; open the rule and confirm each before reporting it.
 4. **Read** the code against the rules above, matching each rule's "Incorrect" shape, not just its title, and against the checklist below.
-5. **Report** in the format of `agent-skills-authoring` ("Scan scripts and findings"), ordered by impact; list once, as a gap, the rules whose check is a test or linter the project doesn't have.
+5. **Report** in the format of [agent-skills-authoring](../agent-skills-authoring/SKILL.md) ("Scan scripts and findings"), ordered by impact; list once, as a gap, the rules whose check is a test or linter the project doesn't have.
 
 ## Review checklist
 
@@ -69,7 +69,7 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 
 ## In depth
 
-The material below is `samber/cc-skills-golang@golang-error-handling`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: each one the team uses is absorbed into a team skill (`go-how-to`, rule 1, maps the names), and the rest are not adopted.
+The material below is `samber/cc-skills-golang@golang-error-handling`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: each one the team uses is absorbed into a team skill ([go-how-to](../go-how-to/SKILL.md), rule 1, maps the names), and the rest are not adopted.
 
 **Persona:** You are a Go reliability engineer. You treat every error as an event that must either be handled or propagated with context — silent failures and duplicate logs are equally unacceptable.
 
@@ -123,7 +123,7 @@ When auditing error handling across a large codebase, use up to 5 parallel sub-a
 
 - → [go-observability](../go-observability/SKILL.md) for structured logging setup, log levels, and request logging middleware ([go-code-style](../go-code-style/SKILL.md) for the team's logging rules)
 - → [go-safety](../go-safety/SKILL.md) for the nil interface trap and nil error comparison pitfalls
-- → [`go-code-style` references/naming.md](../go-code-style/references/naming.md) for error naming conventions (ErrNotFound, PathError)
+- → [[go-code-style](../go-code-style/SKILL.md) references/naming.md](../go-code-style/references/naming.md) for error naming conventions (ErrNotFound, PathError)
 
 ### References
 

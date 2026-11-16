@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.3.0"
+  version: "0.3.3"
 ---
 
 # Go code style (team)
@@ -52,8 +52,8 @@ Related: [go-error-handling](../go-error-handling/SKILL.md) (error style), [go-c
 3. **Modernizing:** `go.mod` (`go` and `toolchain` lines) decides which features are available; modernize in its own change, not inside an unrelated one.
 4. **zap, not slog:** upstream's `log/slog` examples are written with zap; building the logger (ECS json, the `logging` block) is in [go-observability](../go-observability/SKILL.md).
 5. **Metrics, tracing and profiling** (Prometheus, OpenTelemetry, Pyroscope) only where the project already has them; otherwise suggest, don't add.
-6. **CI is GitLab CI** (`gitlab-ci`) and **tests use the standard `testing` package**: the lint and modernize references assume both, and `sloglint`/`testifylint` only flag leftovers of slog and testify.
-7. Links to upstream skills that aren't absorbed (`golang-samber-*`, `golang-uber-*`, `golang-popular-libraries`, `golang-gopls`, `golang-continuous-integration`, `golang-cli`, `golang-pkg-go-dev`) are skipped.
+6. **CI is GitLab CI** ([gitlab-ci](../gitlab-ci/SKILL.md)) and **tests use the standard `testing` package**: the lint and modernize references assume both, and `sloglint`/`testifylint` only flag leftovers of slog and testify.
+7. Links to upstream skills that aren't absorbed (`golang-samber-*`, `golang-uber-*`, `golang-popular-libraries`, `golang-gopls`, `golang-cli`, `golang-pkg-go-dev`) are skipped; Go CI checks are in [go-continuous-integration](../go-continuous-integration/SKILL.md), with GitLab pipeline rules in [gitlab-ci](../gitlab-ci/SKILL.md).
 
 ## Rules
 
@@ -71,7 +71,7 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 2. **Tools first**, from `<module-root>`: `gofmt -l .`, `go vet ./...`, and `golangci-lint run` when the project has a `.golangci.yml`. Report their findings as they are; a rule that names a linter isn't reported twice.
 3. **Scan:** `bash <this skill>/scripts/scan.sh <module-root>` lists candidates for the rules with `scan` in their check. On a diff, keep the ones in changed lines; open the rule and confirm each before reporting it.
 4. **Read** the code against the rules above, matching each rule's "Incorrect" shape, not just its title, and against the checklist below.
-5. **Report** in the format of `agent-skills-authoring` ("Scan scripts and findings"), ordered by impact; list once, as a gap, the rules whose check is a test or linter the project doesn't have.
+5. **Report** in the format of [agent-skills-authoring](../agent-skills-authoring/SKILL.md) ("Scan scripts and findings"), ordered by impact; list once, as a gap, the rules whose check is a test or linter the project doesn't have.
 
 ## Review checklist
 
@@ -83,7 +83,7 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 
 ## In depth
 
-The material below is `samber/cc-skills-golang@golang-code-style`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: each one the team uses is absorbed into a team skill (`go-how-to`, rule 1, maps the names), and the rest are not adopted.
+The material below is `samber/cc-skills-golang@golang-code-style`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: each one the team uses is absorbed into a team skill ([go-how-to](../go-how-to/SKILL.md), rule 1, maps the names), and the rest are not adopted.
 
 Also absorbed, one reference each (their own references, assets and evals sit in a folder of the same name):
 
@@ -95,7 +95,7 @@ Also absorbed, one reference each (their own references, assets and evals sit in
 
 **Orchestration mode:** Fan out the sub-agents described in the "Parallelizing Code Style Reviews" section, each covering an independent style concern, when reviewing code style across a large codebase, and merge their findings. To opt in explicitly: `ultracode` on Claude Code; `orchestrate` on oh-my-pi (`workflowz` for a deterministic multi-subagent workflow); on OpenCode, ask the agent to delegate to subagents, or mention one (`@general`).
 
-Style rules that require human judgment — linters handle formatting, this skill handles clarity. For naming see [references/naming.md](references/naming.md); for design patterns see `go-project-layout` references/design-patterns.md; for struct/interface design see [references/structs-interfaces.md](references/structs-interfaces.md).
+Style rules that require human judgment — linters handle formatting, this skill handles clarity. For naming see [references/naming.md](references/naming.md); for design patterns see [go-project-layout](../go-project-layout/SKILL.md) references/design-patterns.md; for struct/interface design see [references/structs-interfaces.md](references/structs-interfaces.md).
 
 > "Clear is better than clever." — Go Proverbs
 
@@ -243,7 +243,7 @@ default:
 ### Function Design
 
 - Functions SHOULD be **short and focused** — one function, one job.
-- Functions SHOULD have **≤4 parameters**. Beyond that, use an options struct (see `go-project-layout` references/design-patterns.md).
+- Functions SHOULD have **≤4 parameters**. Beyond that, use an options struct (see [go-project-layout](../go-project-layout/SKILL.md) references/design-patterns.md).
 - **Parameter order**: `context.Context` first, then inputs, then output destinations.
 - Naked returns help in very short functions (1-3 lines) where return values are obvious, but become confusing when readers must scroll to find what's returned — name returns explicitly in longer functions.
 
@@ -307,6 +307,6 @@ Many rules are enforced automatically where the project's linter config enables 
 
 - → See the [references/naming.md](references/naming.md) for identifier naming conventions
 - → See the [references/structs-interfaces.md](references/structs-interfaces.md) for pointer vs value receivers, interface design
-- → See the `go-project-layout` references/design-patterns.md for functional options, builders, constructors
+- → See the [go-project-layout](../go-project-layout/SKILL.md) references/design-patterns.md for functional options, builders, constructors
 - → See the [references/lint.md](references/lint.md) for automated formatting enforcement
-- → See `go-refactoring` skill for mechanically applying guard-clause conversion, function extraction, and options-struct migration safely across many call sites once a review surfaces violations at scale
+- → See [go-refactoring](../go-refactoring/SKILL.md) skill for mechanically applying guard-clause conversion, function extraction, and options-struct migration safely across many call sites once a review surfaces violations at scale

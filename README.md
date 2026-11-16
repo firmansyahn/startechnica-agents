@@ -4,9 +4,9 @@ Agent skills for building and shipping Go services and Next.js apps: one focused
 
 Where an established public skill already covers a topic well, it is either included unchanged (vendored) with its licence and an `UPSTREAM.md` naming its source and pinned commit, with a team skill adding what it leaves open, or absorbed into a team skill and edited to agree with the team.
 
-## Install
+## How to use
 
-**[skills](https://skills.sh) CLI** (any Agent Skills tool):
+**Install with the [skills](https://skills.sh) CLI** (works with any [Agent Skills](https://agentskills.io) tool):
 
 ```sh
 npx skills add https://github.com/firmansyahn/startechnica-agents --all
@@ -14,16 +14,181 @@ npx skills add https://github.com/firmansyahn/startechnica-agents --all
 npx skills add https://github.com/firmansyahn/startechnica-agents --skill go-testing
 ```
 
-**Claude Code plugin:**
+**Update** the same way. `update` moves installed skills to the latest release; `add --all` also installs the skills a release adds, and `remove` drops the ones it deletes (see [Updating](#updating)).
+
+```sh
+npx skills update          # -p for the project's skills, -g for the global ones, -y to skip the prompt
+npx skills add https://github.com/firmansyahn/startechnica-agents --all
+```
+
+Skills name each other and the routers expect their siblings beside them, so install them together.
+
+<details>
+<summary>Claude Code</summary>
 
 ```
 /plugin marketplace add firmansyahn/startechnica-agents
 /plugin install startechnica-agents@startechnica
 ```
 
-**Gemini CLI:** `gemini extensions install https://github.com/firmansyahn/startechnica-agents`
+Update, then restart the session:
 
-**By hand:** copy the folders under `skills/` into your tool's skills folder (`~/.claude/skills/`, a project's `.claude/skills/` or `.agents/skills/`, ...). Install them together: the skills name each other and the routers expect their siblings beside them.
+```
+/plugin marketplace update startechnica
+/plugin update startechnica-agents@startechnica
+```
+
+From a terminal: `claude plugin marketplace update startechnica` and `claude plugin update startechnica-agents@startechnica`.
+
+</details>
+
+<details>
+<summary>Gemini CLI</summary>
+
+```sh
+gemini extensions install https://github.com/firmansyahn/startechnica-agents
+```
+
+Update with `gemini extensions update startechnica-agents`.
+
+</details>
+
+<details>
+<summary>OpenClaw</summary>
+
+Install globally:
+
+```sh
+git clone https://github.com/firmansyahn/startechnica-agents.git ~/.openclaw/skills/startechnica-agents
+```
+
+Or install in the OpenClaw workspace:
+
+```sh
+git clone https://github.com/firmansyahn/startechnica-agents.git ~/.openclaw/workspace/skills/startechnica-agents
+```
+
+Update the global copy:
+
+```sh
+git -C ~/.openclaw/skills/startechnica-agents pull
+```
+
+Or update the workspace copy:
+
+```sh
+git -C ~/.openclaw/workspace/skills/startechnica-agents pull
+```
+
+</details>
+
+<details>
+<summary>Copilot</summary>
+
+Install personal skills:
+
+```sh
+git clone https://github.com/firmansyahn/startechnica-agents.git ~/.copilot/skills/startechnica-agents
+```
+
+For project skills, clone into `.agents/skills/startechnica-agents` in the project. Update with `git -C .agents/skills/startechnica-agents pull`.
+
+</details>
+
+<details>
+<summary>oh-my-pi</summary>
+
+Install through oh-my-pi's plugin marketplace:
+
+```sh
+omp plugin marketplace add firmansyahn/startechnica-agents
+omp plugin install startechnica-agents@startechnica
+```
+
+Update the marketplace and installed plugin with:
+
+```sh
+omp plugin marketplace update startechnica
+omp plugin upgrade startechnica-agents@startechnica
+```
+
+By default, the plugin is installed for the user. To install it for the current project, add `--scope project` to the `omp plugin install` command.
+
+</details>
+
+<details>
+<summary>Cursor and OpenCode</summary>
+
+Clone into the shared Agent Skills directory:
+
+```sh
+git clone https://github.com/firmansyahn/startechnica-agents.git ~/.agents/skills/startechnica-agents
+```
+
+For a project-local install, clone into `.agents/skills/startechnica-agents`. Cursor can alternatively use `~/.cursor/skills/` or `.cursor/skills/`; OpenCode can use `~/.opencode/skills/`, `.opencode/skills/` or `.claude/skills/`.
+
+To install specifically for Cursor, use one of these destinations instead of the shared directory:
+
+```sh
+git clone https://github.com/firmansyahn/startechnica-agents.git ~/.cursor/skills/startechnica-agents
+# or in a project:
+git clone https://github.com/firmansyahn/startechnica-agents.git .cursor/skills/startechnica-agents
+```
+
+Update the shared clone with `git -C ~/.agents/skills/startechnica-agents pull`, or check out `v<version>` to stay on a release.
+
+</details>
+
+<details>
+<summary>Antigravity</summary>
+
+```sh
+git clone https://github.com/firmansyahn/startechnica-agents.git ~/.antigravity/skills/startechnica-agents
+```
+
+Update with `git -C ~/.antigravity/skills/startechnica-agents pull`.
+
+</details>
+
+<details>
+<summary>Codex</summary>
+
+Install the plugin:
+
+```sh
+codex plugin add github:firmansyahn/startechnica-agents
+```
+
+Update with `codex plugin update startechnica-agents`. If the marketplace path is unavailable, clone into the shared skills directory:
+
+```sh
+git clone https://github.com/firmansyahn/startechnica-agents.git ~/.agents/skills/startechnica-agents
+```
+
+Update the clone with `git -C ~/.agents/skills/startechnica-agents pull`. Codex also discovers project-local skills in `.agents/skills/`.
+
+</details>
+
+<details>
+<summary>By hand, or pinned in a project</summary>
+
+Copy the folders under `skills/` into your tool's skills folder (`~/.claude/skills/`, a project's `.claude/skills/` or `.agents/skills/`, ...).
+
+A project that keeps its copy in the repository (so every contributor and CI sees the same skills) syncs it from a release tag and never edits it: a local difference goes into a skill here and comes back with the next release. The project brings its own sync script, one that clones the tag, replaces `.agents/skills/` and records the release (`agent-skills-release`, step 4). For example:
+
+```sh
+node tools/sync-agent-skills.mjs v1.1.1      # a release tag
+node tools/sync-agent-skills.mjs --check     # fails when the copy differs from its release
+```
+
+</details>
+
+## Updating
+
+Releases are tagged `v<major>.<minor>.<patch>`: a minor release adds skills or rules, a patch fixes or rewords, a major one removes or renames skills. Read the [release notes](https://github.com/firmansyahn/startechnica-agents/releases) before a major update.
+
+- **v1.0.0** replaced the `golang-*` skills with `go-<topic>` skills (the mapping is in the first rule of `go-how-to`). After updating, remove any `golang-*` skill that came from this repository (`npx skills list`, then `npx skills remove <name>`), or both versions load. Skills installed from samber's own repository are separate: leave them.
+- **v1.1.0** moved the Next.js checks into a kit you copy into an app (`nextjs-new-app`, `references/enforcement-kit.md`). Updating the skills doesn't change an app's copied files: re-copy the lint config and rule tests, and add the dev dependencies the kit names.
 
 ## Where to start
 
@@ -31,7 +196,7 @@ Each area has a small router skill that sends a task to the right skill and list
 
 | Area | Router | Topic skills |
 |---|---|---|
-| Go services | `go-how-to` | `go-project-layout`, `go-code-style`, `go-error-handling`, `go-concurrency`, `go-database`, `go-testing`, `go-security`, `go-http-handlers`, `go-knadh-koanf`, `go-observability`, `go-performance`, `go-safety`, `go-data-structures`, `go-refactoring`, `go-troubleshooting`, `go-nextjs-api-contract` |
+| Go services | `go-how-to` | `go-project-layout`, `go-code-style`, `go-error-handling`, `go-concurrency`, `go-database`, `go-testing`, `go-continuous-integration`, `go-security`, `go-http-handlers`, `go-knadh-koanf`, `go-observability`, `go-performance`, `go-safety`, `go-data-structures`, `go-refactoring`, `go-troubleshooting`, `go-nextjs-api-contract` |
 | Next.js apps | `nextjs-how-to` | `nextjs-new-app`, `nextjs-app-structure`, `nextjs-data`, `nextjs-bff`, `nextjs-forms`, `nextjs-ui`, `nextjs-logging`, `nextjs-security`, `nextjs-e2e`, `nextjs-deploy`, `nextjs-package-manager`, `nextjs-upgrade` |
 | OAuth / OIDC | (from `go-how-to`, `nextjs-how-to`) | `oauth-server`, `oauth-client` |
 | git | `git-how-to` | `git-worktree`, `git-commit`, `git-gitignore` |

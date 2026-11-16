@@ -205,4 +205,4 @@ The hexagonal approach shines when the same `OrderService` is called from differ
 
 ## Wiring
 
-Construct adapters and inject them in `cmd/server/main.go`. → See `samber/cc-skills-golang@golang-dependency-injection` skill for constructor-injection patterns (the team adopts no DI library).
+Construct adapters and inject them in `cmd/server/main.go`. → See [go-project-layout](../../SKILL.md) skill for constructor-injection patterns (the team adopts no DI library).

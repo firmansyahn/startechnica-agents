@@ -37,4 +37,4 @@ func TestListCustomers(t *testing.T) {
 }
 ```
 
-**How to check:** `scripts/scan.sh` lists every `go-sqlmock`/`pgxmock` import and `Expect*(` call in tests, and, as candidates, `t.Parallel()` in test files that use a package-level `*sql.DB` (or pool) declared in a test file of the same package. golangci-lint's `depguard`, with a rule denying the two mock modules in `$test` files (`go-code-style`'s `assets/lint/.golangci.yml`), refuses the import. In review: new queries with no database test, and parallel tests sharing a database through a helper or a struct field.
+**How to check:** `scripts/scan.sh` lists every `go-sqlmock`/`pgxmock` import and `Expect*(` call in tests, and, as candidates, `t.Parallel()` in test files that use a package-level `*sql.DB` (or pool) declared in a test file of the same package. golangci-lint's `depguard`, with a rule denying the two mock modules in `$test` files ([go-code-style](../../go-code-style/SKILL.md)'s `assets/lint/.golangci.yml`), refuses the import. In review: new queries with no database test, and parallel tests sharing a database through a helper or a struct field.

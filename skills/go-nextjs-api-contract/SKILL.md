@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for HTTP APIs between a Go backend and a TypeScript frontend.
 metadata:
   author: firmansyahn
-  version: "0.2.1"
+  version: "0.2.2"
 ---
 
 # API contract: Go backend ↔ TypeScript frontend
@@ -25,7 +25,7 @@ Go route table (method, path, request type, reply type, permission)
    └─ validation: the BFF checks replies against it (nextjs-bff); test fixtures pass the same check
 ```
 
-Related: `go-project-layout` (where the document and the HTTP plumbing live: `api/`, `internal/httpx`), `go-http-handlers` (the Go handlers behind the contract), `nextjs-bff` (`result.ts`, `fromEnvelope`, `validate.ts`, the reply checks), `nextjs-data` (queries and actions built on the generated types), `nextjs-forms` (showing 422 field errors on fields), `oauth-server` (bearer tokens and `WWW-Authenticate`).
+Related: [go-project-layout](../go-project-layout/SKILL.md) (where the document and the HTTP plumbing live: `api/`, `internal/httpx`), [go-http-handlers](../go-http-handlers/SKILL.md) (the Go handlers behind the contract), [nextjs-bff](../nextjs-bff/SKILL.md) (`result.ts`, `fromEnvelope`, `validate.ts`, the reply checks), [nextjs-data](../nextjs-data/SKILL.md) (queries and actions built on the generated types), [nextjs-forms](../nextjs-forms/SKILL.md) (showing 422 field errors on fields), [oauth-server](../oauth-server/SKILL.md) (bearer tokens and `WWW-Authenticate`).
 
 The project's own API guide or architecture doc wins where it differs; keep it and this skill from contradicting each other by linking, not copying.
 
@@ -133,8 +133,8 @@ One file per rule in `rules/`; the file name is the rule ID. Cite a rule by its 
 1. **Scope.** The diff (`git diff <base>...HEAD`), a merge request's files or the whole app, read for what this skill covers: the OpenAPI document, the handlers' replies, the generated types and the frontend's reply handling.
 2. **Scan:** `bash <this skill>/scripts/scan.sh <module-root>` lists candidates for the rules with `scan` in their check (set `ENVELOPE_DIRS` to the envelope helper's folder and the endpoints that answer outside the envelope). On a diff, keep the ones in changed lines; open the rule and confirm each before reporting it.
 3. **Read** the changed code against the Rules above. Open each rule you cite and match its "Incorrect" shape, not just its title.
-4. **Report** each finding in the format of `agent-skills-authoring` ("Scan scripts and findings"): impact, rule ID, file and line, what to change citing the rule's "Correct" shape; ordered by impact. Raise the impact one level on an authentication, payment or deletion path.
-5. **Say what's not covered:** rules whose check is `test`, `ci` or `eslint` but the project has no such test, job or lint rule. Ready-to-copy checks: [assets/openapi_rules_test.go](assets/openapi_rules_test.go) (the rules the document itself proves, one walk of `api/<surface>.openapi.json`), [assets/openapi_lists_test.go](assets/openapi_lists_test.go) (limit clamp and sort allow-list through the real handler), [assets/ci/openapi-breaking.sh](assets/ci/openapi-breaking.sh) (the breaking-change step against the target branch); `kit` in the Check column means one in `nextjs-new-app` (references/enforcement-kit.md).
+4. **Report** each finding in the format of [agent-skills-authoring](../agent-skills-authoring/SKILL.md) ("Scan scripts and findings"): impact, rule ID, file and line, what to change citing the rule's "Correct" shape; ordered by impact. Raise the impact one level on an authentication, payment or deletion path.
+5. **Say what's not covered:** rules whose check is `test`, `ci` or `eslint` but the project has no such test, job or lint rule. Ready-to-copy checks: [assets/openapi_rules_test.go](assets/openapi_rules_test.go) (the rules the document itself proves, one walk of `api/<surface>.openapi.json`), [assets/openapi_lists_test.go](assets/openapi_lists_test.go) (limit clamp and sort allow-list through the real handler), [assets/ci/openapi-breaking.sh](assets/ci/openapi-breaking.sh) (the breaking-change step against the target branch); `kit` in the Check column means one in [nextjs-new-app](../nextjs-new-app/SKILL.md) (references/enforcement-kit.md).
 
 ## Checklist
 

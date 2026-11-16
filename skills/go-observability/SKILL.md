@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.1.1"
+  version: "0.2.2"
 ---
 
 # Go observability (team)
@@ -15,7 +15,7 @@ metadata:
 
 > **Absorbed.** This skill includes `samber/cc-skills-golang@golang-observability` (MIT, Samuel Berthe; source and pinned commit in [UPSTREAM.md](UPSTREAM.md)), adapted to the team: the team's rules and decisions come first and win, and "In depth" holds the upstream material, edited where the team decided otherwise. The project's own `AGENTS.md`, `CLAUDE.md` and project skills win over this skill.
 
-Related: [go-code-style](../go-code-style/SKILL.md) (the injected structured logger, `style-structured-logger`), [go-security](../go-security/SKILL.md) (`sec-no-secrets-in-logs`), [go-knadh-koanf](../go-knadh-koanf/SKILL.md) (the `logging` block in the settings file), [go-http-handlers](../go-http-handlers/SKILL.md) (request logging middleware), [go-how-to](../go-how-to/SKILL.md) (the Go skills and the rules they all assume).
+Related: [go-code-style](../go-code-style/SKILL.md) (the injected structured logger, `style-structured-logger`), [go-security](../go-security/SKILL.md) (`sec-no-secrets-in-logs`), [go-knadh-koanf](../go-knadh-koanf/SKILL.md) (the `logging` and `metrics` blocks in the settings file), [go-http-handlers](../go-http-handlers/SKILL.md) (request logging middleware), [go-how-to](../go-how-to/SKILL.md) (the Go skills and the rules they all assume).
 
 ## When to use
 
@@ -27,12 +27,21 @@ Related: [go-code-style](../go-code-style/SKILL.md) (the injected structured log
 
 - **The team logs with zap, not slog.** A `*zap.Logger` with typed fields (`zap.String`, `zap.Error`), not the `SugaredLogger`.
 - **The logger is injected**, built once at the root from the settings file's `logging` block (`level`, `format`, `probe.enabled`; [go-knadh-koanf](../go-knadh-koanf/SKILL.md) section 4b), with `defer log.Sync()` in `main`; never `zap.L()` or `zap.ReplaceGlobals` (`style-structured-logger`).
+- **The Prometheus endpoint is configured** with `metrics.enabled`, `metrics.port` and `metrics.path` ([go-knadh-koanf](../go-knadh-koanf/SKILL.md) section 4c); it uses a dedicated internal listener and is not exposed on the public application listener.
 - **`format: json` writes one Elastic Common Schema object per line to stdout** through `go.elastic.co/ecszap` — that is what a deployment collects; `console` is zap's development encoder, for a terminal.
 - **Log lines in a traced request carry `trace.id` and `span.id`**, from a helper that derives the logger from the span context (zap takes no `ctx`).
-- **Probe requests are not logged** by default (`probe.enabled: false`): the kubelet calls `/livez` and `/readyz` every few seconds per pod.
+- **Kubernetes probe routes are `/livez` and `/readyz` only**: `/livez` reports process liveness, `/readyz` reports readiness for traffic, and `/healthz` is not an alias. Probe requests are not logged by default (`probe.enabled: false`).
 - **Every metric var has its PromQL queries and alert rules as comments above its declaration**, so the queries live where the metric is defined.
 - **Labels are bounded:** never an unbounded value (user ID, full URL) as a label; the route pattern, not the path.
 - **A feature is not done until it is observable:** metrics declared, spans opened and closed, structured log fields consistent.
+
+## Rules
+
+One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_sections.md](rules/_sections.md).
+
+| ID | Rule | Impact | Check |
+|---|---|---|---|
+| [obs-kubernetes-probe-paths](rules/obs-kubernetes-probe-paths.md) | Expose Kubernetes probes only at `/livez` and `/readyz` | MEDIUM | test, review |
 
 ## Team decisions
 
@@ -40,7 +49,7 @@ Related: [go-code-style](../go-code-style/SKILL.md) (the injected structured log
 2. **The injected logger wins** over upstream's process-wide default: the logger is constructed from the settings file and passed to constructors (`NewStore(db, log)`), never set with `zap.ReplaceGlobals`.
 3. **The logging block in the settings file** (`level`, `format`, `probe.enabled`) is the team's minimum, from [go-knadh-koanf](../go-knadh-koanf/SKILL.md) section 4b; upstream's environment-variable toggles for profiling are kept.
 4. **Errors are logged or returned, never both** — the single handling rule lives in [go-error-handling](../go-error-handling/SKILL.md) (`err-handle-once`); upstream passages that show a log call plus `return err` are read through that rule.
-5. Links to upstream skills that aren't absorbed (`samber/cc-skills@promql-cli`) are skipped.
+5. Upstream's external PromQL CLI skill is not included; use the Prometheus UI/API or project-documented tooling instead.
 
 ## Review checklist
 
@@ -49,11 +58,12 @@ Related: [go-code-style](../go-code-style/SKILL.md) (the injected structured log
 - [ ] Labels bounded; no user IDs or full URLs as label values
 - [ ] Spans opened and closed on service methods, DB queries, external calls; errors recorded with `span.RecordError()`
 - [ ] No PII in logs; probe requests stay unlogged unless `probe.enabled` is on
+- [ ] Kubernetes probes are `/livez` (liveness) and `/readyz` (readiness); `/healthz` is not registered
 - [ ] Log lines in traced code carry `trace.id`/`span.id` (`WithTrace(ctx, log)`); errors logged with `zap.Error(err)`, messages constant
 
 ## In depth
 
-The material below is `samber/cc-skills-golang@golang-observability`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: each one the team uses is absorbed into a team skill (`go-how-to`, rule 1, maps the names), and the rest are not adopted.
+The material below is `samber/cc-skills-golang@golang-observability`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: each one the team uses is absorbed into a team skill ([go-how-to](../go-how-to/SKILL.md), rule 1, maps the names), and the rest are not adopted.
 
 **Persona:** You are a Go observability engineer. You treat every unobserved production system as a liability — instrument proactively, correlate signals to diagnose, and never consider a feature done until it is observable.
 
@@ -92,7 +102,7 @@ When using observability libraries (Prometheus client, OpenTelemetry SDK, vendor
 - → [go-error-handling](../go-error-handling/SKILL.md) for the single handling rule.
 - → [go-troubleshooting](../go-troubleshooting/SKILL.md) for using observability signals to diagnose production issues.
 - → [go-security](../go-security/SKILL.md) for protecting pprof endpoints and avoiding PII in logs.
-- → [`go-concurrency` references/context.md](../go-concurrency/references/context.md) for propagating trace context across service boundaries.
+- → [[go-concurrency](../go-concurrency/SKILL.md) references/context.md](../go-concurrency/references/context.md) for propagating trace context across service boundaries.
 
 ##### Several log destinations: `zapcore.NewTee`
 

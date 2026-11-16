@@ -9,7 +9,7 @@ check: test
 
 **Impact: MEDIUM** (a `null` where the document says array crashes the frontend's `.map`)
 
-A Go `nil` slice marshals to `null`; the document says `array`, and the frontend's `.map` crashes. Make the empty slice explicitly (`go-code-style`).
+A Go `nil` slice marshals to `null`; the document says `array`, and the frontend's `.map` crashes. Make the empty slice explicitly ([go-code-style](../../go-code-style/SKILL.md)).
 
 **Incorrect:**
 

@@ -1,4 +1,4 @@
-> **Absorbed into `go-concurrency`.** This is `samber/cc-skills-golang@golang-context` (MIT, Samuel Berthe; commit in [UPSTREAM.md](../UPSTREAM.md)), kept as the depth for context. The team's rules and decisions in [SKILL.md](../SKILL.md) win where the two differ.
+> **Absorbed into [go-concurrency](../SKILL.md).** This is `samber/cc-skills-golang@golang-context` (MIT, Samuel Berthe; commit in [UPSTREAM.md](../UPSTREAM.md)), kept as the depth for context. The team's rules and decisions in [SKILL.md](../SKILL.md) win where the two differ.
 
 # Go context.Context Best Practices
 
@@ -53,11 +53,11 @@ func (s *OrderService) Create(ctx context.Context, order Order) error {
 
 ## Cross-References
 
-- → See the `samber/cc-skills-golang@golang-concurrency` skill for goroutine cancellation patterns using context
-- → See the `samber/cc-skills-golang@golang-database` skill for context-aware database operations (QueryContext, ExecContext)
-- → See the `samber/cc-skills-golang@golang-observability` skill for trace context propagation with OpenTelemetry
-- → See the `samber/cc-skills-golang@golang-design-patterns` skill for timeout and resilience patterns
+- → See the [go-concurrency](../SKILL.md) skill for goroutine cancellation patterns using context
+- → See the [go-database](../../go-database/SKILL.md) skill for context-aware database operations (QueryContext, ExecContext)
+- → See the [go-observability](../../go-observability/SKILL.md) skill for trace context propagation with OpenTelemetry
+- → See the [go-project-layout](../../go-project-layout/SKILL.md) skill for timeout and resilience patterns
 
 ## Enforce with Linters
 
-Many context pitfalls are caught automatically by linters: `govet`, `staticcheck`. → See the `samber/cc-skills-golang@golang-lint` skill for configuration and usage.
+Many context pitfalls are caught automatically by linters: `govet`, `staticcheck`. → See the [go-code-style](../../go-code-style/SKILL.md) skill for configuration and usage.

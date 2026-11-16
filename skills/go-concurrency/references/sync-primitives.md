@@ -339,4 +339,4 @@ return g.Wait()
 
 This replaces hand-rolled worker pools for most use cases.
 
-→ See `go-concurrency` skill for high-level patterns and decision trees.
+→ See [go-concurrency](../SKILL.md) skill for high-level patterns and decision trees.

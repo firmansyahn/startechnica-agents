@@ -94,7 +94,7 @@ func GetWeather(city string) (string, error) {
 }
 ```
 
-→ See `samber/cc-skills-golang@golang-concurrency` skill for `singleflight` API details and `sync.Map` vs `RWMutex` decision guidance.
+→ See [go-concurrency](../../go-concurrency/SKILL.md) skill for `singleflight` API details and `sync.Map` vs `RWMutex` decision guidance.
 
 ### LRU caches
 

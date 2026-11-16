@@ -1,4 +1,4 @@
-> **Absorbed into `go-code-style`.** This is `samber/cc-skills-golang@golang-lint` (MIT, Samuel Berthe; commit in [UPSTREAM.md](../UPSTREAM.md)), kept as the depth for lint. The team's rules and decisions in [SKILL.md](../SKILL.md) win where the two differ.
+> **Absorbed into [go-code-style](../SKILL.md).** This is `samber/cc-skills-golang@golang-lint` (MIT, Samuel Berthe; commit in [UPSTREAM.md](../UPSTREAM.md)), kept as the depth for lint. The team's rules and decisions in [SKILL.md](../SKILL.md) win where the two differ.
 
 **Persona:** You are a Go code quality engineer. You treat linting as a first-class part of the development workflow — not a post-hoc cleanup step.
 
@@ -131,5 +131,5 @@ When adopting linting on a legacy codebase, use up to 5 parallel sub-agents to f
 ## Cross-References
 
 - → See the [gitlab-ci](../../gitlab-ci/SKILL.md) skill for the CI pipeline that runs golangci-lint as a job
-- → See `samber/cc-skills-golang@golang-code-style` skill for style rules that linters enforce
-- → See `samber/cc-skills-golang@golang-security` skill for SAST tools beyond linting (gosec, govulncheck)
+- → See [go-code-style](../SKILL.md) skill for style rules that linters enforce
+- → See [go-security](../../go-security/SKILL.md) skill for SAST tools beyond linting (gosec, govulncheck)

@@ -1,12 +1,12 @@
 ---
 name: go-how-to
-description: "Use at the start of any Go backend work when it isn't clear which skill applies, or when a task spans several: starting a service, adding an endpoint end to end, onboarding to the team's Go conventions, asking 'what are our rules for Go' or 'how do we do X in Go'. Routes to the focused team skills (go-project-layout, go-code-style, go-error-handling, go-concurrency, go-database, go-testing, go-security, go-http-handlers, go-knadh-koanf, go-observability, go-performance, go-safety, go-data-structures, go-refactoring, go-troubleshooting), go-nextjs-api-contract and the OAuth skills, maps every samber/cc-skills-golang golang-* name to the team skill that absorbed it, says how to ask each harness for deep thinking or subagents, and lists the rules they all assume and the toolchain commands. Each skill reviews its own rules."
+description: "Use at the start of any Go backend work when it isn't clear which skill applies, or when a task spans several: starting a service, adding an endpoint end to end, onboarding to the team's Go conventions, asking 'what are our rules for Go' or 'how do we do X in Go'. Routes to the focused team skills (go-project-layout, go-code-style, go-error-handling, go-concurrency, go-database, go-testing, go-continuous-integration, go-security, go-http-handlers, go-knadh-koanf, go-observability, go-performance, go-safety, go-data-structures, go-refactoring, go-troubleshooting), go-nextjs-api-contract and the OAuth skills, maps every samber/cc-skills-golang golang-* name to the team skill that absorbed it, says how to ask each harness for deep thinking or subagents, and lists the rules they all assume and the toolchain commands. Each skill reviews its own rules."
 user-invocable: true
 license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.2.1"
+  version: "0.3.0"
 ---
 
 # Go: which skill, and what they all assume
@@ -29,6 +29,7 @@ The skills follow the samber/cc-skills-golang shape: one focused skill per topic
 | Goroutines, workers, `context.Context`, deadlines, mutexes, channels, shutdown | [go-concurrency](../go-concurrency/SKILL.md) | golang-concurrency; golang-context | `conc-` |
 | Queries, transactions, soft deletes, IDs, migrations, `pgx` | [go-database](../go-database/SKILL.md) | golang-database | `db-` |
 | Unit, database and handler tests; `-race`, `t.Parallel`, flaky or slow tests | [go-testing](../go-testing/SKILL.md) | golang-testing | `test-` |
+| Go CI quality gates: module checks, Go tests, lint and vulnerability scanning | [go-continuous-integration](../go-continuous-integration/SKILL.md) | golang-continuous-integration | `goci-` |
 | Logs (zap), metrics, traces, profiling toggles, alerts, dashboards | [go-observability](../go-observability/SKILL.md) | golang-observability | |
 | Authorization, SQL injection, secrets, TLS, paths, SSRF, a security review | [go-security](../go-security/SKILL.md) | golang-security | `sec-` |
 | HTTP handlers and outbound HTTP calls: bodies, decoding, error statuses | [go-http-handlers](../go-http-handlers/SKILL.md) | (no upstream skill) | `api-` |
@@ -44,7 +45,7 @@ The skills follow the samber/cc-skills-golang shape: one focused skill per topic
 | Committing, worktrees, conflicts; MRs and the pipeline | `git-how-to`, `gitlab-how-to` | | |
 | Writing or changing a skill or rule, vendoring or absorbing an upstream skill, the skills lint | `agent-skills-authoring` | | |
 
-A new endpoint loads `go-project-layout` (where the handler, rule and query go) → `go-http-handlers` → `go-database` → `go-nextjs-api-contract` (the shape it answers) → `go-testing`, then each skill's "Reviewing" section before the merge request. A review of a whole change goes skill by skill: a handler → `go-http-handlers`, `go-security`, `go-error-handling`; a query or repository → `go-database`, `go-security`; a worker or anything with `go` → `go-concurrency`; a new package → `go-project-layout`; a test → `go-testing`; everything → `go-code-style`.
+A new endpoint loads `go-project-layout` (where the handler, rule and query go) → `go-http-handlers` → `go-database` → `go-nextjs-api-contract` (the shape it answers) → `go-testing`, then each skill's "Reviewing" section before the merge request. A review of a whole change goes skill by skill: a handler → `go-http-handlers`, `go-security`, `go-error-handling`; a query or repository → `go-database`, `go-security`; a worker or anything with `go` → `go-concurrency`; a new package → `go-project-layout`; a test → `go-testing`; a CI change → `go-continuous-integration`, `gitlab-ci`; everything → `go-code-style`.
 
 ## Rules every skill assumes
 
@@ -57,6 +58,7 @@ A new endpoint loads `go-project-layout` (where the handler, rule and query go) 
    | `golang-project-layout`, `golang-dependency-injection`, `golang-dependency-management`, `golang-design-patterns` | `go-project-layout` (the last three as `references/<topic>.md`) |
    | `golang-concurrency`, `golang-context` | `go-concurrency` (`references/context.md`) |
    | `golang-performance`, `golang-benchmark` | `go-performance` (`references/benchmark.md`) |
+   | `golang-continuous-integration` | `go-continuous-integration` |
    | `golang-error-handling`, `-database`, `-testing`, `-security`, `-observability`, `-safety`, `-data-structures`, `-refactoring`, `-troubleshooting` | `go-<topic>` |
 2. **Check the toolchain.** Read `go.mod` (`go` and `toolchain` lines) before using a language or standard-library feature; some advice depends on the version.
 3. **Imports point one way**, enforced by a test, not by convention.
@@ -64,8 +66,8 @@ A new endpoint loads `go-project-layout` (where the handler, rule and query go) 
 5. **Every outbound call and query carries a `context.Context` with a deadline.**
 6. **The OpenAPI document is the contract**; handlers are tested against it.
 7. **`gofmt`, `go vet` and the project's linters pass**; `go test ./...` passes, with `-race` in CI.
-8. **CI is GitLab CI**, not GitHub Actions: upstream's Dependabot, GoReleaser, CodeQL and `golangci-lint-action` advice doesn't apply; the pipeline is in `gitlab-ci` (its Go child template). Upstream's `golang-continuous-integration` isn't vendored.
-9. **Links to upstream skills that aren't absorbed** (`samber/cc-skills-golang@golang-samber-*`, `-stretchr-testify`, `-continuous-integration`, `-grpc`, `-swagger`, `-graphql`, `-cli`, `-spf13-*`, `-uber-*`, `-google-wire`, `-popular-libraries`, `-how-to`, `-gopls`, `-pkg-go-dev`, `-stay-updated`) are skipped, and so are their install commands (`npx skills add`, `clawhub`).
+8. **CI is GitLab CI.** `go-continuous-integration` covers Go quality gates; `gitlab-ci` owns pipeline syntax, topology and shared templates. GitHub Actions, Dependabot, CodeQL and `golangci-lint-action` instructions are not copied as platform defaults.
+9. **Links to upstream skills that aren't absorbed** (`samber/cc-skills-golang@golang-samber-*`, `-stretchr-testify`, `-grpc`, `-swagger`, `-graphql`, `-cli`, `-spf13-*`, `-uber-*`, `-google-wire`, `-popular-libraries`, `-how-to`, `-gopls`, `-pkg-go-dev`, `-stay-updated`) are skipped, and so are their install commands (`npx skills add`, `clawhub`).
 10. **Review before a merge request** with the "Reviewing" section of each skill the change touches, and cite rule IDs in findings.
 
 ## Asking the harness for depth or subagents

@@ -48,11 +48,11 @@ go test ./... -v 2>&1
 # Static analysis
 go vet ./...
 
-# Run linters — see the `go-code-style` references/lint.md for configuration
+# Run linters — see the [go-code-style](../../go-code-style/SKILL.md) references/lint.md for configuration
 golangci-lint run ./...
 ```
 
-Run `golangci-lint` early in your debugging workflow. It catches unchecked errors, suspicious constructs, and many other issues that are easy to miss by reading code. See the `samber/cc-skills-golang@golang-lint` skill for configuration and usage.
+Run `golangci-lint` early in your debugging workflow. It catches unchecked errors, suspicious constructs, and many other issues that are easy to miss by reading code. See the [go-code-style](../../go-code-style/SKILL.md) skill for configuration and usage.
 
 ## Step 3: Isolate the Problem
 

@@ -137,7 +137,7 @@ gobenchdata prune --count 30 bench.json
 
 ### GitLab CI setup
 
-Run the benchmarks in a job in `.gitlab-ci.yml` (see `gitlab-ci` for images, rules and the Go child template), and publish the dashboard from the default branch with GitLab Pages. The previous history comes back from the published site, so it survives between pipelines:
+Run the benchmarks in a job in `.gitlab-ci.yml` (see [gitlab-ci](../../../gitlab-ci/SKILL.md) for images, rules and the Go child template), and publish the dashboard from the default branch with GitLab Pages. The previous history comes back from the published site, so it survives between pipelines:
 
 ```yaml
 # .gitlab-ci.yml

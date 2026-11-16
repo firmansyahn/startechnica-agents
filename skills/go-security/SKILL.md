@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.1.2"
+  version: "0.1.4"
 ---
 
 # Go security (team)
@@ -15,7 +15,7 @@ metadata:
 
 > **Absorbed.** This skill includes `samber/cc-skills-golang@golang-security` (MIT, Samuel Berthe; source and pinned commit in [UPSTREAM.md](UPSTREAM.md)), adapted to the team: the team's rules and decisions come first and win, and "In depth" holds the upstream material, edited where the team decided otherwise. The project's own `AGENTS.md`, `CLAUDE.md` and project skills win over this skill.
 
-Related: [go-database](../go-database/SKILL.md) (queries), [go-http-handlers](../go-http-handlers/SKILL.md) (request bodies, error replies), `oauth-server` and `oauth-client` (tokens), [go-how-to](../go-how-to/SKILL.md) (the Go skills and the rules they all assume).
+Related: [go-database](../go-database/SKILL.md) (queries), [go-http-handlers](../go-http-handlers/SKILL.md) (request bodies, error replies), [oauth-server](../oauth-server/SKILL.md) and [oauth-client](../oauth-client/SKILL.md) (tokens), [go-how-to](../go-how-to/SKILL.md) (the Go skills and the rules they all assume).
 
 ## When to use
 
@@ -39,7 +39,7 @@ Related: [go-database](../go-database/SKILL.md) (queries), [go-http-handlers](..
 ## Team decisions
 
 1. **Secrets in settings** are loaded with koanf, inline or from a mounted `*_file` ([go-knadh-koanf](../go-knadh-koanf/SKILL.md)), never from a flag.
-2. **CI security tooling** is the project's GitLab CI (`gitlab-ci`); GitHub CodeQL and Dependabot advice doesn't apply. `govulncheck` runs where the project has it.
+2. **CI security tooling** is `govulncheck` in Go CI ([go-continuous-integration](../go-continuous-integration/SKILL.md)); assess findings under these rules. GitLab pipeline syntax and permissions are in [gitlab-ci](../gitlab-ci/SKILL.md); GitHub CodeQL and Dependabot advice doesn't apply.
 3. Links to upstream skills that aren't absorbed are skipped.
 
 ## Rules
@@ -64,7 +64,7 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 2. **Tools first**, from `<module-root>`: `gofmt -l .`, `go vet ./...`, and `golangci-lint run` when the project has a `.golangci.yml`. Report their findings as they are; a rule that names a linter isn't reported twice.
 3. **Scan:** `bash <this skill>/scripts/scan.sh <module-root>` lists candidates for the rules with `scan` in their check. On a diff, keep the ones in changed lines; open the rule and confirm each before reporting it.
 4. **Read** the code against the rules above, matching each rule's "Incorrect" shape, not just its title, and against the checklist below.
-5. **Report** in the format of `agent-skills-authoring` ("Scan scripts and findings"), ordered by impact; list once, as a gap, the rules whose check is a test or linter the project doesn't have.
+5. **Report** in the format of [agent-skills-authoring](../agent-skills-authoring/SKILL.md) ("Scan scripts and findings"), ordered by impact; list once, as a gap, the rules whose check is a test or linter the project doesn't have.
 
 ## Review checklist
 
@@ -76,7 +76,7 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 
 ## In depth
 
-The material below is `samber/cc-skills-golang@golang-security`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: each one the team uses is absorbed into a team skill (`go-how-to`, rule 1, maps the names), and the rest are not adopted.
+The material below is `samber/cc-skills-golang@golang-security`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: each one the team uses is absorbed into a team skill ([go-how-to](../go-how-to/SKILL.md), rule 1, maps the names), and the rest are not adopted.
 
 **Persona:** You are a senior Go security engineer. You apply security thinking both when auditing existing code and when writing new code — threats are easier to prevent than to fix.
 
@@ -175,7 +175,7 @@ For the full security review checklist organized by domain (input handling, data
 
 #### Static Analysis & Linting
 
-Security-relevant linters: `bodyclose`, `sqlclosecheck`, `nilerr`, `errcheck`, `govet`, `staticcheck`. See the `go-code-style` references/lint.md for configuration and usage.
+Security-relevant linters: `bodyclose`, `sqlclosecheck`, `nilerr`, `errcheck`, `govet`, `staticcheck`. See the [go-code-style](../go-code-style/SKILL.md) references/lint.md for configuration and usage.
 
 For deeper security-specific analysis:
 
@@ -184,7 +184,7 @@ For deeper security-specific analysis:
 go get -tool github.com/securego/gosec/v2/cmd/gosec@latest
 go tool gosec ./...
 
-# Vulnerability scanner — see `go-project-layout` references/dependency-management.md for full govulncheck usage
+# Vulnerability scanner — see [go-project-layout](../go-project-layout/SKILL.md) references/dependency-management.md for full govulncheck usage
 go get -tool golang.org/x/vuln/cmd/govulncheck@latest
 go tool govulncheck ./...
 ```
@@ -232,7 +232,7 @@ See **[Security Architecture](./references/architecture.md)** for detailed anti-
 
 ### Cross-References
 
-See `go-database`, `go-safety`, `go-observability` and `gitlab-ci` (the project's CI, where `govulncheck` and `gosec` run when the project has them) skills.
+See [go-database](../go-database/SKILL.md), [go-safety](../go-safety/SKILL.md), [go-observability](../go-observability/SKILL.md) and [gitlab-ci](../gitlab-ci/SKILL.md) (the project's CI, where `govulncheck` and `gosec` run when the project has them) skills.
 
 
 ### Additional Resources

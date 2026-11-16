@@ -281,4 +281,4 @@ Where a project already uses `go.uber.org/goleak`, keep it: `goleak.VerifyTestMa
 | Sending mutable data through channel | Send copies or immutable values |
 | Blocking send without select | Wrap channel sends in select with `ctx.Done()` |
 
-→ See `go-concurrency` skill for sync primitives and channel patterns.
+→ See [go-concurrency](../SKILL.md) skill for sync primitives and channel patterns.

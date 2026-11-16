@@ -6,18 +6,18 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go projects that load settings with koanf v2.
 metadata:
   author: firmansyahn
-  version: "0.2.2"
+  version: "0.3.1"
 ---
 
 # koanf: loading a Go service's settings
 
 **Principle:** Settings come from one typed Config loaded by koanf, with defaults in code, strict decoding, and errors that name the file and the key.
 
-The team loads settings with [koanf](https://github.com/knadh/koanf) v2, not `spf13/viper`: keys keep their case, each provider and parser is its own module (no dependency tree pulled in for formats you don't use), and decoding goes through `mapstructure`, which can refuse unknown keys. This skill is the team's pattern for it. No established public koanf skill exists to vendor; the samber `golang-spf13-viper` skill is about viper and isn't vendored (`go-how-to`, rule 9).
+The team loads settings with [koanf](https://github.com/knadh/koanf) v2, not `spf13/viper`: keys keep their case, each provider and parser is its own module (no dependency tree pulled in for formats you don't use), and decoding goes through `mapstructure`, which can refuse unknown keys. This skill is the team's pattern for it. No established public koanf skill exists to vendor; the samber `golang-spf13-viper` skill is about viper and isn't vendored ([go-how-to](../go-how-to/SKILL.md), rule 9).
 
-The project wins where it differs (`go-how-to`, rule 1). Read `go.mod` first: the paths below are koanf v2 (`github.com/knadh/koanf/v2`) with its v1 provider and parser modules and `github.com/go-viper/mapstructure/v2`.
+The project wins where it differs ([go-how-to](../go-how-to/SKILL.md), rule 1). Read `go.mod` first: the paths below are koanf v2 (`github.com/knadh/koanf/v2`) with its v1 provider and parser modules and `github.com/go-viper/mapstructure/v2`.
 
-Related: `go-project-layout` (where the config package sits, how settings reach constructors), `go-security` and `sec-no-secrets-in-logs` (secrets in settings), `go-testing` (test style).
+Related: [go-project-layout](../go-project-layout/SKILL.md) (where the config package sits, how settings reach constructors), [go-security](../go-security/SKILL.md) and `sec-no-secrets-in-logs` (secrets in settings), [go-observability](../go-observability/SKILL.md) (metrics configuration and instrumentation), [go-testing](../go-testing/SKILL.md) (test style).
 
 ## When to use
 
@@ -168,15 +168,51 @@ logging:
   # in a terminal.
   format: json
   probe:
-    # Log the Kubernetes probe requests (/livez, /readyz). Off keeps the kubelet's checks, one
-    # every few seconds per pod, out of the log.
+    # Log Kubernetes probe requests (/livez and /readyz). Off keeps the kubelet's checks,
+    # one every few seconds per pod, out of the log.
     enabled: false
 ```
 
 - **`level`** is one of `debug`, `info`, `warn`, `error` — checked in the block's `validate`, not a free string.
 - **`format`** is `json` or `console`: `json` writes one [Elastic Common Schema](https://elastic.co/guide/en/ecs/current/index.html) object per line to stdout (what a deployment collects); `console` is for reading in a terminal. The default is `json`.
+- **Kubernetes probe routes are `/livez` and `/readyz` only**: `/livez` reports whether the process is alive; `/readyz` reports whether it can accept traffic. Do not add a `/healthz` alias.
 - **`probe.enabled`** defaults to `false`: the kubelet calls `/livez` and `/readyz` every few seconds per pod, and those requests belong in the log only while debugging them.
-- The block is a nested struct (`Logging` with a nested `Probe`), its fields typed and defaulted like any other block (section 1), and the logger is built from it once at the root and injected (`go-code-style`, structured logging).
+- The block is a nested struct (`Logging` with a nested `Probe`), its fields typed and defaulted like any other block (section 1), and the logger is built from it once at the root and injected ([go-code-style](../go-code-style/SKILL.md), structured logging).
+
+## 4c. The metrics block
+
+Every Go service's settings carry a `metrics` block with an enable switch, a dedicated listener port and the scrape path:
+
+```yaml
+metrics:
+  # Enable the internal Prometheus scrape endpoint.
+  enabled: true
+  # Dedicated listener port for metrics; keep it separate from the public application listener.
+  port: 9090
+  # HTTP path scraped by Prometheus.
+  path: /metrics
+```
+
+- **`enabled`** is a `bool` that defaults to `true` for a service that implements metrics. When false, do not start the metrics listener.
+- **`port`** is an `int` in the range 1–65535 and defaults to `9090`. It configures a dedicated metrics listener, not the public application server.
+- **`path`** defaults to `/metrics` and must be an absolute URL path (start with `/`, with no query or fragment). Register `promhttp.Handler()` at this configured path.
+- The block is a typed `Metrics` struct with `koanf` tags; validate the port and path and include field-specific errors naming `metrics.enabled`, `metrics.port` or `metrics.path`.
+- Keep the listener internal to the service network and restrict access at the network boundary. `metrics.enabled` is a runtime toggle, not an access-control mechanism.
+- Test file decoding, defaults, invalid ports and invalid paths, and that disabling metrics does not start the listener. The example settings file lists all three keys.
+
+The config fields are typed and tagged like this:
+
+```go
+type Metrics struct {
+	Enabled bool   `koanf:"enabled"`
+	Port    int    `koanf:"port"`
+	Path    string `koanf:"path"`
+}
+
+type Config struct {
+	Metrics Metrics `koanf:"metrics"`
+}
+```
 
 ## 5. Tests
 
@@ -214,6 +250,7 @@ Cover, for every new key or block:
 
 - [ ] `ErrorUnused` still on; no new silent default for a misspelled key
 - [ ] New field has a `koanf` tag, a doc comment, a default or a validation, an example entry and a test
+- [ ] A service's metrics settings include `metrics.enabled`, `metrics.port` and `metrics.path`, with range/path validation and a dedicated internal listener
 - [ ] Durations are `time.Duration` decoded by the hook, not strings or bare ints without a unit in the name
 - [ ] Errors name the file and the dotted key
 - [ ] No koanf instance, package global or `k.Get` outside the config package; blocks passed to constructors

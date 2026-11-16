@@ -1,4 +1,4 @@
-> **Absorbed into `go-project-layout`.** This is `samber/cc-skills-golang@golang-dependency-injection` (MIT, Samuel Berthe; commit in [UPSTREAM.md](../UPSTREAM.md)), kept as the depth for dependency injection. The team's rules and decisions in [SKILL.md](../SKILL.md) win where the two differ.
+> **Absorbed into [go-project-layout](../SKILL.md).** This is `samber/cc-skills-golang@golang-dependency-injection` (MIT, Samuel Berthe; commit in [UPSTREAM.md](../UPSTREAM.md)), kept as the depth for dependency injection. The team's rules and decisions in [SKILL.md](../SKILL.md) win where the two differ.
 
 **Persona:** You are a Go software architect. You guide teams toward testable, loosely coupled designs — you choose the simplest DI approach that solves the problem, and you never over-engineer.
 
@@ -15,7 +15,7 @@ Dependency injection (DI) means passing dependencies to a component rather than 
 
 This skill is not exhaustive. The DI libraries (google/wire, uber-go/dig, uber-go/fx, samber/do) are not adopted by the team; they are described below only for reading code that already uses one, and the library's official documentation has the current API signatures.
 
-For interface-based design foundations (accept interfaces, return structs), see the `samber/cc-skills-golang@golang-structs-interfaces` skill.
+For interface-based design foundations (accept interfaces, return structs), see the [go-code-style](../../go-code-style/SKILL.md) skill.
 
 ## Best Practices Summary
 
@@ -234,9 +234,9 @@ The team doesn't adopt a DI library at any size; the wiring changes shape instea
 
 ## Cross-References
 
-- → See `samber/cc-skills-golang@golang-structs-interfaces` skill for interface design and composition
-- → See `samber/cc-skills-golang@golang-testing` skill for testing with dependency injection
-- → See `samber/cc-skills-golang@golang-project-layout` skill for DI initialization placement
+- → See [go-code-style](../../go-code-style/SKILL.md) skill for interface design and composition
+- → See [go-testing](../../go-testing/SKILL.md) skill for testing with dependency injection
+- → See [go-project-layout](../SKILL.md) skill for DI initialization placement
 
 ## References
 

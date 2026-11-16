@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.1.3"
 ---
 
 # Go refactoring (team)
@@ -15,20 +15,20 @@ metadata:
 
 > **Absorbed.** This skill includes `samber/cc-skills-golang@golang-refactoring` (MIT, Samuel Berthe; source and pinned commit in [UPSTREAM.md](UPSTREAM.md)), adapted to the team: the team's decisions come first and win, and "In depth" holds the upstream material, edited where the team decided otherwise. The project's own `AGENTS.md`, `CLAUDE.md` and project skills win over this skill.
 
-Related: [go-project-layout](../go-project-layout/SKILL.md) (where code may move: the layers and their architecture test), [go-code-style](../go-code-style/SKILL.md) (the target style), [go-testing](../go-testing/SKILL.md) (the safety net), `git-worktree` (one worktree per change), `gitlab-mr` (stacked merge requests).
+Related: [go-project-layout](../go-project-layout/SKILL.md) (where code may move: the layers and their architecture test), [go-code-style](../go-code-style/SKILL.md) (the target style), [go-testing](../go-testing/SKILL.md) (the safety net), [git-worktree](../git-worktree/SKILL.md) (one worktree per change), [gitlab-mr](../gitlab-mr/SKILL.md) (stacked merge requests).
 
 ## Team decisions
 
-1. **"PR" means a GitLab merge request** (`gitlab-mr`): a stacked change is a stacked merge request (`gitlab-stacked-mrs` for the `refactor/<topic>` branch model), and a retargeted one gets a fresh pipeline (`mr-new-pipeline-after-retarget`).
-2. **One worktree per change** (`git-worktree`), with its own dependencies, removed once merged.
-3. **Moves keep the layers:** a package split or move follows `go-project-layout`, and its architecture test stays green at every step.
-4. **Characterization tests use the standard `testing` package** with golden files under `testdata/` (`go-testing`; no testify).
+1. **"PR" means a GitLab merge request** ([gitlab-mr](../gitlab-mr/SKILL.md)): a stacked change is a stacked merge request ([gitlab-stacked-mrs](../gitlab-stacked-mrs/SKILL.md) for the `refactor/<topic>` branch model), and a retargeted one gets a fresh pipeline (`mr-new-pipeline-after-retarget`).
+2. **One worktree per change** ([git-worktree](../git-worktree/SKILL.md)), with its own dependencies, removed once merged.
+3. **Moves keep the layers:** a package split or move follows [go-project-layout](../go-project-layout/SKILL.md), and its architecture test stays green at every step.
+4. **Characterization tests use the standard `testing` package** with golden files under `testdata/` ([go-testing](../go-testing/SKILL.md); no testify).
 5. **The project's impact-analysis tooling wins** for blast radius when it has one (a code graph's impact or rename tool), before gopls alone.
-6. Links to upstream skills that aren't absorbed (`samber/cc-skills-golang@golang-samber-*`, `-uber-*`, `-google-wire`, `-popular-libraries`, `-gopls`, `-pkg-go-dev`, `-continuous-integration` and the rest in `go-how-to` rule 9) are skipped, and so are their install commands.
+6. Links to upstream skills that aren't absorbed (`samber/cc-skills-golang@golang-samber-*`, `-uber-*`, `-google-wire`, `-popular-libraries`, `-gopls`, `-pkg-go-dev` and the rest in [go-how-to](../go-how-to/SKILL.md) rule 9) are skipped, and so are their install commands.
 
 ## In depth
 
-The material below is `samber/cc-skills-golang@golang-refactoring`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: `go-how-to` (rule 1) maps each to the team skill that absorbed it.
+The material below is `samber/cc-skills-golang@golang-refactoring`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: [go-how-to](../go-how-to/SKILL.md) (rule 1) maps each to the team skill that absorbed it.
 
 **Persona:** You are a Go refactoring engineer. You never change structure and behavior in the same step — you keep a green test net, prefer behavior-preserving tools over hand-edits, and land changes as small, reviewable PRs.
 
@@ -92,7 +92,7 @@ The material below is `samber/cc-skills-golang@golang-refactoring`, absorbed int
 - **Grep for tag and reflection references after any rename.**
   - gopls Rename only guards against _compilation_ breakage — it cannot see a struct tag, a `text/template` field reference, or a `reflect`-driven dispatch that still points at the old name.
   - Renaming a field silently desyncs it from its `json`/`db` tag.
-- **Load `samber/cc-skills-golang@golang-security` (and `go-safety` for internal-correctness risk) whenever a step changes code logic, not just its shape.**
+- **Load `samber/cc-skills-golang@golang-security` (and [go-safety](../go-safety/SKILL.md) for internal-correctness risk) whenever a step changes code logic, not just its shape.**
   - A mechanical, tool-verified transform can't introduce a vulnerability, but a behavioral change can.
   - Treat "changes what the code does" as the trigger for a security-and-safety pass, not an afterthought reserved for the final review.
 - **Start every step from a clean, committed baseline, and revert rather than debug forward when it goes red.**
@@ -148,13 +148,13 @@ Refactoring is an investment that only pays off if a future change is coming to 
 
 #### Cross-References
 
-- → See `samber/cc-skills-golang@golang-naming` skill for what to rename identifiers _to_ — this skill owns _how_ to apply a rename safely at scale.
-- → See `samber/cc-skills-golang@golang-project-layout` skill for target directory/package layout — this skill owns the mechanics of moving code there without breaking callers.
-- → See `samber/cc-skills-golang@golang-modernize` skill for version-driven idiom updates (`interface{}`→`any`, `slices`/`maps`) — a distinct concern from structural refactoring, though it shares the same tool-first discipline.
-- → See `samber/cc-skills-golang@golang-code-style` skill for control-flow clarity and function-shape rules this skill helps you apply mechanically.
-- → See `samber/cc-skills-golang@golang-design-patterns` skill for target patterns (options struct, DI, consumer-side interfaces) this skill helps you migrate toward.
-- → See `samber/cc-skills-golang@golang-testing` skill for the test-writing practices that make the safety net in this skill trustworthy.
-- → See `samber/cc-skills-golang@golang-lint` skill for configuring `golangci-lint`, run here only as a post-step verification gate.
-- → See `samber/cc-skills-golang@golang-security` skill (and `go-safety`) for reviewing any step that changes code logic, not just its shape.
+- → See [go-code-style](../go-code-style/SKILL.md) skill for what to rename identifiers _to_ — this skill owns _how_ to apply a rename safely at scale.
+- → See [go-project-layout](../go-project-layout/SKILL.md) skill for target directory/package layout — this skill owns the mechanics of moving code there without breaking callers.
+- → See [go-code-style](../go-code-style/SKILL.md) skill for version-driven idiom updates (`interface{}`→`any`, `slices`/`maps`) — a distinct concern from structural refactoring, though it shares the same tool-first discipline.
+- → See [go-code-style](../go-code-style/SKILL.md) skill for control-flow clarity and function-shape rules this skill helps you apply mechanically.
+- → See [go-project-layout](../go-project-layout/SKILL.md) skill for target patterns (options struct, DI, consumer-side interfaces) this skill helps you migrate toward.
+- → See [go-testing](../go-testing/SKILL.md) skill for the test-writing practices that make the safety net in this skill trustworthy.
+- → See [go-code-style](../go-code-style/SKILL.md) skill for configuring `golangci-lint`, run here only as a post-step verification gate.
+- → See [go-security](../go-security/SKILL.md) skill (and [go-safety](../go-safety/SKILL.md)) for reviewing any step that changes code logic, not just its shape.
 
 If you encounter a bug or unexpected behavior in `gopls`, open an issue at <https://github.com/golang/go/issues>.

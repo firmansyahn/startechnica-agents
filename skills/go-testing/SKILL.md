@@ -6,16 +6,16 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.2.0"
+  version: "0.2.2"
 ---
 
 # Go tests (team)
 
 **Principle:** Tests are executable specifications: table-driven, run with the race detector, waiting on signals rather than time, and against a real database where the code talks to one.
 
-> **Absorbed.** This skill includes `samber/cc-skills-golang@golang-testing` (MIT, Samuel Berthe; source and pinned commit in [UPSTREAM.md](UPSTREAM.md)), adapted to the team: the team's rules and decisions come first and win, and "In depth" holds the upstream material, edited where the team decided otherwise. For depth on the neighbouring topics read the vendored [`go-performance` references/benchmark.md](../go-performance/references/benchmark.md); this skill wins where they differ. The project's own `AGENTS.md`, `CLAUDE.md` and project skills win over this skill.
+> **Absorbed.** This skill includes `samber/cc-skills-golang@golang-testing` (MIT, Samuel Berthe; source and pinned commit in [UPSTREAM.md](UPSTREAM.md)), adapted to the team: the team's rules and decisions come first and win, and "In depth" holds the upstream material, edited where the team decided otherwise. For depth on the neighbouring topics read the vendored [[go-performance](../go-performance/SKILL.md) references/benchmark.md](../go-performance/references/benchmark.md); this skill wins where they differ. The project's own `AGENTS.md`, `CLAUDE.md` and project skills win over this skill.
 
-Related: [go-database](../go-database/SKILL.md), [go-concurrency](../go-concurrency/SKILL.md), `gitlab-ci` (tests run automatically and block the merge, made fast by sharding and `t.Parallel`: its references/fast-tests.md), [go-how-to](../go-how-to/SKILL.md) (the Go skills and the rules they all assume).
+Related: [go-database](../go-database/SKILL.md), [go-concurrency](../go-concurrency/SKILL.md), [go-continuous-integration](../go-continuous-integration/SKILL.md) (Go-specific CI checks), [gitlab-ci](../gitlab-ci/SKILL.md) (tests run automatically and block the merge, made fast by sharding and `t.Parallel`: its references/fast-tests.md), [go-how-to](../go-how-to/SKILL.md) (the Go skills and the rules they all assume).
 
 ## When to use
 
@@ -41,7 +41,7 @@ Related: [go-database](../go-database/SKILL.md), [go-concurrency](../go-concurre
 1. **No testify.** Tests use the standard library `testing` package. Read golang-testing's testify sections as not adopted; don't add `testify` or its linters.
 2. **No mocked database.** `go-sqlmock` is not adopted (`test-real-database`); testcontainers is fine where the project already uses it.
 3. **Mocks are hand-written fakes** of the small interfaces a consumer declares; no mock generator added as a side effect.
-4. Links to upstream skills that aren't absorbed (`golang-stretchr-testify`, `golang-continuous-integration`) are skipped; CI is GitLab CI (`gitlab-ci`).
+4. Links to upstream skills that aren't absorbed (`golang-stretchr-testify`) are skipped; Go-specific CI checks are in [go-continuous-integration](../go-continuous-integration/SKILL.md), and GitLab pipeline design is in [gitlab-ci](../gitlab-ci/SKILL.md).
 
 ## Rules
 
@@ -60,7 +60,7 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 2. **Tools first**, from `<module-root>`: `gofmt -l .`, `go vet ./...`, and `golangci-lint run` when the project has a `.golangci.yml`. Report their findings as they are; a rule that names a linter isn't reported twice.
 3. **Scan:** `bash <this skill>/scripts/scan.sh <module-root>` lists candidates for the rules with `scan` in their check. On a diff, keep the ones in changed lines; open the rule and confirm each before reporting it.
 4. **Read** the code against the rules above, matching each rule's "Incorrect" shape, not just its title, and against the checklist below.
-5. **Report** in the format of `agent-skills-authoring` ("Scan scripts and findings"), ordered by impact; list once, as a gap, the rules whose check is a test or linter the project doesn't have.
+5. **Report** in the format of [agent-skills-authoring](../agent-skills-authoring/SKILL.md) ("Scan scripts and findings"), ordered by impact; list once, as a gap, the rules whose check is a test or linter the project doesn't have.
 
 ## Review checklist
 
@@ -72,7 +72,7 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 
 ## In depth
 
-The material below is `samber/cc-skills-golang@golang-testing`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: each one the team uses is absorbed into a team skill (`go-how-to`, rule 1, maps the names), and the rest are not adopted.
+The material below is `samber/cc-skills-golang@golang-testing`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: each one the team uses is absorbed into a team skill ([go-how-to](../go-how-to/SKILL.md), rule 1, maps the names), and the rest are not adopted.
 
 **Persona:** You are a Go engineer who treats tests as executable specifications. You write tests to constrain behavior, not to hit coverage targets.
 
@@ -326,7 +326,7 @@ Write benchmarks as sub-benchmarks (`b.Run` per variant) so each variant gets it
 
 → See [Benchmarks in a Test Suite](./references/benchmarks.md) for the code shape and size-parameterized examples.
 
-→ See `go-performance` references/benchmark.md for measurement methodology: `benchstat`, profiling from benchmarks, and CI regression detection.
+→ See [go-performance](../go-performance/SKILL.md) references/benchmark.md for measurement methodology: `benchstat`, profiling from benchmarks, and CI regression detection.
 
 ### Go 1.26+: test artifacts
 
@@ -449,13 +449,13 @@ For mock patterns, test fixtures, and time mocking, see [Mocking](./references/m
 
 ### Enforce with Linters
 
-Many test best practices are enforced automatically by linters: `thelper`, `paralleltest`. See the `go-code-style` references/lint.md for configuration and usage (`testifylint` doesn't apply: the team doesn't use testify).
+Many test best practices are enforced automatically by linters: `thelper`, `paralleltest`. See the [go-code-style](../go-code-style/SKILL.md) references/lint.md for configuration and usage (`testifylint` doesn't apply: the team doesn't use testify).
 
 ### Cross-References
 
-- → See `go-database` skill (testing.md) for database test patterns
-- → See `go-concurrency` skill for proving goroutines exit (goleak only where the project already uses it)
-- → See `go-code-style` references/lint.md for paralleltest and thelper configuration
+- → See [go-database](../go-database/SKILL.md) skill (testing.md) for database test patterns
+- → See [go-concurrency](../go-concurrency/SKILL.md) skill for proving goroutines exit (goleak only where the project already uses it)
+- → See [go-code-style](../go-code-style/SKILL.md) references/lint.md for paralleltest and thelper configuration
 
 ### Quick Reference
 
