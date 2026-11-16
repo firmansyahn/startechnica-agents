@@ -1,20 +1,39 @@
 ---
 name: next-bundle-optimizer
-description: >
-  Audit and reduce Next.js browser initial-load work. Use for slow route startup,
-  oversized client bundles, duplicate browser dependencies, or features that can
-  wait for interaction.
+description: "Use when auditing or reducing a Next.js application bundle, investigating client dependencies, measuring initial-load work, or validating a proposed bundle optimization."
+user-invocable: true
+license: MIT
+compatibility: Designed for coding agents and repositories using Git.
+metadata:
+  author: firmansyahn
+  version: "0.1.1"
 ---
 
-# Bundle optimizer
+# Next Bundle Optimizer (team)
 
-## 1. Set the scope
+**Principle:** Measure the actual client bundle first and justify each optimization with evidence from the project build.
 
-Analyze the whole app by default, covering all routes and shared client dependencies. Narrow the scope only when the user specifies a route, dependency, feature or other subset. Choose **audit** or **fix** mode. Audit is the default: generate analyzer artifacts and report candidates while leaving application source, dependencies and lockfiles unchanged. Fix mode requires an explicit request to change the app. Ask before changing visible behavior, timing, compatibility or a trust boundary. For a route's static App Shell, use [`next-cache-components-optimizer`](https://github.com/vercel/next.js/tree/canary/skills/next-cache-components-optimizer); install it first if unavailable (`npx skills add https://github.com/vercel/next.js/tree/canary/skills/next-cache-components-optimizer`). For navigation prefetch work, use [`next-partial-prefetching-optimizer`](https://github.com/vercel/next.js/tree/canary/skills/next-partial-prefetching-optimizer); install it first if unavailable (`npx skills add https://github.com/vercel/next.js/tree/canary/skills/next-partial-prefetching-optimizer`).
+Related: [nextjs-how-to](../nextjs-how-to/SKILL.md) (routing and team-wide Next.js conventions), [nextjs-package-manager](../nextjs-package-manager/SKILL.md) (Yarn commands).
+
+## Team decisions
+
+- Use the installed Next.js version and its local documentation; do not assume canary behavior applies to the project.
+- Run package scripts through the project-approved Yarn workflow in [nextjs-package-manager](../nextjs-package-manager/SKILL.md).
+- Make only evidence-backed changes in the requested scope, then rebuild and compare against the recorded baseline.
+
+## In depth
+
+The upstream guidance below is adapted from vercel/next.js `next-bundle-optimizer`; its source, pinned commit and license are recorded in [UPSTREAM.md](UPSTREAM.md). The team decisions above take precedence.
+
+## Bundle optimizer
+
+### 1. Set the scope
+
+Analyze the whole app by default, covering all routes and shared client dependencies. Narrow the scope only when the user specifies a route, dependency, feature or other subset. Choose **audit** or **fix** mode. Audit is the default: generate analyzer artifacts and report candidates while leaving application source, dependencies and lockfiles unchanged. Fix mode requires an explicit request to change the app. Ask before changing visible behavior, timing, compatibility or a trust boundary. For a route's static App Shell, the upstream source points to [`next-cache-components-optimizer`](https://github.com/vercel/next.js/tree/canary/skills/next-cache-components-optimizer); for navigation prefetch work, it points to [`next-partial-prefetching-optimizer`](https://github.com/vercel/next.js/tree/canary/skills/next-partial-prefetching-optimizer). These skills are not included here; report them as separate follow-up candidates rather than installing or invoking them.
 
 **Done:** the whole-app or user-specified scope, mode and intended behavior are recorded. A request to capture or export data is audit mode, not permission to fix.
 
-## 2. Capture and export a baseline
+### 2. Capture and export a baseline
 
 Run from the app directory with its package manager. Read `next analyze --help` for capture options and `next analyze export --help` for replay options in the installed CLI. Reuse a selected saved snapshot, or capture with a distinctive name first; then export it through gzip at its default compression level. Keep before/after `.jsonl.gz` files separate.
 
@@ -24,9 +43,9 @@ Run the pipeline in Bash:
 
 ```bash
 set -o pipefail
-# Capture only when a new baseline is needed
-pnpm exec next analyze --output --snapshot 'audit-before-unique-1'
-pnpm exec next analyze export --snapshot 'audit-before-unique-1' | gzip > /tmp/analyze-app-before.jsonl.gz
+## Capture only when a new baseline is needed
+yarn next analyze --output --snapshot 'audit-before-unique-1'
+yarn next analyze export --snapshot 'audit-before-unique-1' | gzip > /tmp/analyze-app-before.jsonl.gz
 ```
 
 `--output` builds and saves binary/UI artifacts without serving. `next analyze export` reads a saved snapshot without building; stdout is one typed JSON record per line, with errors on stderr. Omit `--route` for whole-app analysis; add it for a user-specified route. The route filter keeps the whole-app module graph, so scope it in the next step.
@@ -35,23 +54,23 @@ For a custom `distDir`, replay with `--dist-dir <configured-directory>` (relativ
 
 **Done:** the chosen capture is identified, export succeeded, and the baseline file, snapshot name and analysis scope are recorded. Check the whole pipeline's exit status before processing the compressed file: `pipefail` prevents gzip from hiding a failed export. Export validates one route at a time, so a failure can leave a partial archive even if `gzip -t` accepts it. Discard output when export or gzip fails.
 
-## 3. Interpret the evidence
+### 3. Interpret the evidence
 
 Resolve the schema from the app's **installed Next.js**, using its Node launcher:
 
 ```bash
-pnpm exec node -p "require.resolve('next/analyze/graph-v1.schema.json')"
+yarn node -p "require.resolve('next/analyze/graph-v1.schema.json')"
 ```
 
 Read its descriptions for record meanings, joins, attribution and coverage. Stream decompression with `gzip -dc /tmp/analyze-app-before.jsonl.gz` into a line-oriented analysis script rather than loading the whole dump into context. Use the schema to interpret client/server contributions across every route in scope and choose the metric.
 
 **Done:** the baseline's route-attributed client/server contributions and the metric are identified. Treat this as **build evidence**: claims about observed browser requests, timing or transfer savings need separate evidence.
 
-## 4. Explain a candidate
+### 4. Explain a candidate
 
 Inspect actual project source and exact importers. Rank client-output contributions across the whole app, or within the user-specified scope, by attributed size, repetition, likely runtime cost, need before interaction and correctness risk.
 
-### Community → min-cut pass
+#### Community → min-cut pass
 
 For broad audits seeking opportunities across multiple features or a large contributor list, run **community detection → target selection → directed min-cut → source validation** after the initial ranking. Read [Graph methods](references/graph-methods.md) before constructing the graph or running solvers.
 
@@ -62,7 +81,7 @@ For broad audits seeking opportunities across multiple features or a large contr
 
 For a narrow audit of a named dependency or feature, use direct importer reasoning when it fully accounts for the relevant paths and proposed boundary; record why the paired pass adds no useful target discovery. If graph evidence or tooling blocks the pass, record the blocker and limit the conclusions accordingly.
 
-### Graph-evidence checklist
+#### Graph-evidence checklist
 
 Before proposing an edit, record these items for each candidate. Mark an inapplicable item with its reason; give missing evidence an explicit gap.
 
@@ -75,7 +94,7 @@ Before proposing an edit, record these items for each candidate. Mark an inappli
 
 For lazy interaction features, duplicate packages, server-rendered display work or other attributed assets, read the matching section in [Fix patterns](references/fix-patterns.md) before proposing an edit.
 
-### Unexpected client dependencies
+#### Unexpected client dependencies
 
 Size ranking can miss small server-owned modules in client code. Before scanning in either mode, read [Client dependencies](references/client-dependencies.md) for graph joins, generated Server Action identities and tracing. Stream the export to check every emitted client module, including async outputs.
 
@@ -85,17 +104,17 @@ Use three dispositions: **possible leak** requires server-only ownership evidenc
 
 **Done:** the community/min-cut pass accounts for every target or records its skip reason or blocker. Every size candidate has a completed checklist, exact source/importer, proposed edit and behavior checks. Every client-dependency match is a heuristic finding, suppressed with a reason or unverified with an evidence gap. Audit mode ends after the report.
 
-## 5. Verify one change — fix mode only
+### 5. Verify one change — fix mode only
 
 Classify each proposed edit as a size optimization or boundary remediation before applying it. A request to reduce browser JavaScript authorizes size edits, including in public prompt modules and finding importers. Removing private client state/payloads, relocating policy or adding `server-only` needs separate explicit approval; leave those findings unresolved for the owner even if the UI would stay unchanged.
 
-Make one small, cohesive change. Capture/export an after snapshot with a new name and compare the **same analysis scope, output class and metric** with the baseline. For whole-app analysis, account for changes across all routes, including shared dependencies. Run relevant behavior tests and type-check; use [`next-dev-loop`](https://github.com/vercel/next.js/tree/canary/skills/next-dev-loop) when verifying the edit in the running app, and install it first if unavailable (`npx skills add https://github.com/vercel/next.js/tree/canary/skills/next-dev-loop`).
+Make one small, cohesive change. Capture/export an after snapshot with a new name and compare the **same analysis scope, output class and metric** with the baseline. For whole-app analysis, account for changes across all routes, including shared dependencies. Run relevant behavior tests and type-check; use [nextjs-dev-loop](../nextjs-dev-loop/SKILL.md) when verifying the edit in the running app. If that skill's prerequisites are unavailable, report the limitation rather than installing it.
 
 If no relevant tests exist, create and run focused smoke tests. Test production imports or rendered UI, not copied implementations. Exercise interactive flows through a browser or executable component tests, including input handling, timing and deferred actions. For debounced search, check case-insensitive results and the existing delay; for editable lazy features, trigger loading and edit the result. Record commands/actions and observed results. Source inspection, type-checking and successful builds alone do not verify behavior.
 
 **Done:** retain the change only when the scoped metric improves and the intended behavior passes its checks. Revert a change that fails either condition. If checks are blocked, report the unverified edit and blocker rather than accepting it. Record the accepted after snapshot as the next baseline before another edit.
 
-## 6. Report and stop
+### 6. Report and stop
 
 Audit reports candidates; fix reports accepted edits and any reverted or unverified attempts. Include snapshot names, scoped attribution/deltas, exact source/importer, behavior-check results and blockers. For a graph cut, include its route/render conditions, roots/target and unknowns. Distinguish source facts, build evidence, heuristics and separately observed runtime facts.
 

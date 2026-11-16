@@ -1,6 +1,6 @@
 # Working on this repository
 
-This repo is a library of agent skills: `skills/` holds one folder per skill, plus `scripts/` (version tooling), five plugin manifests (`.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, `.cursor-plugin/plugin.json`, `gemini-extension.json`) and the OpenCode plugin package (`opencode-plugin/package.json`). See the `README.md` for the skill inventory, install methods and the vendored-sources table.
+This repo is a library of agent skills: `skills/` holds one folder per skill, plus `scripts/` (version tooling), five plugin manifests (`.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, `.cursor-plugin/plugin.json`, `gemini-extension.json`) and the root OpenCode plugin package (`package.json`, exporting `.opencode/plugins/index.js`). See the `README.md` for the skill inventory, install methods and the vendored-sources table.
 
 Kinds of skills:
 

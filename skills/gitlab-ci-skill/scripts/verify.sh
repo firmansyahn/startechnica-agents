@@ -92,21 +92,26 @@ print_docker_install_offer() {
   local os
   os="$(uname -s 2>/dev/null || echo unknown)"
   echo "" >&2
-  echo "To unlock the simulate and run tiers, install Docker:" >&2
+  echo "To unlock the simulate and run tiers, install a supported container engine:" >&2
   case "$os" in
     Darwin)
       echo "  macOS (lightweight):  brew install colima docker && colima start" >&2
       echo "  macOS (GUI):          https://www.docker.com/products/docker-desktop" >&2
       ;;
     Linux)
-      echo "  Linux:                curl -fsSL https://get.docker.com | sh" >&2
+      if [ -r /etc/os-release ] && grep -Eiq '^(ID|ID_LIKE)=.*(rhel|fedora|centos|rocky|almalinux|ol)' /etc/os-release; then
+        echo "  RHEL family:          use Podman with its Docker-compatible CLI/API; do not install Docker Engine." >&2
+        echo "                        Ensure the compatible CLI and service are available to glci." >&2
+      else
+        echo "  Linux:                curl -fsSL https://get.docker.com | sh" >&2
+      fi
       ;;
     *)
-      echo "  Install Docker for your platform: https://docs.docker.com/get-docker/" >&2
+      echo "  Install a supported container engine for your platform: https://docs.docker.com/get-docker/" >&2
       ;;
   esac
   echo "" >&2
-  echo "glci needs Docker to spin up the gitlab-runner image and run jobs locally" >&2
+  echo "glci needs a Docker-compatible CLI and daemon API to spin up the gitlab-runner image and run jobs locally" >&2
   echo "with the same fidelity as a real GitLab pipeline." >&2
 }
 
@@ -148,7 +153,7 @@ require_commits() {
   echo "  (lint and show still work in commit-less repos.)" >&2
   echo "" >&2
   echo "  Fix: create an initial commit and re-run." >&2
-  echo "    git add -A && git commit -m \"Initial commit\"" >&2
+  echo "  Create an initial commit with the intended files, following git-commit; then re-run." >&2
   exit 2
 }
 
@@ -275,7 +280,7 @@ case "$TIER" in
       echo "" >&2
       echo "Stopped after show: this repo has no commits yet, and glci run" >&2
       echo "(including --simulate) needs at least one commit to start gitlab-runner." >&2
-      echo "  Fix: git add -A && git commit -m \"Initial commit\"" >&2
+      echo "  Fix: create an initial commit with the intended files, following git-commit." >&2
       echo "  Then: bash scripts/verify.sh simulate" >&2
       exit 0
     fi

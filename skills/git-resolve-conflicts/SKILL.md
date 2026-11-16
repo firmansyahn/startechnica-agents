@@ -1,13 +1,35 @@
 ---
 name: git-resolve-conflicts
-description: Use this skill immediately when the user mentions merge conflicts that need to be resolved. Do not attempt to resolve conflicts directly - invoke this skill first. This skill specializes in providing a structured framework for merging imports, tests, lock files (regeneration), configuration files, and handling deleted-but-modified files with backup and analysis.
+description: "Use when Git reports merge, rebase, cherry-pick or revert conflicts. Inventory and classify conflicts, plan a safe resolution, preserve both sides where compatible, regenerate generated files from sources, and validate before finalizing."
+user-invocable: true
+license: Apache-2.0
+compatibility: Designed for coding agents and repositories using Git.
+metadata:
+  author: firmansyahn
+  version: "0.1.0"
 ---
 
-# Git Conflict Resolution
+# Git Resolve Conflicts (team)
+
+**Principle:** Resolve the intent of both sides without losing work; ask before irreversible choices and validate before finalizing.
+
+Related: [git-worktree](../git-worktree/SKILL.md) (team conflict and generated-file policy), [git-commit](../git-commit/SKILL.md) (staging and commit rules).
+
+## Team decisions
+
+- Inspect the active Git operation and project instructions before choosing resolution commands; never assume every conflict is a merge.
+- Regenerate generated files using the project-documented command after resolving their sources; do not hand-merge generated output.
+- Do not abort an operation, discard a side, or commit a resolution unless the user or project workflow authorizes it. Preserve backups for deleted-but-modified files.
+
+## In depth
+
+The upstream guidance below is adapted from tailcallhq/forgecode `resolve-conflicts`; its source, pinned commit and license are recorded in [UPSTREAM.md](UPSTREAM.md). The team decisions above take precedence.
+
+## Git Conflict Resolution
 
 Resolve Git merge conflicts by intelligently combining changes from both branches while preserving the intent of both changes. This skill follows a plan-first approach: assess conflicts, create a detailed resolution plan, get approval, then execute.
 
-## Core Principles
+### Core Principles
 
 1. **Plan Before Executing**: Always create a structured resolution plan and get user approval before making changes
 2. **Prefer Both Changes**: Default to keeping both changes unless they directly contradict
@@ -18,9 +40,9 @@ Resolve Git merge conflicts by intelligently combining changes from both branche
 7. **Explain All Resolutions**: For each conflict resolved, provide a one-line explanation of the resolution strategy
 8. **Ask When Unclear**: When the correct resolution isn't clear from the diff, present options to the user and ask for their choice
 
-## Workflow
+### Workflow
 
-### Step 1: Assess the Conflict Situation
+#### Step 1: Assess the Conflict Situation
 
 Run initial checks to understand the conflict scope:
 
@@ -44,23 +66,23 @@ For each conflicted file, gather information:
 - Scope of changes (lines changed, sections affected)
 - Whether the file is generated or hand-written
 
-### Step 2: Create Merge Resolution Plan
+#### Step 2: Create Merge Resolution Plan
 
 Based on the assessment, create a structured plan before resolving any conflicts. Present the plan in the following markdown format:
 
 ```markdown
-## Merge Resolution Plan
+### Merge Resolution Plan
 
-### Conflict Summary
+#### Conflict Summary
 
 - **Total conflicted files**: [N]
 - **Deleted-modified conflicts**: [N]
 - **Generated files**: [N]
 - **Regular conflicts**: [N]
 
-### Resolution Strategy by File
+#### Resolution Strategy by File
 
-#### 1. [File Path]
+##### 1. [File Path]
 
 **Conflict Type**: [deleted-modified / generated / imports / tests / code logic / config / struct / binary]
 **Strategy**: [Brief description of resolution approach]
@@ -71,11 +93,11 @@ Based on the assessment, create a structured plan before resolving any conflicts
 - [ ] [Specific action 1]
 - [ ] [Specific action 2]
 
-#### 2. [File Path]
+##### 2. [File Path]
 
 ...
 
-### Execution Order
+#### Execution Order
 
 1. **Phase 1: Deleted-Modified Files** - Handle deletions and backups first
 2. **Phase 2: Generated Files** - Regenerate from source
@@ -83,11 +105,11 @@ Based on the assessment, create a structured plan before resolving any conflicts
 4. **Phase 4: High-Risk Merges** - Code logic, configuration, structs
 5. **Phase 5: Validation** - Compile, test, verify
 
-### Questions/Decisions Needed
+#### Questions/Decisions Needed
 
 - [ ] **[File/Decision]**: [Question for user] (Options: 1, 2, 3)
 
-### Validation Steps
+#### Validation Steps
 
 - [ ] Run conflict validation script
 - [ ] Compile project
@@ -99,14 +121,14 @@ Based on the assessment, create a structured plan before resolving any conflicts
 
 **For a complete example plan**, see `references/sample-plan.md`.
 
-### Step 3: Handle Deleted-Modified Files
+#### Step 3: Handle Deleted-Modified Files
 
 **Execute this phase only after the plan is approved.**
 
 If there are deleted-but-modified files (status: DU, UD, DD, UA, AU):
 
 ```bash
-# scripts/ in this skill's own folder, wherever the skill is installed
+## scripts/ in this skill's own folder, wherever the skill is installed
 bash <this skill>/scripts/handle-deleted-modified.sh
 ```
 
@@ -119,13 +141,13 @@ This script will:
 
 Review the backup directory and analysis files to understand where changes should be applied.
 
-### Step 4: Execute Resolution Plan
+#### Step 4: Execute Resolution Plan
 
 **Follow the execution order defined in your plan.** For each conflicted file, apply the appropriate resolution pattern according to your plan. **For every conflict you resolve, provide a one-line explanation** of how you're resolving it.
 
 As you complete each action item in your plan, mark it as done and report progress to the user.
 
-#### When Resolution is Unclear
+##### When Resolution is Unclear
 
 When you cannot determine the correct resolution from the diff alone (these should already be listed in your plan's "Questions/Decisions Needed" section):
 
@@ -162,11 +184,11 @@ Please respond with "Option 1", "Option 2", "Option 3", or "Option 4", or provid
 
 Once the user responds, apply their decision and similar logic to related conflicts.
 
-#### Resolution Patterns
+##### Resolution Patterns
 
 For each conflicted file, apply the appropriate resolution pattern:
 
-#### Imports/Dependencies
+##### Imports/Dependencies
 
 **Goal**: Merge all unique imports from both branches.
 
@@ -181,7 +203,7 @@ Read `references/patterns.md` section "Import Conflicts" for detailed examples.
 3. Group by module/package
 4. Follow language-specific style (alphabetize, group std/external/internal)
 
-#### Tests
+##### Tests
 
 **Goal**: Include all test cases and test data from both branches.
 
@@ -196,7 +218,7 @@ Read `references/patterns.md` section "Test Conflicts" for detailed examples.
 3. Combine assertions from both sides
 4. If test names conflict but test different behaviors, rename to clarify
 
-#### Generated Files
+##### Generated Files
 
 **Goal**: Regenerate any generated files to include changes from both branches.
 
@@ -224,7 +246,6 @@ Read `references/patterns.md` section "Test Conflicts" for detailed examples.
    ```bash
    # Package manager lock files
    cargo update                       # for Cargo.lock
-   npm install                        # for package-lock.json
    yarn install                       # for yarn.lock
    bundle install                     # for Gemfile.lock
    poetry lock --no-update            # for poetry.lock
@@ -233,12 +254,13 @@ Read `references/patterns.md` section "Test Conflicts" for detailed examples.
    protoc ...                         # for protobuf files
    graphql-codegen                    # for GraphQL generated code
    make generate                      # for Makefile-based generation
-   npm run generate                   # for npm script-based generation
 
    # Build artifacts
-   npm run build                      # for compiled/bundled assets
    cargo build                        # for Rust build artifacts
+   yarn build                         # for team Next.js apps
    ```
+
+For lockfiles, script-based generation and builds, use the command documented by the project; team Next.js apps use Yarn 4 (`nextjs-package-manager`).
 
 4. **Stage the regenerated file**:
    ```bash
@@ -247,7 +269,7 @@ Read `references/patterns.md` section "Test Conflicts" for detailed examples.
 
 **When unsure if a file is generated**: Check for auto-generation markers in the file header, or ask the user if you should regenerate or manually merge the file.
 
-#### Configuration Files
+##### Configuration Files
 
 **Goal**: Merge configuration values from both branches.
 
@@ -266,7 +288,7 @@ Read `references/patterns.md` section "Configuration File Conflicts" for detaile
 
 **When unclear**: Ask the user which configuration value to prefer (current vs incoming)
 
-#### Code Logic
+##### Code Logic
 
 **Goal**: Understand intent of both changes and combine if possible.
 
@@ -286,7 +308,7 @@ Read `references/patterns.md` section "Code Logic Conflicts" for detailed exampl
 
 **When unclear**: Present both approaches as options to the user with context about what each does
 
-#### Struct/Type Definitions
+##### Struct/Type Definitions
 
 **Goal**: Include all fields from both branches.
 
@@ -301,12 +323,12 @@ Read `references/patterns.md` section "Code Logic Conflicts" for detailed exampl
 
 **When unclear**: Ask the user which type definition is correct if field types conflict
 
-### Step 5: Validate Resolution
+#### Step 5: Validate Resolution
 
 After completing all resolution phases in your plan, validate that all conflicts are resolved:
 
 ```bash
-# scripts/ in this skill's own folder, wherever the skill is installed
+## scripts/ in this skill's own folder, wherever the skill is installed
 bash <this skill>/scripts/validate-conflicts.sh
 ```
 
@@ -317,18 +339,18 @@ This script checks for:
 - Deleted-modified conflicts
 - Merge state files
 
-### Step 6: Compile and Test
+#### Step 6: Compile and Test
 
 Build and test to ensure the resolution is correct (as defined in your plan's validation steps):
 
 ```bash
-# For Rust projects
+## For Rust projects
 cargo test
 
-# For other projects, use appropriate test command
-# npm test
-# pytest
-# etc.
+## For other projects, use appropriate test command
+## <test command from the project's documented package manager>
+## pytest
+## etc.
 ```
 
 If tests fail:
@@ -338,32 +360,15 @@ If tests fail:
 3. Fix integration issues between the merged changes
 4. Re-run tests until all pass
 
-### Step 7: Finalize
+#### Step 7: Finalize
 
-Once all conflicts are resolved and tests pass, review your completed plan and commit:
+Once all conflicts are resolved and tests pass, review the staged result. Commit only when the user or project workflow authorizes it, following `git-commit`:
 
 ```bash
-# Review the changes
 git diff --cached
-
-# Commit with descriptive message that references the plan
-git commit -m "Resolve merge conflicts: [describe key decisions]
-
-Executed merge resolution plan:
-- [Phase 1 summary]
-- [Phase 2 summary]
-- [Phase 3+ summaries]
-
-Key decisions:
-- Merged imports from both branches
-- Combined test cases
-- Regenerated lock files
-- [other significant decisions from plan]
-
-Co-Authored-By: ForgeCode <noreply@forgecode.dev>"
 ```
 
-## Decision Tracking
+### Decision Tracking
 
 When you ask the user to choose between options, track their decision and apply similar reasoning to subsequent conflicts:
 
@@ -380,7 +385,7 @@ When you ask the user to choose between options, track their decision and apply 
 - Mention the consistency: "Following the same pattern as before..."
 - Ask again if a new conflict is sufficiently different from previous ones
 
-## Common Patterns Reference
+### Common Patterns Reference
 
 For detailed resolution patterns, read:
 
@@ -396,19 +401,19 @@ For detailed resolution patterns, read:
 - **Structs**: Include all fields from both branches
 - **Docs**: Combine all documentation sections
 
-## Special Scenarios
+### Special Scenarios
 
-### Binary Files in Conflict
+#### Binary Files in Conflict
 
 Binary files cannot be merged. Choose one version:
 
 ```bash
 git checkout --ours path/to/binary    # keep our version
-# or
+## or
 git checkout --theirs path/to/binary  # keep their version
 ```
 
-### Mass Rename/Refactoring Conflicts
+#### Mass Rename/Refactoring Conflicts
 
 If one branch renamed/refactored many files while another modified them:
 
@@ -416,22 +421,22 @@ If one branch renamed/refactored many files while another modified them:
 2. Apply the modifications to the new structure
 3. Use backups from `handle-deleted-modified.sh` to guide the application
 
-### Submodule Conflicts
+#### Submodule Conflicts
 
 ```bash
-# Check submodule status
+## Check submodule status
 git submodule status
 
-# Update to the correct commit
+## Update to the correct commit
 cd path/to/submodule
 git checkout <desired-commit>
 cd ../..
 git add path/to/submodule
 ```
 
-## Troubleshooting
+### Troubleshooting
 
-### "Both Added" Conflicts (AA)
+#### "Both Added" Conflicts (AA)
 
 Both branches added a new file with the same name but different content:
 
@@ -439,7 +444,7 @@ Both branches added a new file with the same name but different content:
 2. If they serve the same purpose, merge their content
 3. If they serve different purposes, rename one
 
-### Whitespace-Only Conflicts
+#### Whitespace-Only Conflicts
 
 If conflicts are only whitespace differences:
 
@@ -447,7 +452,7 @@ If conflicts are only whitespace differences:
 git merge -Xignore-space-change <branch>
 ```
 
-### Persistent Conflict Markers
+#### Persistent Conflict Markers
 
 If validation shows conflict markers but you think you resolved them:
 
@@ -455,14 +460,14 @@ If validation shows conflict markers but you think you resolved them:
 2. Some markers might be in strings or comments - resolve those too
 3. Check for hidden characters or encoding issues
 
-### Tests Fail After Resolution
+#### Tests Fail After Resolution
 
 1. Test each branch individually to confirm they pass
 2. The failure is likely from interaction between the merged changes
 3. Debug the interaction issue, not the individual changes
 4. Update code to make both changes work together
 
-## Quick Reference Card
+### Quick Reference Card
 
 | Conflict Type    | Strategy                                | One-line Explanation Template                                                                                    |
 | ---------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |

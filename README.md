@@ -144,24 +144,30 @@ Update the shared clone with `git -C ~/.agents/skills/startechnica-agents pull`,
 
 OpenCode discovers `SKILL.md` files natively. The optional plugin adds a slash command for every skill and a tool for listing, searching and loading skill instructions.
 
-Clone this repository (or reuse the clone from the OpenCode skills section):
+Install the plugin from Git with OpenCode v2.3.0 or a compatible release (requires a revision containing the [root npm manifest](package.json)):
+
+```sh
+opencode plugin add 'git+https://github.com/firmansyahn/startechnica-agents.git'
+```
+
+For a local installation instead, clone this repository (or reuse the clone from the OpenCode skills section):
 
 ```sh
 git clone https://github.com/firmansyahn/startechnica-agents.git ~/.agents/skills/startechnica-agents
 ```
 
-Add the absolute path to the clone's `opencode-plugin` directory to the `plugins` array in your OpenCode config (`opencode.json` or `opencode.jsonc`):
+Add the absolute path to the clone's root directory (which contains [package.json](package.json)) to the `plugins` array in your OpenCode config (`opencode.json` or `opencode.jsonc`):
 
 ```jsonc
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugins": ["<absolute-path-to-clone>/opencode-plugin"]
+  "plugins": ["<absolute-path-to-clone>"]
 }
 ```
 
 Keep any existing plugin entries in that array. The plugin registers commands such as `/skill-go-testing` and the `startechnica_skill` tool, which accepts `list`, `search` and `load` actions. Native skill discovery is a separate interface; use the skills installation above if needed.
 
-Keep the repository layout intact: the plugin reads skill files from the adjacent `skills/` directory.
+Keep the repository layout intact: the [plugin entrypoint](.opencode/plugins/index.js) reads the root [skills directory](skills/). Helpers and tests live outside the auto-discovered plugin directory.
 
 See the [OpenCode plugin guide](docs/opencode.md) for Windows configuration, usage examples, updates and troubleshooting. The plugin requires OpenCode's v2 plugin API.
 
@@ -215,9 +221,7 @@ node tools/sync-agent-skills.mjs --check     # fails when the copy differs from 
 
 Releases are tagged `v<major>.<minor>.<patch>`: a minor release adds skills or rules, a patch fixes or rewords, a major one removes or renames skills. Read the [release notes](https://github.com/firmansyahn/startechnica-agents/releases) before a major update.
 
-- **v1.0.0** replaced the `golang-*` skills with `go-<topic>` skills (the mapping is in the first rule of `go-how-to`). After updating, remove any `golang-*` skill that came from this repository (`npx skills list`, then `npx skills remove <name>`), or both versions load. Skills installed from samber's own repository are separate: leave them.
-- **v1.1.0** moved the Next.js checks into a kit you copy into an app (`nextjs-new-app`, `references/enforcement-kit.md`). Updating the skills doesn't change an app's copied files: re-copy the lint config and rule tests, and add the dev dependencies the kit names.
-- **v1.2.0** adds an optional, dependency-free OpenCode v2 plugin with skill commands and a lookup tool. Follow the [OpenCode plugin guide](docs/opencode.md) to configure it; updating native skills alone does not enable the plugin.
+See the [changelog](CHANGELOG.md) for version-specific changes and migration instructions.
 
 ## Where to start
 
@@ -233,19 +237,26 @@ Each area has a small router skill that sends a task to the right skill and list
 | Writing these skills | `agent-skills-authoring` | the rule format, rule prefixes, vendoring upstream skills, the skills lint |
 | Releasing the skills | `agent-skills-release` | the bump kind, the version script, tagging and the GitHub release |
 
+## Adapted upstream skills
+
+The following skills preserve upstream guidance under a team-owned entrypoint. Their `metadata.version` tracks the local team-maintained skill; each `UPSTREAM.md` records its source, pinned commit, license and adaptation:
+
+| Skills | Source | Licence |
+|---|---|---|
+| `nextjs-dev-loop` (upstream `next-dev-loop`), `next-bundle-optimizer` | [vercel/next.js](https://github.com/vercel/next.js/tree/canary/skills) | MIT |
+| `git-using-worktrees`, `finishing-a-development-branch` | [obra/superpowers](https://github.com/obra/superpowers) | MIT |
+| `git-resolve-conflicts` | [tailcallhq/forgecode](https://github.com/tailcallhq/forgecode) | Apache-2.0 |
+| `gitlab-ci-skill` | [gitlab-org/ci-cd/gitlab-ci-skill](https://gitlab.com/gitlab-org/ci-cd/gitlab-ci-skill) | MIT |
+
 ## Vendored upstream skills
 
 Included unchanged, each under its own licence (see its `LICENSE` and `UPSTREAM.md`):
 
 | Skills | Source | Licence |
 |---|---|---|
-| `next-dev-loop`, `next-bundle-optimizer` | [vercel/next.js](https://github.com/vercel/next.js/tree/canary/skills) | MIT |
-| `git-using-worktrees`, `finishing-a-development-branch` | [obra/superpowers](https://github.com/obra/superpowers) | MIT |
-| `git-resolve-conflicts` | [tailcallhq/forgecode](https://github.com/tailcallhq/forgecode) | Apache-2.0 |
 | `gitlab-glab`, `gitlab-mr-description`, `git-mr-adversarial-review`, `gitlab-pipeline-watch`, `gitlab-babysit-mr`, `gitlab-stacked-mrs` | [gitlab-org/ai/skills](https://gitlab.com/gitlab-org/ai/skills) | MIT |
-| `gitlab-ci-skill` | [gitlab-org/ci-cd/gitlab-ci-skill](https://gitlab.com/gitlab-org/ci-cd/gitlab-ci-skill) | MIT |
 
-All of samber's Go skills the team uses ([samber/cc-skills-golang](https://github.com/samber/cc-skills-golang), MIT) are absorbed rather than vendored: each `go-<topic>` skill holds the team's rules and decisions first, and the upstream material, edited to agree, under "In depth" or as one of its references, with both copyrights in its `LICENSE`. `go-how-to` maps every upstream `golang-*` name to the team skill that holds it.
+All of samber's Go skills the team uses ([samber/cc-skills-golang](https://github.com/samber/cc-skills-golang), MIT) are adapted rather than vendored: each `go-<topic>` skill holds the team's rules and decisions first, and the upstream material, edited to agree, under "In depth" or as one of its references, with both copyrights in its `LICENSE`. `go-how-to` maps every upstream `golang-*` name to the team skill that holds it.
 
 ## Reviewing with the skills
 

@@ -57,18 +57,7 @@ For an existing pipeline, the skill also adds jobs (`include: component:` from t
 
 ## Installation
 
-This skill follows the [Agent Skills open standard](https://agentskills.io/specification). Install by copying the `gitlab-ci-skill/` directory into your skill discovery path:
-
-| Tool | Path |
-|---|---|
-| Claude Code | `~/.claude/skills/gitlab-ci-skill/` |
-| opencode | `~/.config/opencode/skills/gitlab-ci-skill/` (also picks up the Claude path) |
-| Project-local | `.claude/skills/gitlab-ci-skill/` or `.opencode/skills/gitlab-ci-skill/` |
-| Cross-tool (open standard) | `~/.agents/skills/gitlab-ci-skill/`, picked up by Claude Code, opencode, Cursor, GitLab Duo CLI, and any tool implementing the Agent Skills specification |
-| GitLab Duo CLI (Linux/macOS) | `~/.gitlab/duo/skills/gitlab-ci-skill/` |
-| GitLab Duo CLI (Windows) | `%APPDATA%\GitLab\duo\skills\gitlab-ci-skill\` |
-
-For GitLab Duo workspace-level skills, place at `skills/gitlab-ci-skill/SKILL.md` inside a project repository.
+This skill follows the [Agent Skills open standard](https://agentskills.io/specification). See the repository's [installation guide](../../README.md#how-to-use) for supported clients and update methods.
 
 ## Project structure
 

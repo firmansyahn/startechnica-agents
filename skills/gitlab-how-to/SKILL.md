@@ -1,12 +1,12 @@
 ---
 name: gitlab-how-to
-description: "Use at the start of any GitLab work when it isn't clear which skill applies, or when a task spans several: any glab command, opening, describing, reviewing, checking or merging a merge request, stacked MRs, waiting for a pipeline or nursing a failed one to green, writing or debugging .gitlab-ci.yml, or asking 'what are our rules for GitLab'. Routes to the team overlays (gitlab-mr, gitlab-ci) and GitLab's vendored agent skills they build on (gitlab-glab, gitlab-mr-description, git-mr-adversarial-review, gitlab-pipeline-watch, gitlab-babysit-mr, gitlab-stacked-mrs, gitlab-ci-skill), says when ce-code-review fits, lists the rules they all assume and the hooks that enforce them, and hands branches and commits to git-how-to."
+description: "Use at the start of any GitLab work when it isn't clear which skill applies, or when a task spans several: any glab command, opening, describing, reviewing, checking or merging a merge request, stacked MRs, waiting for a pipeline or nursing a failed one to green, writing or debugging .gitlab-ci.yml, or asking 'what are our rules for GitLab'. Routes to the team overlays (gitlab-mr, gitlab-ci), the GitLab skills they build on and the team-adapted gitlab-ci-skill, says when ce-code-review fits, lists the rules they all assume and the hooks that enforce them, and hands branches and commits to git-how-to."
 user-invocable: true
 license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for git repositories hosted on GitLab.
 metadata:
   author: firmansyahn
-  version: "0.1.2"
+  version: "0.1.3"
 ---
 
 # GitLab: which skill, and the rules they all assume
@@ -15,20 +15,20 @@ metadata:
 
 This skill only routes: open the skill the task needs, and only that one. Each team skill holds its patterns, its rules (one file per rule, with how each is caught), its own `scripts/scan.sh` and a "Reviewing" section.
 
-The how-to comes from GitLab's own agent skills (gitlab-org/ai/skills), vendored unchanged beside these skills (each has an `UPSTREAM.md` with its source, pinned commit and license). The two **team overlays**, `gitlab-mr` and `gitlab-ci`, add what those skills leave to the project and win where they differ: read the overlay first; it names the upstream skill to follow.
+The how-to includes GitLab's own agent skills (gitlab-org/ai/skills), vendored unchanged beside these skills (each has an `UPSTREAM.md` with its source, pinned commit and license). `gitlab-ci-skill` is adapted to team conventions; the **team overlays**, `gitlab-mr` and `gitlab-ci`, set project policy and win where sources differ.
 
 **How to use it:** the skills are installed together, each in its own folder beside this one, wherever the project or user keeps skills; the links below are relative to this file, and a skill named in backticks is the folder of that name beside this one. Open the linked `SKILL.md` with Read (they may not be registered as invocable skills), then only the references and rules it points to.
 
 ## Pick the skill
 
-| The task | Team overlay | Upstream skill it builds on | Rules |
+| The task | Team skill | Related skill or source | Rules |
 |---|---|---|---|
 | Any `glab` command; open, update, comment on an MR | [gitlab-mr](../gitlab-mr/SKILL.md) | [gitlab-glab](../gitlab-glab/SKILL.md) | `mr-` |
 | Write or refresh an MR description | [gitlab-mr](../gitlab-mr/SKILL.md) section 1 | [gitlab-mr-description](../gitlab-mr-description/SKILL.md) | |
 | Review an MR; post the review to it | [gitlab-mr](../gitlab-mr/SKILL.md) section 2 | `ce-code-review` (compound-engineering) for the deep review, [git-mr-adversarial-review](../git-mr-adversarial-review/SKILL.md) for the posted comment | |
 | Wait for an MR's pipeline; nurse a failed one to green; merge it | [gitlab-mr](../gitlab-mr/SKILL.md) sections 3-4 | [gitlab-pipeline-watch](../gitlab-pipeline-watch/SKILL.md), [gitlab-babysit-mr](../gitlab-babysit-mr/SKILL.md) | `mr-` |
 | Stacked MRs | [gitlab-mr](../gitlab-mr/SKILL.md) | [gitlab-stacked-mrs](../gitlab-stacked-mrs/SKILL.md) | `mr-` |
-| Write, change or debug `.gitlab-ci.yml`; a failed or missing job | [gitlab-ci](../gitlab-ci/SKILL.md) | [gitlab-ci-skill](../gitlab-ci-skill/SKILL.md) | `ci-` |
+| Write, change or debug `.gitlab-ci.yml`; a failed or missing job | [gitlab-ci](../gitlab-ci/SKILL.md), [gitlab-ci-skill](../gitlab-ci-skill/SKILL.md) | GitLab CI skill adapted to team conventions | `ci-` |
 | A Next.js app's image and pipeline; a Go service's | `nextjs-deploy`, [gitlab-ci](../gitlab-ci/SKILL.md) `assets/go.gitlab-ci.yml` | | |
 | Branches, worktrees, commits, ignore files, conflicts | `git-how-to` | | |
 | Writing or changing a skill or rule; vendoring or updating an upstream skill | `agent-skills-authoring` | | |

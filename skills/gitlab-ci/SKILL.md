@@ -6,14 +6,14 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for git repositories hosted on GitLab.
 metadata:
   author: firmansyahn
-  version: "0.2.1"
+  version: "0.2.2"
 ---
 
 # GitLab CI: the team's overlay
 
 **Principle:** A pipeline runs what the change needs, blocks the merge on its checks, and builds the image only after the checks pass.
 
-**Start from GitLab's official [gitlab-ci-skill](../gitlab-ci-skill/SKILL.md)**, vendored unchanged beside this one (updated as `agent-skills-authoring` describes): CI syntax, the mental model, caching, images, optimising, debugging a failed job, and verifying YAML (`glci lint`, `scripts/verify.sh`). This file adds only the team's pipeline shape, the org's shared templates and their traps, and wins where it says something different (for example, the team includes the org templates rather than CI/CD Catalog components).
+**Start from the team-adapted [gitlab-ci-skill](../gitlab-ci-skill/SKILL.md)** for CI syntax, the mental model, caching, images, optimising, debugging a failed job, and verifying YAML (`glci lint`, `scripts/verify.sh`). Its upstream source is recorded in that skill's `UPSTREAM.md`. This file adds the team's pipeline shape, the org's shared templates and their traps, and wins where it says something different (for example, the team includes the org templates rather than CI/CD Catalog components).
 
 The team's pipelines share one shape: a root `.gitlab-ci.yml` decides the deployment tier from the branch, includes one child file per app, and each app tests itself, builds its image with the org's kaniko template and releases it by triggering the Helm chart repository on the tier's branch. Pipelines run for merge requests and for the long-lived branches, never twice for one push.
 

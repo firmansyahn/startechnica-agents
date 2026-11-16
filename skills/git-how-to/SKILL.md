@@ -1,12 +1,12 @@
 ---
 name: git-how-to
-description: "Use at the start of any git work when it isn't clear which skill applies, or when a task spans several: starting branch work in an isolated worktree, setting the base, dependencies in a worktree, committing (Conventional Commits, staging by name, line endings, [ci skip], author identity), what to ignore and where, merge conflicts and generated files, finishing a branch and cleaning up after the merge, or asking 'what are our rules for git'. Routes to the team skills (git-worktree, git-commit, git-gitignore) and the vendored upstream skills they build on (git-using-worktrees, finishing-a-development-branch, git-resolve-conflicts), lists the rules they all assume, and hands merge requests and pipelines to gitlab-how-to."
+description: "Use at the start of any git work when it isn't clear which skill applies, or when a task spans several: starting branch work in an isolated worktree, setting the base, dependencies in a worktree, committing (Conventional Commits, staging by name, line endings, [ci skip], author identity), what to ignore and where, merge conflicts and generated files, finishing a branch and cleaning up after the merge, or asking 'what are our rules for git'. Routes to the team skills (git-worktree, git-commit, git-gitignore, git-using-worktrees, finishing-a-development-branch, git-resolve-conflicts), lists the rules they all assume, and hands merge requests and pipelines to gitlab-how-to."
 user-invocable: true
 license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for any git repository.
 metadata:
   author: firmansyahn
-  version: "0.1.2"
+  version: "0.1.3"
 ---
 
 # Git: which skill, and the rules they all assume
@@ -15,17 +15,17 @@ metadata:
 
 This skill only routes: open the skill the task needs, and only that one. Each team skill holds its patterns, its rules (one file per rule, with how each is caught), its own `scripts/scan.sh` and a "Reviewing" section.
 
-The workflow comes from established public skills, vendored unchanged beside these skills (each has an `UPSTREAM.md` with its source, pinned commit and license). The **team overlays** add what those skills leave to the project and win where they differ: read the overlay first; it names the upstream skill to follow.
+The workflow includes team-maintained skills adapted from established public sources, plus vendored references that remain unchanged (each source has an `UPSTREAM.md` with its source, pinned commit and license). The **team overlays** set project conventions and win where upstream material differs: read the overlay first.
 
 **How to use it:** the skills are installed together, each in its own folder beside this one, wherever the project or user keeps skills; the links below are relative to this file, and a skill named in backticks is the folder of that name beside this one. Open the linked `SKILL.md` with Read (they may not be registered as invocable skills), then only the references and rules it points to.
 
 ## Pick the skill
 
-| The task | Team skill | Upstream skill it builds on | Rules |
+| The task | Team skill or reference | Source or related skill | Rules |
 |---|---|---|---|
-| Start branch work in isolation; set the base; dependencies in a worktree | [git-worktree](../git-worktree/SKILL.md) | [git-using-worktrees](../git-using-worktrees/SKILL.md) (obra/superpowers) | `wt-` |
-| Finish a branch; clean up after the merge; sync the other worktrees | [git-worktree](../git-worktree/SKILL.md) | [finishing-a-development-branch](../finishing-a-development-branch/SKILL.md) (obra/superpowers) | `wt-` |
-| Merge conflicts, generated files in a conflict | [git-worktree](../git-worktree/SKILL.md) section 4 | [git-resolve-conflicts](../git-resolve-conflicts/SKILL.md) (tailcallhq/forgecode) | |
+| Start branch work in isolation; set the base; dependencies in a worktree | [git-worktree](../git-worktree/SKILL.md) | [git-using-worktrees](../git-using-worktrees/SKILL.md) (team workflow adapted from obra/superpowers) | `wt-` |
+| Finish a branch; clean up after the merge; sync the other worktrees | [git-worktree](../git-worktree/SKILL.md) | [finishing-a-development-branch](../finishing-a-development-branch/SKILL.md) (team workflow adapted from obra/superpowers) | `wt-` |
+| Merge conflicts, generated files in a conflict | [git-resolve-conflicts](../git-resolve-conflicts/SKILL.md), then [git-worktree](../git-worktree/SKILL.md) section 4 | Team workflow adapted from tailcallhq/forgecode | |
 | A commit message, what to stage, line endings, `[ci skip]`, author identity | [git-commit](../git-commit/SKILL.md) | The Conventional Commits 1.0.0 spec | `commit-` |
 | What to ignore and where, a `.gitignore` change, a committed file that should be ignored, `.dockerignore` in step | [git-gitignore](../git-gitignore/SKILL.md) | gitignore(5), GitHub's github/gitignore templates | `ignore-` |
 | Merge requests, reviews posted to them, pipelines, merging | `gitlab-how-to` | | |
