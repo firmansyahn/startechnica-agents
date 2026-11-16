@@ -21,9 +21,13 @@ jobs:
           # A regex of names that must never appear in the skills, kept as a repository secret.
           SKILLS_INTERNAL_PATTERNS: ${{ secrets.SKILLS_INTERNAL_PATTERNS }}
         run: node skills/agent-skills-authoring/scripts/lint-skills.mjs
+      - name: OpenCode plugin tests
+        run: node --test opencode-plugin/test/*.test.js
+      - name: OpenCode plugin syntax
+        run: node --check opencode-plugin/index.js
       - name: Scan scripts parse
         run: for f in skills/*/scripts/*.sh; do bash -n "$f"; done
       - name: Manifest versions agree
         run: node scripts/bump-version.mjs --check
       - name: Manifests parse
-        run: for f in .claude-plugin/*.json .codex-plugin/plugin.json .cursor-plugin/plugin.json gemini-extension.json; do node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' "$f"; done
+        run: for f in .claude-plugin/*.json .codex-plugin/plugin.json .cursor-plugin/plugin.json gemini-extension.json opencode-plugin/package.json; do node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' "$f"; done
