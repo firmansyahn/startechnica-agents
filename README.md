@@ -54,15 +54,118 @@ Update with `gemini extensions update startechnica-agents`.
 </details>
 
 <details>
-<summary>Codex, Cursor, OpenCode and other tools that read <code>.agents/skills/</code></summary>
+<summary>OpenClaw</summary>
 
-Clone the repository into the shared discovery folder:
+Install globally:
+
+```sh
+git clone https://github.com/firmansyahn/startechnica-agents.git ~/.openclaw/skills/startechnica-agents
+```
+
+Or install in the OpenClaw workspace:
+
+```sh
+git clone https://github.com/firmansyahn/startechnica-agents.git ~/.openclaw/workspace/skills/startechnica-agents
+```
+
+Update the global copy:
+
+```sh
+git -C ~/.openclaw/skills/startechnica-agents pull
+```
+
+Or update the workspace copy:
+
+```sh
+git -C ~/.openclaw/workspace/skills/startechnica-agents pull
+```
+
+</details>
+
+<details>
+<summary>Copilot</summary>
+
+Install personal skills:
+
+```sh
+git clone https://github.com/firmansyahn/startechnica-agents.git ~/.copilot/skills/startechnica-agents
+```
+
+For project skills, clone into `.agents/skills/startechnica-agents` in the project. Update with `git -C .agents/skills/startechnica-agents pull`.
+
+</details>
+
+<details>
+<summary>oh-my-pi</summary>
+
+Install through oh-my-pi's plugin marketplace:
+
+```sh
+omp plugin marketplace add firmansyahn/startechnica-agents
+omp plugin install startechnica-agents@startechnica
+```
+
+Update the marketplace and installed plugin with:
+
+```sh
+omp plugin marketplace update startechnica
+omp plugin upgrade startechnica-agents@startechnica
+```
+
+By default, the plugin is installed for the user. To install it for the current project, add `--scope project` to the `omp plugin install` command.
+
+</details>
+
+<details>
+<summary>Cursor and OpenCode</summary>
+
+Clone into the shared Agent Skills directory:
 
 ```sh
 git clone https://github.com/firmansyahn/startechnica-agents.git ~/.agents/skills/startechnica-agents
 ```
 
-Codex, Cursor and OpenCode find skills in `~/.agents/skills/` and in a project's `.agents/skills/`; Cursor also reads `.cursor/skills/`, and OpenCode `.opencode/skills/` and `.claude/skills/`. Update with `cd ~/.agents/skills/startechnica-agents && git pull`, or `git checkout v<version>` to stay on a release.
+For a project-local install, clone into `.agents/skills/startechnica-agents`. Cursor can alternatively use `~/.cursor/skills/` or `.cursor/skills/`; OpenCode can use `~/.opencode/skills/`, `.opencode/skills/` or `.claude/skills/`.
+
+To install specifically for Cursor, use one of these destinations instead of the shared directory:
+
+```sh
+git clone https://github.com/firmansyahn/startechnica-agents.git ~/.cursor/skills/startechnica-agents
+# or in a project:
+git clone https://github.com/firmansyahn/startechnica-agents.git .cursor/skills/startechnica-agents
+```
+
+Update the shared clone with `git -C ~/.agents/skills/startechnica-agents pull`, or check out `v<version>` to stay on a release.
+
+</details>
+
+<details>
+<summary>Antigravity</summary>
+
+```sh
+git clone https://github.com/firmansyahn/startechnica-agents.git ~/.antigravity/skills/startechnica-agents
+```
+
+Update with `git -C ~/.antigravity/skills/startechnica-agents pull`.
+
+</details>
+
+<details>
+<summary>Codex</summary>
+
+Install the plugin:
+
+```sh
+codex plugin add github:firmansyahn/startechnica-agents
+```
+
+Update with `codex plugin update startechnica-agents`. If the marketplace path is unavailable, clone into the shared skills directory:
+
+```sh
+git clone https://github.com/firmansyahn/startechnica-agents.git ~/.agents/skills/startechnica-agents
+```
+
+Update the clone with `git -C ~/.agents/skills/startechnica-agents pull`. Codex also discovers project-local skills in `.agents/skills/`.
 
 </details>
 
@@ -93,7 +196,7 @@ Each area has a small router skill that sends a task to the right skill and list
 
 | Area | Router | Topic skills |
 |---|---|---|
-| Go services | `go-how-to` | `go-project-layout`, `go-code-style`, `go-error-handling`, `go-concurrency`, `go-database`, `go-testing`, `go-security`, `go-http-handlers`, `go-knadh-koanf`, `go-observability`, `go-performance`, `go-safety`, `go-data-structures`, `go-refactoring`, `go-troubleshooting`, `go-nextjs-api-contract` |
+| Go services | `go-how-to` | `go-project-layout`, `go-code-style`, `go-error-handling`, `go-concurrency`, `go-database`, `go-testing`, `go-continuous-integration`, `go-security`, `go-http-handlers`, `go-knadh-koanf`, `go-observability`, `go-performance`, `go-safety`, `go-data-structures`, `go-refactoring`, `go-troubleshooting`, `go-nextjs-api-contract` |
 | Next.js apps | `nextjs-how-to` | `nextjs-new-app`, `nextjs-app-structure`, `nextjs-data`, `nextjs-bff`, `nextjs-forms`, `nextjs-ui`, `nextjs-logging`, `nextjs-security`, `nextjs-e2e`, `nextjs-deploy`, `nextjs-package-manager`, `nextjs-upgrade` |
 | OAuth / OIDC | (from `go-how-to`, `nextjs-how-to`) | `oauth-server`, `oauth-client` |
 | git | `git-how-to` | `git-worktree`, `git-commit`, `git-gitignore` |
