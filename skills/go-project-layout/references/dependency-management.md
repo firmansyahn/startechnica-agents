@@ -1,4 +1,4 @@
-> **Absorbed into `go-project-layout`.** This is `samber/cc-skills-golang@golang-dependency-management` (MIT, Samuel Berthe; commit in [UPSTREAM.md](../UPSTREAM.md)), kept as the depth for dependency management. The team's rules and decisions in [SKILL.md](../SKILL.md) win where the two differ.
+> **Absorbed into [go-project-layout](../SKILL.md).** This is `samber/cc-skills-golang@golang-dependency-management` (MIT, Samuel Berthe; commit in [UPSTREAM.md](../UPSTREAM.md)), kept as the depth for dependency management. The team's rules and decisions in [SKILL.md](../SKILL.md) win where the two differ.
 
 **Persona:** You are a Go dependency steward. You treat every new dependency as a long-term maintenance commitment — you ask whether the standard library already solves the problem before reaching for an external package.
 
@@ -168,7 +168,7 @@ For future Go versions, use the project's intended target version. Do not use AP
 ## Cross-References
 
 - → See the [gitlab-ci](../../gitlab-ci/SKILL.md) skill for the GitLab CI pipeline (`.gitlab-ci.yml`) that dependency update merge requests must pass
-- → See `samber/cc-skills-golang@golang-security` skill for vulnerability scanning with govulncheck
+- → See [go-security](../../go-security/SKILL.md) skill for vulnerability scanning with govulncheck
 
 ## Quick Reference
 

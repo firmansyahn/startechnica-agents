@@ -214,8 +214,8 @@ func (s *OrderPlacedSubscriber) OnOrderPlaced(evt events.OrderPlaced) error {
 
 This prevents billing from depending on order's internal types.
 
-For large systems, keep one module: each context is its own package under `internal/`, not its own module in a `go.work` workspace (a team project is one module). See the `samber/cc-skills-golang@golang-project-layout` skill.
+For large systems, keep one module: each context is its own package under `internal/`, not its own module in a `go.work` workspace (a team project is one module). See the [go-project-layout](../../SKILL.md) skill.
 
 ## Wiring
 
-Wire dependencies in `cmd/server/main.go` using manual constructor injection. → See `samber/cc-skills-golang@golang-dependency-injection` skill for constructor-injection patterns (the team adopts no DI library).
+Wire dependencies in `cmd/server/main.go` using manual constructor injection. → See [go-project-layout](../../SKILL.md) skill for constructor-injection patterns (the team adopts no DI library).

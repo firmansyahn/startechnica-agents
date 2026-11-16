@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.2.1"
+  version: "0.2.3"
 ---
 
 # Go concurrency and lifecycle (team)
@@ -38,7 +38,7 @@ Related: [go-project-layout](../go-project-layout/SKILL.md) (the worker and `mai
 
 1. **Lifecycle is hand-wired**, not through a DI container's hooks (`uber-go/fx` and the like are not adopted; [go-project-layout](../go-project-layout/SKILL.md)).
 2. **Tests prove goroutines exit** with the package's own stop-and-wait test; `goleak` is fine where the project already has it, not added as a side effect.
-3. **The logger is never a context value:** it is injected, and request fields come from `WithTrace(ctx, log)` (`go-observability`).
+3. **The logger is never a context value:** it is injected, and request fields come from `WithTrace(ctx, log)` ([go-observability](../go-observability/SKILL.md)).
 4. Links to upstream skills that aren't absorbed (`golang-samber-*`) are skipped.
 
 ## Rules
@@ -59,7 +59,7 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 2. **Tools first**, from `<module-root>`: `gofmt -l .`, `go vet ./...`, and `golangci-lint run` when the project has a `.golangci.yml`. Report their findings as they are; a rule that names a linter isn't reported twice.
 3. **Scan:** `bash <this skill>/scripts/scan.sh <module-root>` lists candidates for the rules with `scan` in their check. On a diff, keep the ones in changed lines; open the rule and confirm each before reporting it.
 4. **Read** the code against the rules above, matching each rule's "Incorrect" shape, not just its title, and against the checklist below.
-5. **Report** in the format of `agent-skills-authoring` ("Scan scripts and findings"), ordered by impact; list once, as a gap, the rules whose check is a test or linter the project doesn't have.
+5. **Report** in the format of [agent-skills-authoring](../agent-skills-authoring/SKILL.md) ("Scan scripts and findings"), ordered by impact; list once, as a gap, the rules whose check is a test or linter the project doesn't have.
 
 ## Review checklist
 
@@ -71,7 +71,7 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 
 ## In depth
 
-The material below is `samber/cc-skills-golang@golang-concurrency`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: each one the team uses is absorbed into a team skill (`go-how-to`, rule 1, maps the names), and the rest are not adopted.
+The material below is `samber/cc-skills-golang@golang-concurrency`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: each one the team uses is absorbed into a team skill ([go-how-to](../go-how-to/SKILL.md), rule 1, maps the names), and the rest are not adopted.
 
 Also absorbed, one reference each (their own references, assets and evals sit in a folder of the same name):
 
@@ -179,11 +179,11 @@ When auditing concurrency across a large codebase, use up to 5 parallel sub-agen
 
 ### Cross-References
 
-- → See `go-performance` skill for false sharing, cache-line padding, `sync.Pool` hot-path patterns
+- → See [go-performance](../go-performance/SKILL.md) skill for false sharing, cache-line padding, `sync.Pool` hot-path patterns
 - → See [references/context.md](references/context.md) for cancellation propagation and timeout patterns
-- → See `go-safety` skill for concurrent map access and race condition prevention
-- → See `go-troubleshooting` skill for debugging goroutine leaks and deadlocks
-- → See `go-project-layout` references/design-patterns.md for graceful shutdown patterns
+- → See [go-safety](../go-safety/SKILL.md) skill for concurrent map access and race condition prevention
+- → See [go-troubleshooting](../go-troubleshooting/SKILL.md) skill for debugging goroutine leaks and deadlocks
+- → See [go-project-layout](../go-project-layout/SKILL.md) references/design-patterns.md for graceful shutdown patterns
 
 #### Goroutine leak profile
 

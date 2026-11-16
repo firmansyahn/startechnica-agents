@@ -1,4 +1,4 @@
-> **Absorbed into `go-code-style`.** This is `samber/cc-skills-golang@golang-modernize` (MIT, Samuel Berthe; commit in [UPSTREAM.md](../UPSTREAM.md)), kept as the depth for modernize. The team's rules and decisions in [SKILL.md](../SKILL.md) win where the two differ.
+> **Absorbed into [go-code-style](../SKILL.md).** This is `samber/cc-skills-golang@golang-modernize` (MIT, Samuel Berthe; commit in [UPSTREAM.md](../UPSTREAM.md)), kept as the depth for modernize. The team's rules and decisions in [SKILL.md](../SKILL.md) win where the two differ.
 
 <!-- markdownlint-disable ol-prefix -->
 
@@ -68,7 +68,7 @@ When the project's `go.mod` targets an older version, suggest upgrading and expl
 
 ## Using the modernize linter
 
-The `modernize` linter (available since **golangci-lint v2.6.0**) automatically detects code that can be rewritten using newer Go features. It originates from `golang.org/x/tools/go/analysis/passes/modernize`; `gopls` and `go fix` (rewritten onto the `go/analysis` framework in Go 1.26, with fixer coverage still growing in Go 1.27 — see [Tooling modernization](modernize/tooling.md) for the exact fixer list) cover overlapping modernization checks, but exact coverage differs by tool version. See the `samber/cc-skills-golang@golang-lint` skill for configuration.
+The `modernize` linter (available since **golangci-lint v2.6.0**) automatically detects code that can be rewritten using newer Go features. It originates from `golang.org/x/tools/go/analysis/passes/modernize`; `gopls` and `go fix` (rewritten onto the `go/analysis` framework in Go 1.26, with fixer coverage still growing in Go 1.27 — see [Tooling modernization](modernize/tooling.md) for the exact fixer list) cover overlapping modernization checks, but exact coverage differs by tool version. See the [go-code-style](../SKILL.md) skill for configuration.
 
 ## Version-specific modernizations
 
@@ -147,6 +147,6 @@ When modernizing a codebase, prioritize changes by impact:
 
 ## Related Skills
 
-See `samber/cc-skills-golang@golang-concurrency`, `samber/cc-skills-golang@golang-testing`, `samber/cc-skills-golang@golang-observability`, `samber/cc-skills-golang@golang-error-handling`, `samber/cc-skills-golang@golang-lint` skills, and [gitlab-ci](../../gitlab-ci/SKILL.md) for the CI pipeline.
+See [go-concurrency](../../go-concurrency/SKILL.md), [go-testing](../../go-testing/SKILL.md), [go-observability](../../go-observability/SKILL.md), [go-error-handling](../../go-error-handling/SKILL.md), [go-code-style](../SKILL.md) skills, and [gitlab-ci](../../gitlab-ci/SKILL.md) for the CI pipeline.
 
-- → See `samber/cc-skills-golang@golang-refactoring` skill for staging a large modernization sweep as small human-reviewed PRs instead of one big worktree sweep.
+- → See [go-refactoring](../../go-refactoring/SKILL.md) skill for staging a large modernization sweep as small human-reviewed PRs instead of one big worktree sweep.

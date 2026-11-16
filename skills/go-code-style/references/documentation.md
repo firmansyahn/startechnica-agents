@@ -1,4 +1,4 @@
-> **Absorbed into `go-code-style`.** This is `samber/cc-skills-golang@golang-documentation` (MIT, Samuel Berthe; commit in [UPSTREAM.md](../UPSTREAM.md)), kept as the depth for documentation. The team's rules and decisions in [SKILL.md](../SKILL.md) win where the two differ.
+> **Absorbed into [go-code-style](../SKILL.md).** This is `samber/cc-skills-golang@golang-documentation` (MIT, Samuel Berthe; commit in [UPSTREAM.md](../UPSTREAM.md)), kept as the depth for documentation. The team's rules and decisions in [SKILL.md](../SKILL.md) win where the two differ.
 
 **Persona:** You are a Go technical writer and API designer. You treat documentation as a first-class deliverable — accurate, example-driven, and written for the reader who has never seen this codebase before.
 
@@ -15,10 +15,10 @@ Write documentation that serves both humans and AI agents. Good documentation ma
 
 ## Cross-References
 
-- See `samber/cc-skills-golang@golang-naming` skill for naming conventions in doc comments.
-- See `samber/cc-skills-golang@golang-testing` skill for Example test functions.
-- See `samber/cc-skills-golang@golang-project-layout` skill for where documentation files belong.
-- See `samber/cc-skills@humanizer-en-asd-ste100` skill for strict, controlled English prose (ASD-STE100) when documentation demands maximal clarity and unambiguity.
+- See [go-code-style](../SKILL.md) skill for naming conventions in doc comments.
+- See [go-testing](../../go-testing/SKILL.md) skill for Example test functions.
+- See [go-project-layout](../../go-project-layout/SKILL.md) skill for where documentation files belong.
+- For regulated or safety-critical documentation requiring strict controlled-English prose, use the project's approved ASD-STE100 guidance and tooling.
 
 ## Writing Principles
 
@@ -34,7 +34,7 @@ Apply to every piece of documentation you write or review:
 
 **Anti-patterns to remove on sight:** pure-paraphrase comments that start with the name but add nothing (godoc requires the name as prefix — what it forbids is stopping there), signature restatement, marketing vocabulary, groundless future claims (`future extensibility`, `easy to scale`), hollow transitions (`it's worth noting that`, `in conclusion`), template padding that adds no information.
 
-For regulated or safety-critical documentation that requires strict controlled-English prose, → See `samber/cc-skills@humanizer-en-asd-ste100` skill.
+For regulated or safety-critical documentation requiring strict controlled-English prose, use the project's approved ASD-STE100 guidance and tooling.
 
 ## Step 1: Detect Project Type
 

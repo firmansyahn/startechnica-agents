@@ -1,6 +1,6 @@
 # Library Documentation
 
-→ See `samber/cc-skills-golang@golang-testing` skill for writing effective Example test functions.
+→ See [go-testing](../../../go-testing/SKILL.md) skill for writing effective Example test functions.
 
 ## Table of Contents
 

@@ -2,7 +2,7 @@
 
 ## Where it lives and who owns it
 
-- **One document per API surface** (`console`, `public`, `internal`), because surfaces differ in auth, audience and stability. File: `<module-root>/api/<surface>.openapi.json` (`go-project-layout`: `/api` holds API specs).
+- **One document per API surface** (`console`, `public`, `internal`), because surfaces differ in auth, audience and stability. File: `<module-root>/api/<surface>.openapi.json` ([go-project-layout](../../go-project-layout/SKILL.md): `/api` holds API specs).
 - **OpenAPI 3.1.x.** Its schemas are JSON Schema 2020-12: `type: ["string", "null"]` instead of 3.0's `nullable`, `const`, `examples`. Tooling that only speaks 3.0 is the wrong tooling.
 - **The backend owns it.** A frontend developer who needs a new field asks for (or writes) the backend change; the frontend never patches its copy.
 - **Committed, both the source and the frontend's copy**, so the web image builds from the app folder alone and a diff shows every contract change in review.
@@ -44,7 +44,7 @@ func TestOpenAPI(t *testing.T) {
 }
 ```
 
-- The schema of a type comes from its `json` tags (`go-code-style`: the tag is the contract), `omitempty` makes a field optional, a pointer or an `Opt[T]` makes it nullable, and an enum type lists its values (`Enum() []string`). Use a reflector library or a small in-house one; whichever, it must emit 3.1.
+- The schema of a type comes from its `json` tags ([go-code-style](../../go-code-style/SKILL.md): the tag is the contract), `omitempty` makes a field optional, a pointer or an `Opt[T]` makes it nullable, and an enum type lists its values (`Enum() []string`). Use a reflector library or a small in-house one; whichever, it must emit 3.1.
 - Doc comments become `description`s; a route's `Errors` list becomes its documented refusals, all pointing at one shared `Failure` response.
 - A route without reply types fails the test, so nothing new escapes the document.
 - **Keep it honest:** handler tests validate their replies against the generated document ([contract-tests.md](contract-tests.md)). A generator only proves the types were declared, not that the handler returns them.
@@ -88,7 +88,7 @@ if (stale.length) {
 ```
 
 - `openapi-typescript` (7.x) exports `openapiTS` and `astToString`; its CLI has `--check`, `--alphabetize`, `--enum-values` (enum value arrays for selects) and `--read-write-markers` (`readOnly`/`writeOnly` fields). The script form above also checks the copied document, which the CLI's `--check` doesn't.
-- `"gen:api": "node scripts/gen-api.mjs"` in `package.json`; run through Yarn (`nextjs-package-manager`).
+- `"gen:api": "node scripts/gen-api.mjs"` in `package.json`; run through Yarn ([nextjs-package-manager](../../nextjs-package-manager/SKILL.md)).
 - In a monorepo, put the generated types in a package (`packages/api-types`) when two apps use the same surface.
 - Use the types by name: `type Item = components["schemas"]["Item"]`; query parameters from `operations["listItems"]["parameters"]["query"]`. Re-export the common ones from one `src/api/types.ts` so imports stay short.
 

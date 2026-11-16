@@ -112,7 +112,7 @@ curl http://localhost:6060/debug/pprof/block > block.prof
 
 ## Analyzing and Interpreting Profiles
 
-→ See `samber/cc-skills-golang@golang-benchmark` skill (pprof.md) for interpreting profiles: `top`, `list`, `peek`, common profile patterns (flat vs cum, GC churn, memory leaks), and compiler diagnostics. See also compiler-analysis.md for escape analysis and inlining decisions.
+→ See [go-performance](../../go-performance/SKILL.md) skill (pprof.md) for interpreting profiles: `top`, `list`, `peek`, common profile patterns (flat vs cum, GC churn, memory leaks), and compiler diagnostics. See also compiler-analysis.md for escape analysis and inlining decisions.
 
 **Quick start:**
 
@@ -130,4 +130,4 @@ For production servers, replace `localhost:6060` with your server address and us
 
 ---
 
-→ See `samber/cc-skills-golang@golang-observability` skill for continuous profiling with Pyroscope. → See `samber/cc-skills-golang@golang-benchmark` skill for investigation session setup and Prometheus-based performance tracking.
+→ See [go-observability](../../go-observability/SKILL.md) skill for continuous profiling with Pyroscope. → See [go-performance](../../go-performance/SKILL.md) skill for investigation session setup and Prometheus-based performance tracking.

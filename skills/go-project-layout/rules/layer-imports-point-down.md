@@ -9,7 +9,7 @@ check: test (architecture test)
 
 **Impact: MEDIUM** (upward imports tie business rules to HTTP and wiring, create import cycles, and make packages impossible to test or move alone)
 
-Root → Surface → Domain → Platform → Kernel (`go-project-layout`, "Layers"). A package imports only its own layer (where the project allows) and the layers below. Domain and Kernel never use server-side HTTP types (`http.ResponseWriter`, `http.Handler`, `ServeMux`); an outbound `http.Client` is fine. A new package gets its layer classification in the same change.
+Root → Surface → Domain → Platform → Kernel ([go-project-layout](../SKILL.md), "Layers"). A package imports only its own layer (where the project allows) and the layers below. Domain and Kernel never use server-side HTTP types (`http.ResponseWriter`, `http.Handler`, `ServeMux`); an outbound `http.Client` is fine. A new package gets its layer classification in the same change.
 
 **Incorrect:**
 

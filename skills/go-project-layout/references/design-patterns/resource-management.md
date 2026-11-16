@@ -160,4 +160,4 @@ This pattern applies to any long-running service — gRPC servers, message consu
 4. Shut down with a timeout to drain in-flight requests
 5. Close all remaining resources in order
 
-For goroutine shutdown patterns, see the `samber/cc-skills-golang@golang-concurrency` skill.
+For goroutine shutdown patterns, see the [go-concurrency](../../../go-concurrency/SKILL.md) skill.

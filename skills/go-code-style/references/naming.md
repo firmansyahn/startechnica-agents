@@ -1,4 +1,4 @@
-> **Absorbed into `go-code-style`.** This is `samber/cc-skills-golang@golang-naming` (MIT, Samuel Berthe; commit in [UPSTREAM.md](../UPSTREAM.md)), kept as the depth for naming. The team's rules and decisions in [SKILL.md](../SKILL.md) win where the two differ.
+> **Absorbed into [go-code-style](../SKILL.md).** This is `samber/cc-skills-golang@golang-naming` (MIT, Samuel Berthe; commit in [UPSTREAM.md](../UPSTREAM.md)), kept as the depth for naming. The team's rules and decisions in [SKILL.md](../SKILL.md) win where the two differ.
 
 # Go Naming Conventions
 
@@ -137,11 +137,11 @@ Applying these fixes means renaming existing identifiers — do it with gopls' r
 
 ## Enforce with Linters
 
-Many naming convention issues are caught automatically by linters: `revive`, `predeclared`, `misspell`, `errname`. See `samber/cc-skills-golang@golang-lint` skill for configuration and usage.
+Many naming convention issues are caught automatically by linters: `revive`, `predeclared`, `misspell`, `errname`. See [go-code-style](../SKILL.md) skill for configuration and usage.
 
 ## Cross-References
 
-- → See `samber/cc-skills-golang@golang-code-style` skill for broader formatting and style decisions
-- → See `samber/cc-skills-golang@golang-structs-interfaces` skill for interface naming depth and receiver design
-- → See `samber/cc-skills-golang@golang-lint` skill for automated enforcement (revive, predeclared, misspell, errname)
-- → See `samber/cc-skills-golang@golang-refactoring` skill for how to apply a rename safely at scale (gopls Rename/Inline, blast-radius mapping, staged PR workflow) once you've decided what to rename identifiers to
+- → See [go-code-style](../SKILL.md) skill for broader formatting and style decisions
+- → See [go-code-style](../SKILL.md) skill for interface naming depth and receiver design
+- → See [go-code-style](../SKILL.md) skill for automated enforcement (revive, predeclared, misspell, errname)
+- → See [go-refactoring](../../go-refactoring/SKILL.md) skill for how to apply a rename safely at scale (gopls Rename/Inline, blast-radius mapping, staged PR workflow) once you've decided what to rename identifiers to

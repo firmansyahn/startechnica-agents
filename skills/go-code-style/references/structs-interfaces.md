@@ -1,4 +1,4 @@
-> **Absorbed into `go-code-style`.** This is `samber/cc-skills-golang@golang-structs-interfaces` (MIT, Samuel Berthe; commit in [UPSTREAM.md](../UPSTREAM.md)), kept as the depth for structs interfaces. The team's rules and decisions in [SKILL.md](../SKILL.md) win where the two differ.
+> **Absorbed into [go-code-style](../SKILL.md).** This is `samber/cc-skills-golang@golang-structs-interfaces` (MIT, Samuel Berthe; commit in [UPSTREAM.md](../UPSTREAM.md)), kept as the depth for structs interfaces. The team's rules and decisions in [SKILL.md](../SKILL.md) win where the two differ.
 
 **Persona:** You are a Go type system designer. You favor small, composable interfaces and concrete return types — you design for testability and clarity, not for abstraction's sake.
 
@@ -12,7 +12,7 @@
 
 Interfaces SHOULD have 1-3 methods. Small interfaces are easier to implement, mock, and compose. If you need a larger contract, compose it from small interfaces:
 
-→ See `samber/cc-skills-golang@golang-naming` skill for interface naming conventions (method + "-er" suffix, canonical names)
+→ See [go-code-style](../SKILL.md) skill for interface naming conventions (method + "-er" suffix, canonical names)
 
 ```go
 type Reader interface {
@@ -255,10 +255,10 @@ A struct holding a mutex, a channel, or internal pointers breaks when copied: th
 
 ## Cross-References
 
-- → See `samber/cc-skills-golang@golang-naming` skill for interface naming conventions (Reader, Closer, Stringer)
-- → See `samber/cc-skills-golang@golang-design-patterns` skill for functional options, constructors, and builder patterns
-- → See `samber/cc-skills-golang@golang-dependency-injection` skill for DI patterns using interfaces
-- → See `samber/cc-skills-golang@golang-code-style` skill for value vs pointer function parameters (distinct from receivers)
+- → See [go-code-style](../SKILL.md) skill for interface naming conventions (Reader, Closer, Stringer)
+- → See [go-project-layout](../../go-project-layout/SKILL.md) skill for functional options, constructors, and builder patterns
+- → See [go-project-layout](../../go-project-layout/SKILL.md) skill for DI patterns using interfaces
+- → See [go-code-style](../SKILL.md) skill for value vs pointer function parameters (distinct from receivers)
 
 ## Common Mistakes
 

@@ -39,9 +39,9 @@ export function fromEnvelope<T>(status: number, body: unknown): Result<T> {
 }
 ```
 
-- `ApiError` (thrown by `runAction` and by query functions) carries `status`, `message` and `fields` into `onError`; `nextjs-forms` puts `fields` on the form.
+- `ApiError` (thrown by `runAction` and by query functions) carries `status`, `message` and `fields` into `onError`; [nextjs-forms](../../nextjs-forms/SKILL.md) puts `fields` on the form.
 - A reply that isn't JSON or isn't the envelope (a proxy's HTML error page) becomes a `Failure` with the HTTP status and a generic message, never a crash on `JSON.parse`.
-- Backend unreachable or timed out → the BFF answers 503 with the envelope (`nextjs-bff`).
+- Backend unreachable or timed out → the BFF answers 503 with the envelope ([nextjs-bff](../../nextjs-bff/SKILL.md)).
 
 ## Status codes
 
@@ -51,7 +51,7 @@ export function fromEnvelope<T>(status: number, body: unknown): Result<T> {
 | 201 | Created | empty or "Created" | `setQueryData` with `data`, invalidates lists |
 | 204 | Deleted, nothing to say | (no body) | invalidates |
 | 400 | The request is malformed: unparseable JSON, a wrong type, an unknown query parameter, a bad path segment | what was wrong | form-level notice (a bug, usually) |
-| 401 | No valid credentials | "Sign in again" | guard 401 → refresh once and retry, then sign in (`nextjs-bff`) |
+| 401 | No valid credentials | "Sign in again" | guard 401 → refresh once and retry, then sign in ([nextjs-bff](../../nextjs-bff/SKILL.md)) |
 | 403 | Signed in, not allowed (permission, scope, plan) | which permission is missing, in words | form-level notice; never a sign-in loop |
 | 404 | The record doesn't exist **in the caller's scope** | "Item not found" | the not-found state |
 | 409 | Conflict with current state: duplicate unique value, stale version, still in use | what conflicts | form-level notice, or a field error when one field is the cause (then use 422) |
@@ -75,7 +75,7 @@ The key of `errors` is the field's **JSON path in the request body**, dotted, wi
 | `{ "rules": [{}, {}, { "value": 0 }] }` | `rules.2.value` |
 | An error not tied to one field | `""` |
 
-These are react-hook-form's field names when the form's shape mirrors the body (`nextjs-forms`), so the error lands on its control without a mapping table. When the form's shape differs from the body (a form that edits `start` and `end` while the body sends `window.start`), the action maps the paths back before returning the `Result`.
+These are react-hook-form's field names when the form's shape mirrors the body ([nextjs-forms](../../nextjs-forms/SKILL.md)), so the error lands on its control without a mapping table. When the form's shape differs from the body (a form that edits `start` and `end` while the body sends `window.start`), the action maps the paths back before returning the `Result`.
 
 On the Go side, validation returns the same paths:
 
@@ -110,5 +110,5 @@ Messages are short, user-facing and in the request's language (or stable English
 
 ## Request ids and 5xx
 
-- Every request carries `X-Request-Id`: the BFF forwards the incoming one or makes a UUID; the backend uses it (or makes one) and echoes it on the reply. Both sides log it (`nextjs-logging`, `go-code-style`).
+- Every request carries `X-Request-Id`: the BFF forwards the incoming one or makes a UUID; the backend uses it (or makes one) and echoes it on the reply. Both sides log it ([nextjs-logging](../../nextjs-logging/SKILL.md), [go-code-style](../../go-code-style/SKILL.md)).
 - A 5xx never leaks internals: no stack trace, SQL, file path or upstream URL in `message`. The full error is logged once with the request id; the user sees the generic message and the id to quote.

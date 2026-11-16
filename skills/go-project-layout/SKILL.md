@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.2.1"
+  version: "0.2.3"
 ---
 
 # Go project layout and layers (team)
@@ -71,8 +71,8 @@ Root → Surface → Domain → Platform → Kernel. A package may import its ow
 
 1. **No DI containers.** Dependencies are passed to constructors by hand (`layer-inject-dependencies`); lazy creation lives in the service that owns the dependency, and tests call the real constructors with fakes, never clone a container; `google/wire`, `uber-go/dig`, `uber-go/fx` and `samber/do` are not adopted, whatever [references/dependency-injection.md](references/dependency-injection.md) recommends.
 2. **No `pkg/`.** These are server projects: golang-project-layout's "library" and "CLI with optional `pkg/`" shapes don't apply (`layer-logic-in-internal`).
-3. **No `replace` or `go.work` pointing at another checkout** (a sibling repo or another worktree); [references/dependency-management.md](references/dependency-management.md)'s `replace` advice is for a fork published as its own module (`git-worktree`, `wt-own-dependencies`).
-4. **Dependency upgrades** follow [references/dependency-management.md](references/dependency-management.md), but CI is GitLab CI (`gitlab-ci`): Dependabot and Renovate-on-GitHub advice doesn't apply.
+3. **No `replace` or `go.work` pointing at another checkout** (a sibling repo or another worktree); [references/dependency-management.md](references/dependency-management.md)'s `replace` advice is for a fork published as its own module ([git-worktree](../git-worktree/SKILL.md), `wt-own-dependencies`).
+4. **Dependency upgrades** follow [references/dependency-management.md](references/dependency-management.md), but CI is GitLab CI ([gitlab-ci](../gitlab-ci/SKILL.md)): Dependabot and Renovate-on-GitHub advice doesn't apply.
 
 ## Rules
 
@@ -91,7 +91,7 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 2. **Tools first**, from `<module-root>`: `gofmt -l .`, `go vet ./...`, and `golangci-lint run` when the project has a `.golangci.yml`. Report their findings as they are; a rule that names a linter isn't reported twice.
 3. **Scan:** `bash <this skill>/scripts/scan.sh <module-root>` lists candidates for the rules with `scan` in their check. On a diff, keep the ones in changed lines; open the rule and confirm each before reporting it.
 4. **Read** the code against the rules above, matching each rule's "Incorrect" shape, not just its title, and against the checklist below.
-5. **Report** in the format of `agent-skills-authoring` ("Scan scripts and findings"), ordered by impact; list once, as a gap, the rules whose check is a test or linter the project doesn't have.
+5. **Report** in the format of [agent-skills-authoring](../agent-skills-authoring/SKILL.md) ("Scan scripts and findings"), ordered by impact; list once, as a gap, the rules whose check is a test or linter the project doesn't have.
 
 ## Review checklist
 
@@ -103,7 +103,7 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 
 ## In depth
 
-The material below is `samber/cc-skills-golang@golang-project-layout`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: each one the team uses is absorbed into a team skill (`go-how-to`, rule 1, maps the names), and the rest are not adopted.
+The material below is `samber/cc-skills-golang@golang-project-layout`, absorbed into this skill (source, pinned commit and licence in [UPSTREAM.md](UPSTREAM.md)) and edited where the team decided otherwise. The team's rules and decisions above win wherever the two still differ. Links of the form `samber/cc-skills-golang@<name>` name upstream skills: each one the team uses is absorbed into a team skill ([go-how-to](../go-how-to/SKILL.md), rule 1, maps the names), and the rest are not adopted.
 
 Also absorbed, one reference each (their own references, assets and evals sit in a folder of the same name):
 
@@ -127,7 +127,7 @@ Dependencies are wired by hand: constructors take them explicitly, and `cmd/<bin
 
 ### 12-Factor App
 
-For applications (services, APIs, workers), follow [12-Factor App](https://12factor.net/) conventions: config kept out of the code, logs to stdout, stateless processes, graceful shutdown, backing services as attached resources, and admin tasks as one-off commands (e.g., `cmd/migrate/`). The team's form of "config out of the code": one settings file loaded with koanf by `internal/config`, mounted by the deployment and never committed, with secrets as mounted `<name>_file` values (`go-knadh-koanf`).
+For applications (services, APIs, workers), follow [12-Factor App](https://12factor.net/) conventions: config kept out of the code, logs to stdout, stateless processes, graceful shutdown, backing services as attached resources, and admin tasks as one-off commands (e.g., `cmd/migrate/`). The team's form of "config out of the code": one settings file loaded with koanf by `internal/config`, mounted by the deployment and never committed, with secrets as mounted `<name>_file` values ([go-knadh-koanf](../go-knadh-koanf/SKILL.md)).
 
 ### Quick Start: Choose Your Project Type
 
@@ -164,7 +164,7 @@ module utils
 
 #### Package Naming
 
-Packages MUST be lowercase, singular, and match their directory name. → See `go-code-style` references/naming.md for complete package naming conventions and examples.
+Packages MUST be lowercase, singular, and match their directory name. → See [go-code-style](../go-code-style/SKILL.md) references/naming.md for complete package naming conventions and examples.
 
 ### Directory Layout
 
@@ -178,9 +178,9 @@ A Go project usually has at the module root:
 
 - **Makefile** — build automation (upstream's template isn't vendored; follow the project's existing build entry point)
 - **.gitignore** — git ignore patterns
-- **.golangci.yml** — linter config. Don't add one, or change it, as a side effect of other work; if the project has none, propose one (see the `go-code-style` references/lint.md for the recommended configuration)
+- **.golangci.yml** — linter config. Don't add one, or change it, as a side effect of other work; if the project has none, propose one (see the [go-code-style](../go-code-style/SKILL.md) references/lint.md for the recommended configuration)
 
-Settings are loaded with koanf by one `internal/config` package, not Cobra + Viper in `cmd/` (`go-knadh-koanf`); [config reference](references/config.md) keeps upstream's Viper notes for reading a project that already uses Viper.
+Settings are loaded with koanf by one `internal/config` package, not Cobra + Viper in `cmd/` ([go-knadh-koanf](../go-knadh-koanf/SKILL.md)); [config reference](references/config.md) keeps upstream's Viper notes for reading a project that already uses Viper.
 
 ### Tests, Benchmarks, and Examples
 
@@ -210,6 +210,6 @@ When starting a new Go project:
 ### Related Skills
 
 - → See [references/dependency-injection.md](references/dependency-injection.md) for constructor-injection patterns and wiring (by hand; its DI libraries are not adopted).
-- → See `go-code-style` references/lint.md for golangci-lint configuration (propose a config; don't add one as a side effect).
+- → See [go-code-style](../go-code-style/SKILL.md) references/lint.md for golangci-lint configuration (propose a config; don't add one as a side effect).
 - → See [references/design-patterns.md](references/design-patterns.md) for architectural patterns.
-- → See `go-refactoring` for safely moving or splitting existing code into the layout above via type-alias gradual code repair and staged PRs, without a big-bang break.
+- → See [go-refactoring](../go-refactoring/SKILL.md) for safely moving or splitting existing code into the layout above via type-alias gradual code repair and staged PRs, without a big-bang break.

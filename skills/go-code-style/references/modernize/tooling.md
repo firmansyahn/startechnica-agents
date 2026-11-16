@@ -19,7 +19,7 @@ go get toolchain@latest
 
 ## golangci-lint v2 _(golangci-lint v2.0.0+, March 2025)_
 
-Upgrade to golangci-lint v2. **Migration**: Run `golangci-lint migrate` to convert v1 config to v2. See the `samber/cc-skills-golang@golang-lint` skill for the recommended configuration.
+Upgrade to golangci-lint v2. **Migration**: Run `golangci-lint migrate` to convert v1 config to v2. See the [go-code-style](../../SKILL.md) skill for the recommended configuration.
 
 ## govulncheck _(works best with Go 1.22+)_
 
@@ -81,6 +81,6 @@ go doc -ex net/http.Client
 
 ## AI-Driven Code Review in CI
 
-Add an AI agent as a merge request reviewer alongside traditional static analysis. When configured with this skill plugin, the agent loads the relevant Go skills — `go-security` for security review, `go-concurrency` for concurrency issues, `go-error-handling` for error handling, and so on — giving it the same expertise as a senior Go reviewer. This catches architectural drift, logic bugs, missing context in errors, and subtle concurrency hazards that linters cannot detect.
+Add an AI agent as a merge request reviewer alongside traditional static analysis. When configured with this skill plugin, the agent loads the relevant Go skills — [go-security](../../../go-security/SKILL.md) for security review, [go-concurrency](../../../go-concurrency/SKILL.md) for concurrency issues, [go-error-handling](../../../go-error-handling/SKILL.md) for error handling, and so on — giving it the same expertise as a senior Go reviewer. This catches architectural drift, logic bugs, missing context in errors, and subtle concurrency hazards that linters cannot detect.
 
 Run it as a job in `.gitlab-ci.yml` on merge request pipelines; the pipeline's shape is in the [gitlab-ci](../../../gitlab-ci/SKILL.md) skill.
