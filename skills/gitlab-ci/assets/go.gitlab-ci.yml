@@ -35,6 +35,10 @@ spec:
       description: Go major version for the vet and test jobs.
       type: string
       default: "1.27"
+    golangci-lint-version:
+      description: Exact golangci-lint release tag, including the v prefix.
+      type: string
+      default: "v2.15.0"
 ---
 
 # The image jobs come from the org templates, included under this app's own job names so several
@@ -135,14 +139,41 @@ include:
         *)    echo "unknown TEST_SHARD '$TEST_SHARD'" >&2; exit 2 ;;
       esac
       go vet $pkgs
-      go test -race $pkgs
+      go test -race -shuffle=on -count=1 $pkgs
 
-# The org template sets needs: [], which would start the build beside the tests. The context is
-# the repo root (the template's default), as the Dockerfile copies from <app>/. MR pipelines only
-# test; tag pipelines always count as changed.
+# Use a separately pinned linter image so lint does not install tools during the job.
+<app>:lint:
+  extends: .<app>
+  image: $IMAGE_MIRROR/golangci/golangci-lint:$[[ inputs.golangci-lint-version ]]
+  script:
+    - golangci-lint run ./...
+
+# Check module manifests and reachable vulnerabilities before building the image.
+<app>:verify:
+  extends: .<app>
+  script:
+    - |
+      files="$(gofmt -l .)"
+      if [ -n "$files" ]; then
+        printf '%s\n' "$files"
+        exit 1
+      fi
+    - go mod tidy
+    - git diff --exit-code -- go.mod go.sum
+    - go mod verify
+    - go install golang.org/x/vuln/cmd/govulncheck@v1.1.4
+    - govulncheck ./...
+
+# The org template sets needs: [], which would start the build beside the checks. The context is
+# the repo root (the template's default), as the Dockerfile copies from <app>/. MR pipelines run
+# checks only; tag pipelines always count as changed.
 <app>:build:
   needs:
     - job: "<app>:test"
+      optional: true
+    - job: "<app>:lint"
+      optional: true
+    - job: "<app>:verify"
       optional: true
   variables:
     <<: *app-vars

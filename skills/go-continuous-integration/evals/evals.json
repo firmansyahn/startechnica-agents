@@ -1,0 +1,77 @@
+[
+  {
+    "id": 1,
+    "name": "gitlab-go-ci-gates",
+    "description": "Recommends the team's blocking Go checks in GitLab CI without emitting GitHub Actions configuration",
+    "prompt": "Set up CI for a Go service in our GitLab monorepo. What checks should the Go child pipeline run?",
+    "trap": "The answer may generate GitHub Actions or miss module verification, race-enabled tests, lint, or govulncheck.",
+    "assertions": [
+      {
+        "id": "1.1",
+        "text": "Uses GitLab CI and points to gitlab-ci for pipeline syntax and the shared Go template"
+      },
+      {
+        "id": "1.2",
+        "text": "Includes formatting, go vet, configured golangci-lint, and go test -race"
+      },
+      {
+        "id": "1.3",
+        "text": "Includes go mod tidy followed by a diff check of go.mod and go.sum"
+      },
+      {
+        "id": "1.4",
+        "text": "Recommends govulncheck and says to pin its version"
+      },
+      {
+        "id": "1.5",
+        "text": "Does not output GitHub Actions workflow configuration"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "integration-test-cache",
+    "description": "Requires uncached real-service tests without confusing Go test-result and build caches",
+    "prompt": "Our Go tests use PostgreSQL in GitLab CI. Sometimes the database was changed but Go reports cached tests. What should the test command do?",
+    "trap": "The answer may disable the build cache or suggest hiding the integration tests behind a tag instead of disabling result caching.",
+    "assertions": [
+      {
+        "id": "2.1",
+        "text": "Uses -count=1 for tests dependent on external service state"
+      },
+      {
+        "id": "2.2",
+        "text": "Explains that -count=1 disables test-result caching, not the Go build cache"
+      },
+      {
+        "id": "2.3",
+        "text": "Keeps real database tests in the normal test suite in line with go-testing"
+      },
+      {
+        "id": "2.4",
+        "text": "May recommend -shuffle=on to expose order-dependent tests"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "gitlab-go-service-release",
+    "description": "Uses the team's GitLab service release path instead of GoReleaser or GitHub workflows by default",
+    "prompt": "Add CI deployment for a Go HTTP service. Should I use GoReleaser and the upstream Docker GitHub Actions workflow?",
+    "trap": "The answer may copy upstream GitHub Actions or conflate a Go service's image/chart release with publishing CLI binaries.",
+    "assertions": [
+      {
+        "id": "3.1",
+        "text": "Says Go services use the GitLab image and chart-release templates in gitlab-ci"
+      },
+      {
+        "id": "3.2",
+        "text": "Does not use GoReleaser as the default service deployment path"
+      },
+      {
+        "id": "3.3",
+        "text": "Distinguishes standalone binary or library release use cases from service deployment"
+      }
+    ]
+  }
+]
