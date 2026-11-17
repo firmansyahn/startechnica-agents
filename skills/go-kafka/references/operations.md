@@ -9,7 +9,7 @@ One `kafka` block in the service's settings file ([go-knadh-koanf](../../go-knad
 ```yaml
 kafka:
   brokers: [kafka-0.example.com:9093, kafka-1.example.com:9093, kafka-2.example.com:9093]
-  client_id: orders-service
+  client_id: orders-service            # required: the service's name, same on every replica
   tls: true                            # optional; without it the mechanism must be SCRAM
   ca_file: /etc/kafka/ca.crt           # empty: the system roots
   sasl:                                # required: every client logs in
@@ -22,6 +22,7 @@ kafka:
 ```
 
 - **Login** is required (`kafka-authenticated-connection`): `validate` refuses an empty mechanism, a missing username or password file, and PLAIN without TLS, so a service never falls back to connecting anonymously.
+- **Client ID** is required (`kafka-client-id`): the service's name, appended with the role when one service runs several clients (`orders-service-relay`). It labels requests for broker logs, metrics and client-ID quotas; the SASL user is the identity. Per-instance IDs are `instance_id` (static membership) and `transactional_id`, set by the deployment.
 - **Secrets** come from a mounted file (`password_file`) or the settings file kept out of the image, never from flags or the code, and never logged ([go-security](../../go-security/SKILL.md), `sec-no-secrets-in-logs`).
 - **Group IDs** are settings, not code: `<service>-<purpose>`, the same in every replica and across deploys, and not used by any other service (`kafka-stable-consumer-group`).
 - **Topics** in settings, not as constants spread through the code, so an environment can rename them.

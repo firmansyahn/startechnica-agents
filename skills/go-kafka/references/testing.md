@@ -75,7 +75,7 @@ func TestConsumerCommitsAfterHandling(t *testing.T) {
 		handled <- string(r.Key)
 		return nil
 	}
-	cfg := kafka.Config{Brokers: brokers, Group: "billing-test", Topics: []string{"orders.v1"}, SASL: testSASL(t)}
+	cfg := kafka.Config{Brokers: brokers, ClientID: "billing-test", Group: "billing-test", Topics: []string{"orders.v1"}, SASL: testSASL(t)}
 	c, err := kafka.NewConsumer(cfg, producer, handler, zaptest.NewLogger(t))
 	if err != nil {
 		t.Fatal(err)

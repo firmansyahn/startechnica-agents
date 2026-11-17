@@ -31,6 +31,7 @@ Related: [go-concurrency](../go-concurrency/SKILL.md) (goroutine owners, context
 
 - **One long-lived client per role**, built once in the Platform package (`internal/kafka`) from the settings block and handed to constructors. Never a client per request or per message.
 - **Login is required, TLS is optional:** every client authenticates with SASL in every environment, and the settings check refuses a missing mechanism or password. Without TLS the mechanism is SCRAM (SHA-512 or SHA-256); PLAIN and OAUTHBEARER only over TLS. The broker refuses anonymous clients and grants each service only its topics and group.
+- **Client ID required:** every client sends the service's name as its client ID (`kgo.ClientID`), the same on every replica; the settings check refuses an empty one. It labels requests in broker logs, metrics and quotas; it is not an identity, which is the SASL user.
 - **Consumer groups:** a consumer that processes work joins a group whose ID comes from the settings, names the service and purpose, stays fixed across restarts and is used by no other service. No group only when every replica must read every record, on purpose and with an explicit start offset. Producers have no group.
 - **Producing:** acks from all in-sync replicas and idempotence stay on (franz-go's defaults). Every produce result is checked: `ProduceSync(...).FirstErr()`, or a promise that handles `err`. A request path that must not lose the event uses `ProduceSync`, or the outbox.
 - **Keys:** a record about an entity carries that entity's ID as its key, so its events stay in order on one partition.
@@ -71,6 +72,7 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 | [kafka-durable-writes](rules/kafka-durable-writes.md) | Keep all-ISR acks and idempotence; declare topics explicitly | HIGH | scan |
 | [kafka-key-for-ordering](rules/kafka-key-for-ordering.md) | Key records by the entity whose order matters | HIGH | review |
 | [kafka-idempotent-handler](rules/kafka-idempotent-handler.md) | Make every handler safe to run twice for one record | HIGH | review, test |
+| [kafka-client-id](rules/kafka-client-id.md) | Name every client with the service's client ID | MEDIUM | scan (candidates), test, review |
 | [kafka-poison-message-dlq](rules/kafka-poison-message-dlq.md) | Retry a bounded number of times, then dead-letter and move on | HIGH | review |
 | [kafka-bounded-concurrency](rules/kafka-bounded-concurrency.md) | Process with one worker per partition, never a goroutine per record | HIGH | scan (candidates), review |
 | [kafka-graceful-shutdown](rules/kafka-graceful-shutdown.md) | Stop polling, finish, commit, flush, then close | HIGH | scan (candidates), review |
@@ -96,6 +98,7 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 - [ ] One worker per partition or a fixed pool; no `go` per record
 - [ ] Database writes that must be announced go through the outbox
 - [ ] Every client logs in with SASL; `validate` refuses no mechanism, and PLAIN or OAUTHBEARER without TLS
+- [ ] Every client sends `kgo.ClientID` with the service's name; `validate` refuses an empty `client_id`
 - [ ] Credentials from settings or a mounted file, TLS verified when on, nothing secret logged
 - [ ] Each consumer of work has a fixed group ID from the settings, its own; no group only for a commented broadcast consumer with `ConsumeStartOffset`
 - [ ] Tests: handler unit tests, the loop against `kfake` or a real broker; no `time.Sleep` waits
@@ -111,7 +114,7 @@ package kafka
 // Config is the kafka settings block.
 type Config struct {
 	Brokers      []string      `koanf:"brokers"`       // seed brokers, host:port
-	ClientID     string        `koanf:"client_id"`     // shows up in broker logs and quotas
+	ClientID     string        `koanf:"client_id"`     // required: the service's name, same on every replica
 	Group        string        `koanf:"group"`         // fixed consumer group, the service's own; empty for producers
 	Topics       []string      `koanf:"topics"`        // topics this consumer reads; require a group unless Broadcast
 	Broadcast    bool          `koanf:"broadcast"`     // every replica reads every record, no group (rare)
@@ -121,8 +124,12 @@ type Config struct {
 	DialTimeout  time.Duration `koanf:"dial_timeout"`  // default 10s
 }
 
-// validate runs when the settings load (kafka-authenticated-connection, kafka-stable-consumer-group).
+// validate runs when the settings load (kafka-authenticated-connection, kafka-client-id,
+// kafka-stable-consumer-group).
 func (c Config) validate() error {
+	if c.ClientID == "" {
+		return errors.New("kafka.client_id is required: the service's name, e.g. orders-service")
+	}
 	switch c.SASL.Mechanism {
 	case "SCRAM-SHA-512", "SCRAM-SHA-256":
 	case "PLAIN":

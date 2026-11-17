@@ -106,6 +106,12 @@ fi
 # login made optional: SASL only when the settings name a mechanism
 g "$LIST" 'if[[:space:]].*\.Mechanism[[:space:]]*(!=|==)[[:space:]]*""' | emit kafka-authenticated-connection
 
+# --- kafka-client-id ------------------------------------------------------------------------------
+# clients built in a module where no non-test file names the client (franz-go then sends "kgo")
+if ! any "$KGO" 'kgo\.ClientID\('; then
+  g "$KGO" 'kgo\.NewClient\(' | sed 's/$/  (no kgo.ClientID in the module)/' | emit kafka-client-id
+fi
+
 # --- kafka-stable-consumer-group ------------------------------------------------------------------
 # a group ID generated at start: on the ConsumerGroup line, or through a variable assigned from a
 # generated value earlier in the same function (a pod name in InstanceID is fine and not flagged)

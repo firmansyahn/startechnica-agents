@@ -2,7 +2,7 @@
 
 ## v1.5.0
 
-- [go-kafka](skills/go-kafka/SKILL.md) 0.2.0: every Kafka client logs in. The new `kafka-authenticated-connection` rule (CRITICAL) makes SASL required in every environment, keeps TLS optional, and allows PLAIN only over TLS; the settings check refuses an empty mechanism. The new `kafka-stable-consumer-group` rule (HIGH) gives every consumer of work a fixed group ID of its own from the settings, and allows no group only for a deliberate broadcast consumer with an explicit start offset. Tests log in too (`kfake` with SASL, Redpanda with SASL), and `scan.sh` checks both rules.
+- [go-kafka](skills/go-kafka/SKILL.md) 0.2.0: every Kafka client logs in. The new `kafka-authenticated-connection` rule (CRITICAL) makes SASL required in every environment, keeps TLS optional, and allows PLAIN only over TLS; the settings check refuses an empty mechanism. The new `kafka-client-id` rule (MEDIUM) requires every client to send the service's name as its client ID. The new `kafka-stable-consumer-group` rule (HIGH) gives every consumer of work a fixed group ID of its own from the settings, and allows no group only for a deliberate broadcast consumer with an explicit start offset. Tests log in too (`kfake` with SASL, Redpanda with SASL), and `scan.sh` checks both rules.
 
 ## v1.4.0
 
