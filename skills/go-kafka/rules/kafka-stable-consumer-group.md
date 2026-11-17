@@ -27,21 +27,24 @@ cl, err := kgo.NewClient(append(opts, kgo.ConsumeTopics("orders.v1"))...)
 **Correct:**
 
 ```go
-// kafka.group: billing-order-events, kafka.topics: [orders.v1]
-// (validate refuses topics without a group, unless kafka.broadcast is true)
+// kafka.consumers.billing: {group: billing-order-events, topics: [orders.v1], start: earliest}
+// validate refuses a consumer without a group (unless broadcast) and a group used twice.
+c, _ := cfg.Consumer("billing")
 cl, err := kgo.NewClient(append(opts,
-	kgo.ConsumerGroup(cfg.Group),
-	kgo.ConsumeTopics(cfg.Topics...),
+	kgo.ConsumerGroup(c.Group),
+	kgo.ConsumeTopics(c.Topics...),
+	kgo.ConsumeStartOffset(kgo.NewOffset().AtStart()), // start: earliest, for the group's first start
 )...)
 
-// kafka.broadcast: true. No group on purpose: every replica drops its cached prices
-// on every change, starting from now.
+// kafka.consumers.price-cache: {broadcast: true, topics: [prices.v1], start: latest}
+// No group on purpose: every replica drops its cached prices on every change, starting from now.
+p, _ := cfg.Consumer("price-cache")
 cl, err := kgo.NewClient(append(opts,
-	kgo.ConsumeTopics(cfg.Topics...),
+	kgo.ConsumeTopics(p.Topics...),
 	kgo.ConsumeStartOffset(kgo.NewOffset().AtEnd()),
 )...)
 ```
 
 With ACLs on, the service's principal needs Read on its group as well as on the topics (`kafka-authenticated-connection`).
 
-**How to check:** `scripts/scan.sh` flags a `ConsumerGroup(` whose argument is built from a UUID, random value, hostname, process ID or the time, and a file that calls `ConsumeTopics(`/`ConsumePartitions(` with neither `ConsumerGroup(` nor `ConsumeStartOffset(` in it. A settings test asserts that `validate` refuses topics without a group (unless `broadcast` is set) and a group together with `broadcast`. In review, check that no other service uses the same group ID.
+**How to check:** `scripts/scan.sh` flags a `ConsumerGroup(` whose argument is built from a UUID, random value, hostname, process ID or the time, and a file that calls `ConsumeTopics(`/`ConsumePartitions(` with neither `ConsumerGroup(` nor `ConsumeStartOffset(` in it. A settings test asserts that `validate` refuses a consumer without a group (unless `broadcast` is set), a group together with `broadcast`, and one group used by two consumers (references/config.md, "Tests"); `ConsumerOpts` there sets all of this from the settings. In review, check that no other service uses the same group ID.

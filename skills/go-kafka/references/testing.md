@@ -40,14 +40,28 @@ func newCluster(t *testing.T, partitions int32, topics ...string) []string {
 	return c.ListenAddrs()
 }
 
-// testSASL writes the password to a file, as production mounts it, and returns the settings block.
-func testSASL(t *testing.T) kafka.SASL {
+// testConfig is the kafka settings block for a test: the login with the password in a file, as
+// production mounts it, and one consumer with every value validate would otherwise fill in.
+func testConfig(t *testing.T, brokers []string) config.Kafka {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "password")
 	if err := os.WriteFile(path, []byte(testPass+"\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	return kafka.SASL{Mechanism: "SCRAM-SHA-512", Username: testUser, PasswordFile: path}
+	return config.Kafka{
+		Brokers:     brokers,
+		ClientID:    "billing-test",
+		DialTimeout: 5 * time.Second,
+		SASL:        config.KafkaSASL{Mechanism: "SCRAM-SHA-512", Username: testUser, PasswordFile: path},
+		Consumers: map[string]config.KafkaConsumer{
+			"billing": {
+				Group: "billing-test", Topics: []string{"orders.v1"}, Start: "earliest",
+				MaxPollRecords:  100,
+				Retry:           config.KafkaRetry{Attempts: 2, Backoff: 10 * time.Millisecond, MaxBackoff: 20 * time.Millisecond},
+				DeadLetterTopic: "orders.v1.dlq",
+			},
+		},
+	}
 }
 
 func TestConsumerCommitsAfterHandling(t *testing.T) {
@@ -75,8 +89,7 @@ func TestConsumerCommitsAfterHandling(t *testing.T) {
 		handled <- string(r.Key)
 		return nil
 	}
-	cfg := kafka.Config{Brokers: brokers, ClientID: "billing-test", Group: "billing-test", Topics: []string{"orders.v1"}, SASL: testSASL(t)}
-	c, err := kafka.NewConsumer(cfg, producer, handler, zaptest.NewLogger(t))
+	c, err := kafka.NewConsumer(testConfig(t, brokers), "billing", producer, handler, zaptest.NewLogger(t))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -143,6 +156,6 @@ func startBroker(t *testing.T) []string {
 ```
 
 - Apache Kafka: `github.com/testcontainers/testcontainers-go/modules/kafka` (`kafka.Run(ctx, image, kafka.WithClusterID("test"))`, then `ctr.Brokers(ctx)`). Redpanda: `modules/redpanda` (`redpanda.Run`, `KafkaSeedBroker`, `SchemaRegistryAddress`). Use the broker production runs, at its version.
-- Clients of the container log in with `SCRAM-SHA-256` (`scram.Auth{...}.AsSha256Mechanism()`, or `testSASL` with that mechanism). To test the service's own ACLs, add a second, non-super account and grant it only what production grants.
+- Clients of the container log in with `SCRAM-SHA-256` (`scram.Auth{...}.AsSha256Mechanism()`, or `testConfig` with that mechanism). To test the service's own ACLs, add a second, non-super account and grant it only what production grants.
 - One container per package (started in `TestMain` or a `sync.OnceValue`), with a unique topic and group name per test, keeps the suite fast.
 - Create topics in the test with `kadm`, as production does; don't turn on auto-creation to save a line.

@@ -4,52 +4,20 @@ Part of [go-kafka](../SKILL.md); its rules win where this file is less strict.
 
 ## The settings block
 
-One `kafka` block in the service's settings file ([go-knadh-koanf](../../go-knadh-koanf/SKILL.md)), decoded into the Platform package's `Config`. A service with several consumers gives each its own block (`kafka_billing`, `kafka_audit`) or a list, each with its own group and topics.
+One `kafka` block in the service's settings file ([go-knadh-koanf](../../go-knadh-koanf/SKILL.md)): a shared connection and named consumers. The YAML, the structs, `validate` and what it refuses, and the client options are in [config.md](config.md).
 
-```yaml
-kafka:
-  brokers: [kafka-0.example.com:9093, kafka-1.example.com:9093, kafka-2.example.com:9093]
-  client_id: orders-service            # required: the service's name, same on every replica
-  tls: true                            # optional; without it the mechanism must be SCRAM
-  ca_file: /etc/kafka/ca.crt           # empty: the system roots
-  sasl:                                # required: every client logs in
-    mechanism: SCRAM-SHA-512           # or SCRAM-SHA-256; PLAIN only with tls: true
-    username: orders-service
-    password_file: /var/run/secrets/kafka/password
-  dial_timeout: 10s
-  group: billing-order-events          # consumers only: fixed, this service's own
-  topics: [orders.v1]                  # consumers only
-```
-
-- **Login** is required (`kafka-authenticated-connection`): `validate` refuses an empty mechanism, a missing username or password file, and PLAIN without TLS, so a service never falls back to connecting anonymously.
-- **Client ID** is required (`kafka-client-id`): the service's name, appended with the role when one service runs several clients (`orders-service-relay`). It labels requests for broker logs, metrics and client-ID quotas; the SASL user is the identity. Per-instance IDs are `instance_id` (static membership) and `transactional_id`, set by the deployment.
+- **Login** is required (`kafka-authenticated-connection`): `validate` refuses an empty mechanism, a missing username or password, and PLAIN without TLS, so a service never falls back to connecting anonymously.
+- **Client ID** is required (`kafka-client-id`): the service's name, appended with the role when one service runs several clients (`orders-service-relay`). It labels requests for broker logs, metrics and client-ID quotas; the SASL user is the identity. The per-instance IDs (static membership, transactions) come from `instance`, set per pod with `-kafka-instance`.
 - **Secrets** come from a mounted file (`password_file`) or the settings file kept out of the image, never from flags or the code, and never logged ([go-security](../../go-security/SKILL.md), `sec-no-secrets-in-logs`).
-- **Group IDs** are settings, not code: `<service>-<purpose>`, the same in every replica and across deploys, and not used by any other service (`kafka-stable-consumer-group`).
+- **Group IDs** are settings, not code: `consumers.<name>.group`, `<service>-<purpose>`, the same in every replica and across deploys, and not used by any other service (`kafka-stable-consumer-group`).
 - **Topics** in settings, not as constants spread through the code, so an environment can rename them.
 
 ## SASL and TLS
 
-```go
-func (s SASL) mechanism() (sasl.Mechanism, error) {
-	pass, err := readSecret(s.PasswordFile) // trims the trailing newline
-	if err != nil {
-		return nil, err
-	}
-	switch s.Mechanism {
-	case "SCRAM-SHA-512":
-		return scram.Auth{User: s.Username, Pass: pass}.AsSha512Mechanism(), nil
-	case "SCRAM-SHA-256":
-		return scram.Auth{User: s.Username, Pass: pass}.AsSha256Mechanism(), nil
-	case "PLAIN":
-		return plain.Auth{User: s.Username, Pass: pass}.AsMechanism(), nil
-	default:
-		return nil, fmt.Errorf("sasl.mechanism %q: want SCRAM-SHA-512, SCRAM-SHA-256 or PLAIN", s.Mechanism)
-	}
-}
-```
+The mechanism and TLS helpers (`mechanism`, `tlsConfig`) are in [config.md](config.md) ("The client options").
 
 - Packages: `github.com/twmb/franz-go/pkg/sasl/scram`, `.../sasl/plain`, `.../sasl/oauth` (OAUTHBEARER, with a token function that refreshes), `.../sasl/aws` (MSK IAM).
-- **SASL always; TLS when the network needs it.** SCRAM proves the password without sending it, so it is safe without TLS; PLAIN and OAUTHBEARER send the secret as it is and need TLS. TLS through `kgo.DialTLSConfig(&tls.Config{MinVersion: tls.VersionTLS12, RootCAs: pool})`; never `InsecureSkipVerify` (`sec-tls-verify`). A cluster with self-signed certificates gets its CA in `ca_file`. Without TLS the records themselves travel unencrypted: keep TLS on wherever the traffic leaves a network the team trusts.
+- **SASL always; TLS when the network needs it.** SCRAM proves the password without sending it, so it is safe without TLS; PLAIN and OAUTHBEARER send the secret as it is and need TLS. TLS through `kgo.DialTLSConfig(&tls.Config{MinVersion: tls.VersionTLS12, RootCAs: pool})`; never `InsecureSkipVerify` (`sec-tls-verify`). A cluster with self-signed certificates gets its CA in `tls.ca_file`; a client certificate (mTLS) goes in `tls.cert_file` and `tls.key_file`. Without TLS the records themselves travel unencrypted: keep TLS on wherever the traffic leaves a network the team trusts.
 - **The broker enforces it.** No `PLAINTEXT` listener reachable by services, an authorizer on, `allow.everyone.if.no.acl.found=false`, and ACLs per service principal: Write on the topics it produces to, Read on the topics and the group it consumes, Describe where `kadm` needs it.
 - The settings name the mechanism; the client doesn't guess. Rotation of a password file needs a restart unless the project wires a refreshing `scram.Sha512(func(ctx) (scram.Auth, error))`.
 
@@ -102,7 +70,7 @@ if err != nil && !errors.Is(err, kerr.TopicAlreadyExists) {
 tracer := kotel.NewTracer(
 	kotel.TracerProvider(tp),
 	kotel.TracerPropagator(propagation.TraceContext{}),
-	kotel.ConsumerGroup(cfg.Group),
+	kotel.ConsumerGroup(settings.Group), // the consumer's settings: cfg.Consumer(name)
 )
 cl, err := kgo.NewClient(append(opts, kgo.WithHooks(kotel.NewKotel(kotel.WithTracer(tracer)).Hooks()...))...)
 ```

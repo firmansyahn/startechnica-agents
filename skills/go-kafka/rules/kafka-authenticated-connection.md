@@ -27,31 +27,27 @@ if cfg.SASL.Mechanism != "" {
 **Correct:**
 
 ```go
-// validate runs when the settings load: no client is built without a login.
-func (c Config) validate() error {
-	switch c.SASL.Mechanism {
-	case "SCRAM-SHA-512", "SCRAM-SHA-256":
-	case "PLAIN":
-		if !c.TLS {
-			return errors.New("kafka.sasl.mechanism: PLAIN sends the password in clear; set kafka.tls: true or use SCRAM-SHA-512")
-		}
-	case "":
-		return errors.New("kafka.sasl.mechanism is required: every client logs in")
-	default:
-		return fmt.Errorf("kafka.sasl.mechanism %q: want SCRAM-SHA-512, SCRAM-SHA-256 or PLAIN", c.SASL.Mechanism)
-	}
-	if c.SASL.Username == "" || c.SASL.PasswordFile == "" {
-		return errors.New("kafka.sasl: username and password_file are required")
-	}
-	return nil
+// In the config package's validate, which runs when the settings load (references/config.md):
+// no client is built without a login.
+switch {
+case k.SASL.Mechanism == "":
+	return fail("sasl.mechanism is required: every client logs in (SCRAM-SHA-512, SCRAM-SHA-256, PLAIN)")
+case !slices.Contains(kafkaMechanisms, k.SASL.Mechanism):
+	return fail("sasl.mechanism %q: want one of SCRAM-SHA-512, SCRAM-SHA-256, PLAIN", k.SASL.Mechanism)
+case k.SASL.Mechanism == "PLAIN" && !k.TLS.Enabled:
+	return fail("sasl.mechanism PLAIN sends the password in clear: set kafka.tls.enabled or use SCRAM-SHA-512")
+case k.SASL.Username == "":
+	return fail("sasl.username is required")
+case (k.SASL.Password == "") == (k.SASL.PasswordFile == ""):
+	return fail("sasl.password and sasl.password_file are alternatives: set one")
 }
 
 // baseOpts always logs in.
-m, err := cfg.SASL.mechanism()
+mech, err := mechanism(cfg.SASL) // reads password_file
 if err != nil {
 	return nil, fmt.Errorf("kafka sasl: %w", err)
 }
-opts = append(opts, kgo.SASL(m))
+opts := []kgo.Opt{kgo.SeedBrokers(cfg.Brokers...), kgo.ClientID(cfg.ClientID), kgo.SASL(mech)}
 ```
 
 The client can only do its half. The broker must refuse anonymous clients itself: no `PLAINTEXT` listener reachable by services, an authorizer on, `allow.everyone.if.no.acl.found=false`, and ACLs per service principal (Write on its topics, Read on the topics and the group it consumes).

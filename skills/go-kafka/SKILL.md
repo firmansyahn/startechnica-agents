@@ -107,81 +107,59 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 
 The Platform package builds clients from the settings block; Domain code depends on a small interface it owns (`Publisher`), and consumer handlers live in the Surface layer next to the HTTP handlers: they decode, validate and call a Domain service ([go-project-layout](../go-project-layout/SKILL.md)).
 
+The settings are one `kafka` block: a shared connection and named consumers.
+
+```yaml
+kafka:
+  brokers: [kafka-0.example.com:9093, kafka-1.example.com:9093, kafka-2.example.com:9093]
+  client_id: orders-service        # required: the service's name, same on every replica
+  # instance: set per pod with -kafka-instance=$(POD_NAME); only for static membership and transactions
+  tls: {enabled: true, ca_file: /etc/kafka/ca.crt}   # optional; without it sasl.mechanism must be SCRAM
+  sasl:                            # required: every client logs in
+    mechanism: SCRAM-SHA-512
+    username: orders-service
+    password_file: /var/run/secrets/kafka/password
+  producer: {enabled: true, compression: zstd}
+  consumers:
+    billing:
+      group: billing-order-events  # fixed, this service's own
+      topics: [orders.v1]
+      start: earliest              # where a new group starts: earliest or latest
+```
+
+The config package decodes and checks it (`validate` refuses a missing client ID or login, PLAIN without TLS, a consumer without a group or a start, a group used twice); `internal/kafka` turns it into options that always carry the seeds, the client ID, the login and TLS when on:
+
 ```go
-// Package kafka builds the service's Kafka clients from its settings.
-package kafka
-
-// Config is the kafka settings block.
-type Config struct {
-	Brokers      []string      `koanf:"brokers"`       // seed brokers, host:port
-	ClientID     string        `koanf:"client_id"`     // required: the service's name, same on every replica
-	Group        string        `koanf:"group"`         // fixed consumer group, the service's own; empty for producers
-	Topics       []string      `koanf:"topics"`        // topics this consumer reads; require a group unless Broadcast
-	Broadcast    bool          `koanf:"broadcast"`     // every replica reads every record, no group (rare)
-	SASL         SASL          `koanf:"sasl"`          // required: every client logs in
-	TLS          bool          `koanf:"tls"`           // optional; without it SASL must be SCRAM
-	CAFile       string        `koanf:"ca_file"`       // empty: the system roots
-	DialTimeout  time.Duration `koanf:"dial_timeout"`  // default 10s
-}
-
-// validate runs when the settings load (kafka-authenticated-connection, kafka-client-id,
-// kafka-stable-consumer-group).
-func (c Config) validate() error {
-	if c.ClientID == "" {
-		return errors.New("kafka.client_id is required: the service's name, e.g. orders-service")
+// baseOpts are the options every client of the service shares: seeds, client ID, TLS and the login.
+func baseOpts(cfg config.Kafka, log *zap.Logger) ([]kgo.Opt, error) {
+	mech, err := mechanism(cfg.SASL) // SCRAM or PLAIN; reads password_file
+	if err != nil {
+		return nil, fmt.Errorf("kafka sasl: %w", err)
 	}
-	switch c.SASL.Mechanism {
-	case "SCRAM-SHA-512", "SCRAM-SHA-256":
-	case "PLAIN":
-		if !c.TLS {
-			return errors.New("kafka.sasl.mechanism: PLAIN sends the password in clear; set kafka.tls: true or use SCRAM-SHA-512")
-		}
-	case "":
-		return errors.New("kafka.sasl.mechanism is required: every client logs in")
-	default:
-		return fmt.Errorf("kafka.sasl.mechanism %q: want SCRAM-SHA-512, SCRAM-SHA-256 or PLAIN", c.SASL.Mechanism)
-	}
-	if c.SASL.Username == "" || c.SASL.PasswordFile == "" {
-		return errors.New("kafka.sasl: username and password_file are required")
-	}
-	switch {
-	case len(c.Topics) > 0 && c.Group == "" && !c.Broadcast:
-		return errors.New("kafka.group is required for a consumer (or set kafka.broadcast: true)")
-	case c.Broadcast && c.Group != "":
-		return errors.New("kafka.broadcast and kafka.group exclude each other")
-	}
-	return nil
-}
-
-func baseOpts(cfg Config, log *zap.Logger) ([]kgo.Opt, error) {
 	opts := []kgo.Opt{
 		kgo.SeedBrokers(cfg.Brokers...),
 		kgo.ClientID(cfg.ClientID),
 		kgo.DialTimeout(cfg.DialTimeout),
+		kgo.SASL(mech),
 		kgo.WithLogger(kzap.New(log.Named("kafka"), kzap.Level(kgo.LogLevelInfo))),
 	}
-	if cfg.TLS {
-		tc, err := cfg.tlsConfig() // MinVersion TLS 1.2, RootCAs from CAFile; never InsecureSkipVerify
+	if cfg.TLS.Enabled {
+		tc, err := tlsConfig(cfg.TLS) // TLS 1.2+, the CA, an optional client certificate; never InsecureSkipVerify
 		if err != nil {
 			return nil, fmt.Errorf("kafka tls: %w", err)
 		}
 		opts = append(opts, kgo.DialTLSConfig(tc))
 	}
-	m, err := cfg.SASL.mechanism() // always: SCRAM or PLAIN, password from a mounted file
-	if err != nil {
-		return nil, fmt.Errorf("kafka sasl: %w", err)
-	}
-	opts = append(opts, kgo.SASL(m))
 	return opts, nil
 }
 
-// NewProducer returns a producing client and checks that a broker answers.
-func NewProducer(ctx context.Context, cfg Config, log *zap.Logger) (*kgo.Client, error) {
-	opts, err := baseOpts(cfg, log)
+// NewProducer returns the producing client and checks that a broker answers (and the login works).
+func NewProducer(ctx context.Context, cfg config.Kafka, log *zap.Logger) (*kgo.Client, error) {
+	opts, err := ProducerOpts(cfg, log) // baseOpts plus the producer block; franz-go's safe defaults stay
 	if err != nil {
 		return nil, err
 	}
-	cl, err := kgo.NewClient(opts...) // defaults: acks=all, idempotent, linger 10ms, snappy
+	cl, err := kgo.NewClient(opts...)
 	if err != nil {
 		return nil, fmt.Errorf("kafka producer: %w", err)
 	}
@@ -192,6 +170,8 @@ func NewProducer(ctx context.Context, cfg Config, log *zap.Logger) (*kgo.Client,
 	return cl, nil
 }
 ```
+
+The whole block (structs, `validate` and what it refuses, `ProducerOpts`, `ConsumerOpts`, `TransactionalID`, TLS and SASL helpers) and its tests: [references/config.md](references/config.md).
 
 Producer settings, SASL, TLS, schemas, tracing and metrics: [references/producer.md](references/producer.md) and [references/operations.md](references/operations.md).
 
@@ -272,6 +252,7 @@ Handlers are plain functions over a decoded event: table tests, no broker. The l
 
 ## References
 
+- [references/config.md](references/config.md): the `kafka` settings block, `validate` and what it refuses, the client options, their tests
 - [references/producer.md](references/producer.md): producer options, async producing, batching and compression, settings named like the Java client, transactions
 - [references/consumer.md](references/consumer.md): commit strategies, rebalances, a worker per partition, retries and dead letters, exactly-once, lag
 - [references/operations.md](references/operations.md): settings and secrets, SASL and TLS, topics through `kadm` or infrastructure code, schemas and `sr`, logs, traces and metrics

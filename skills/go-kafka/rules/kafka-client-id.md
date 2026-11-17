@@ -23,9 +23,9 @@ opts := []kgo.Opt{
 **Correct:**
 
 ```go
-// in validate
-if c.ClientID == "" {
-	return errors.New("kafka.client_id is required: the service's name, e.g. orders-service")
+// in the config package's validate (references/config.md)
+if k.ClientID == "" {
+	return fail("client_id is required: the service's name, e.g. orders-service")
 }
 
 // in baseOpts
