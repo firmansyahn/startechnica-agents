@@ -107,13 +107,23 @@ fi
 g "$LIST" 'if[[:space:]].*\.Mechanism[[:space:]]*(!=|==)[[:space:]]*""' | emit kafka-authenticated-connection
 
 # --- kafka-stable-consumer-group ------------------------------------------------------------------
-# a group ID generated at start: on the ConsumerGroup line, or earlier in the same function
+# a group ID generated at start: on the ConsumerGroup line, or through a variable assigned from a
+# generated value earlier in the same function (a pod name in InstanceID is fine and not flagged)
+export SC_GEN='(uuid\.|UUID|rand\.|[Hh]ostname|HOSTNAME|POD_NAME|time\.Now|Getpid)'
 a "$KGO" '
-  FNR==1 { gen=0 }
+  BEGIN { gen=ENVIRON["SC_GEN"] }
+  FNR==1 { vars="" }
   /^[[:space:]]*\/\// { next }
-  /^func[[:space:]]/ { gen=0 }
-  /(uuid\.|UUID|rand\.|[Hh]ostname|HOSTNAME|POD_NAME|time\.Now|Getpid)/ { gen=1 }
-  gen && /ConsumerGroup\(/ { print FILENAME ":" FNR ": " $0 "  (group ID built from a generated value)" }
+  /^func[[:space:]]/ { vars="" }
+  /ConsumerGroup\(/ {
+    hit = ($0 ~ gen); n = split(vars, v, " ")
+    for (i = 1; i <= n; i++) if ($0 ~ ("[^A-Za-z0-9_]" v[i] "[^A-Za-z0-9_]")) hit = 1
+    if (hit) print FILENAME ":" FNR ": " $0 "  (group ID built from a generated value)"
+    next
+  }
+  $0 ~ gen && /:?=/ && match($0, /^[[:space:]]*[A-Za-z_][A-Za-z0-9_]*/) {
+    name = substr($0, RSTART, RLENGTH); gsub(/[[:space:]]/, "", name); vars = vars " " name
+  }
 ' | emit kafka-stable-consumer-group
 # a file that consumes with neither a group nor an explicit start offset
 for f in $(files "$KGO" '(ConsumeTopics|ConsumePartitions|ConsumeRegex)\('); do

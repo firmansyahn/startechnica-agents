@@ -131,14 +131,19 @@ func (r *Relay) relayOnce(ctx context.Context) (int, error) {
 
 Exactly-once covers records produced and offsets committed to Kafka together. Use it for consume-transform-produce between topics (an enrichment or routing service), through `kgo.NewGroupTransactSession`; consumers of its output read with `kgo.FetchIsolationLevel(kgo.ReadCommitted())`.
 
+The transactional ID must be **unique per running instance** and stable across that instance's restarts, so give each replica its own, e.g. `<service>-enricher-<pod name>` from a StatefulSet, set by the deployment in a `transactional_id` setting. Two replicas with the same ID fence each other: the broker treats the newer one as the replacement and the older one fails with a fenced-producer error. (The client ID, the same on every replica, can't serve as it.)
+
 ```go
-sess, err := kgo.NewGroupTransactSession(
-	kgo.SeedBrokers(cfg.Brokers...),
-	kgo.TransactionalID(cfg.ClientID+"-enricher"), // stable per instance
+opts, err := baseOpts(cfg, log) // seeds, client ID, TLS and the SASL login
+if err != nil {
+	return err
+}
+sess, err := kgo.NewGroupTransactSession(append(opts,
+	kgo.TransactionalID(cfg.TransactionalID), // unique per instance: "<service>-enricher-<pod name>"
 	kgo.FetchIsolationLevel(kgo.ReadCommitted()),
-	kgo.ConsumerGroup("order-enricher"),
-	kgo.ConsumeTopics("orders.v1"),
-)
+	kgo.ConsumerGroup(cfg.Group), // "order-enricher", shared by all replicas
+	kgo.ConsumeTopics(cfg.Topics...),
+)...)
 if err != nil {
 	return fmt.Errorf("transact session: %w", err)
 }
