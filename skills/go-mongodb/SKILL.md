@@ -1,12 +1,12 @@
 ---
 name: go-mongodb
-description: "Use when writing, changing, reviewing or testing MongoDB access in a Go service with the official driver (go.mongodb.org/mongo-driver/v2): connecting, the one Client and its pool, timeouts (CSOT, SetTimeout, context deadlines), document structs and bson tags, ObjectID, filters, updates, upserts, bulk writes, aggregation, cursors, pagination, indexes, unique keys, transactions and sessions, write and read concerns, read preference, change streams and resume tokens, OpenTelemetry (otelmongo), tests against a real MongoDB, and migrating from driver v1 to v2. One Client per process disconnected on shutdown, every call with the request's context, cursors closed, filters built from typed values (no operator injection), ErrNoDocuments and duplicate keys translated in the store, an index declared for every query, bounded keyset pages, WithTransaction with its own context. Names the vendored mongodb-schema-design and mongodb-query-optimizer skills. Holds the mongo-* rules."
+description: "Use when writing, changing, reviewing or testing MongoDB access in a Go service with the official driver (go.mongodb.org/mongo-driver/v2): connecting and the settings block, logging in (required; TLS optional, PLAIN only over TLS), the app name, the one Client and its pool, timeouts (CSOT, context deadlines), document structs and bson tags, filters, updates, upserts, bulk writes, aggregation, cursors, pagination, indexes, transactions, write and read concerns, change streams, OpenTelemetry (otelmongo), tests against a real MongoDB, and migrating from driver v1 to v2. One Client per process, every call with the request's context, cursors closed, filters from typed values (no operator injection), driver errors translated in the store, an index declared for every query, bounded keyset pages, WithTransaction with its own context. Names the vendored mongodb-schema-design and mongodb-query-optimizer skills. Holds the mongo-* rules."
 user-invocable: true
 license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects on MongoDB with mongo-driver v2.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Go and MongoDB (team)
@@ -33,6 +33,8 @@ Related: [go-database](../go-database/SKILL.md) (the same stance for PostgreSQL:
 
 - **Where it lives:** one Platform package owns MongoDB (`internal/platform/mongostore` or the project's equivalent): the Client, the collections, the document structs, the indexes. Domain packages call its methods; Surface packages never import the driver.
 - **One Client per process**, opened and pinged in `run()`, injected, disconnected once on shutdown (`mongo-one-client`).
+- **Login is required, TLS is optional:** every client logs in, in every environment, with credentials from the settings' `auth` block or the URI; the store refuses options without a login. Without TLS the mechanism is SCRAM; PLAIN only over TLS. The server has authorization on and gives the service one least-privilege user (`mongo-authenticated-connection`).
+- **App name required:** every client sets `SetAppName` with the service's name from the settings, the same on every replica; it labels connections in the server's logs and `currentOp`, and is not an identity (`mongo-app-name`).
 - **Every call takes the caller's `ctx`**, and the Client sets `SetTimeout` for calls without a deadline (`mongo-context-deadline`).
 - **Cursors** are read with `cur.All` or closed with `defer cur.Close(ctx)` and checked with `cur.Err()` (`mongo-close-cursor`).
 - **Filters and updates are built from typed values** under keys the code names; no request document becomes a filter, an update or a pipeline; no `$where` (`mongo-no-operator-injection`).
@@ -58,7 +60,7 @@ Related: [go-database](../go-database/SKILL.md) (the same stance for PostgreSQL:
 4. **IDs:** `_id` is a `bson.ObjectID` made in code (`bson.NewObjectID()`), unless the project already uses UUIDv7 across its stores. Secrets are separate random fields, never IDs.
 5. **Schema and indexes change through code review:** indexes and validators are declared in the store's `EnsureIndexes` or the project's migration step, never made by hand in one environment. The vendored skills' MCP workflows are for reading (explain, indexes, sample documents, Performance Advisor); an agent never creates or drops an index, validator or collection through an MCP server, even with approval: it writes the change into the code.
 6. **Observability:** traces through `otelmongo.NewMonitor()` on the Client; pool events counted as metrics; the driver's own logger off unless debugging; the service logs with zap (`go-observability`). No command documents in logs.
-7. **Settings** come from the `mongodb` block of the service's config (koanf), the URI treated as a secret (references/connection.md).
+7. **Settings** come from the `mongodb` block of the service's config (koanf): the URI (hosts, replica set, TLS options), the app name, the database, and the login in an `auth` block with a mounted `password_file`, or in the URI, which is then a secret read from `uri_file` ([references/connection.md](references/connection.md), "Settings").
 
 ## Rules
 
@@ -67,6 +69,7 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 | ID | Rule | Impact | Check |
 |---|---|---|---|
 | [mongo-no-operator-injection](rules/mongo-no-operator-injection.md) | Build filters and updates from typed values, never from request documents | CRITICAL | scan (candidates), review |
+| [mongo-authenticated-connection](rules/mongo-authenticated-connection.md) | Always log in; TLS is optional, PLAIN only over it | CRITICAL | scan (candidates), test, review |
 | [mongo-one-client](rules/mongo-one-client.md) | Create one Client per process and disconnect it on shutdown | HIGH | scan (candidates), review |
 | [mongo-context-deadline](rules/mongo-context-deadline.md) | Run every operation with the request's context and a client-wide timeout | HIGH | scan, review |
 | [mongo-close-cursor](rules/mongo-close-cursor.md) | Close every cursor and check its error | HIGH | scan, review |
@@ -74,6 +77,7 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 | [mongo-with-transaction](rules/mongo-with-transaction.md) | Run multi-document transactions through WithTransaction with its context | HIGH | scan, review |
 | [mongo-translate-driver-errors](rules/mongo-translate-driver-errors.md) | Translate ErrNoDocuments and duplicate keys into domain errors in the store | MEDIUM | scan (candidates), review |
 | [mongo-bounded-reads](rules/mongo-bounded-reads.md) | Bound every list read with a limit, a projection and keyset pagination | MEDIUM | scan (candidates), review |
+| [mongo-app-name](rules/mongo-app-name.md) | Name every client with the service's app name | MEDIUM | scan (candidates), test, review |
 
 ## Reviewing
 
@@ -87,6 +91,8 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 
 - [ ] No request document used as a filter, update, sort or pipeline; no `$where`/`$function`
 - [ ] Tenant in every filter; soft-deleted documents excluded
+- [ ] Every client logs in: credentials in the `auth` block or the URI, never neither; PLAIN only with TLS; no literal URI in code
+- [ ] `SetAppName` with the service's name from the settings; `validate` refuses an empty `app_name`
 - [ ] One Client, injected, disconnected on shutdown; `SetTimeout` set
 - [ ] Every call with the caller's `ctx`; background work with its own deadline
 - [ ] Cursors read with `All` or closed and `Err()` checked
@@ -107,13 +113,12 @@ type Store struct {
 }
 
 func Open(ctx context.Context, cfg config.MongoDB) (*Store, error) {
-	client, err := mongo.Connect(options.Client().
-		ApplyURI(cfg.URI).
-		SetAppName("<app>").
-		SetTimeout(cfg.Timeout).                               // bound for calls without a deadline
-		SetServerSelectionTimeout(cfg.ServerSelectionTimeout). // fail over in seconds, not 30s
-		SetWriteConcern(writeconcern.Majority()).
-		SetMonitor(otelmongo.NewMonitor()))
+	// URI or uri_file, the login (refused when missing), app name, timeouts, pool, majority writes
+	opts, err := ClientOptions(cfg) // references/connection.md
+	if err != nil {
+		return nil, err
+	}
+	client, err := mongo.Connect(opts.SetMonitor(otelmongo.NewMonitor()))
 	if err != nil {
 		return nil, fmt.Errorf("mongodb connect: %w", err)
 	}

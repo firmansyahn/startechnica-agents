@@ -1,12 +1,12 @@
 ---
 name: go-kafka
-description: "Use when a Go service produces to or consumes from Kafka or a Kafka-compatible broker (Redpanda, managed Kafka) with franz-go (github.com/twmb/franz-go, kgo, kadm, sr): building the client, producer settings (acks, idempotence, linger, compression), ProduceSync versus Produce with a promise, Flush, record keys for per-entity ordering, headers, consumer groups and PollFetches, checking fetch errors, committing offsets after processing (DisableAutoCommit, AutoCommitMarks, MarkCommitRecords), rebalances and OnPartitionsRevoked, a worker per partition, retries and dead-letter topics, idempotent handlers, the transactional outbox, exactly-once with GroupTransactSession, schemas and the schema registry, topic creation, SASL and TLS, lag, metrics, tracing (kotel, kprom, kzap), graceful shutdown, and tests with kfake or a broker in a container. Also when choosing a Go Kafka client (franz-go versus sarama, segmentio/kafka-go, confluent-kafka-go) or reviewing Kafka code. Holds the kafka-* rules."
+description: "Use when a Go service produces to or consumes from Kafka or a Kafka-compatible broker (Redpanda, managed Kafka) with franz-go (github.com/twmb/franz-go, kgo, kadm, sr): building the client, producer settings (acks, idempotence, linger, compression), ProduceSync versus Produce with a promise, Flush, record keys for ordering, consumer group IDs (fixed, per service, or none for a broadcast consumer), PollFetches and fetch errors, committing offsets after processing (DisableAutoCommit, AutoCommitMarks), rebalances, a worker per partition, retries and dead-letter topics, idempotent handlers, the transactional outbox, exactly-once, schemas and the schema registry, topic creation, login (SASL required, TLS optional), lag, metrics, tracing (kotel, kprom, kzap), graceful shutdown, and tests with kfake or a broker in a container. Also when choosing a Go Kafka client (franz-go versus sarama, segmentio/kafka-go, confluent-kafka-go) or reviewing Kafka code. Holds the kafka-* rules."
 user-invocable: true
 license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go services that talk to Kafka-protocol brokers with franz-go v1.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Kafka from Go (team)
@@ -30,6 +30,9 @@ Related: [go-concurrency](../go-concurrency/SKILL.md) (goroutine owners, context
 ## The team's rules
 
 - **One long-lived client per role**, built once in the Platform package (`internal/kafka`) from the settings block and handed to constructors. Never a client per request or per message.
+- **Login is required, TLS is optional:** every client authenticates with SASL in every environment, and the settings check refuses a missing mechanism or password. Without TLS the mechanism is SCRAM (SHA-512 or SHA-256); PLAIN and OAUTHBEARER only over TLS. The broker refuses anonymous clients and grants each service only its topics and group.
+- **Client ID required:** every client sends the service's name as its client ID (`kgo.ClientID`), the same on every replica; the settings check refuses an empty one. It labels requests in broker logs, metrics and quotas; it is not an identity, which is the SASL user.
+- **Consumer groups:** a consumer that processes work joins a group whose ID comes from the settings, names the service and purpose, stays fixed across restarts and is used by no other service. No group only when every replica must read every record, on purpose and with an explicit start offset. Producers have no group.
 - **Producing:** acks from all in-sync replicas and idempotence stay on (franz-go's defaults). Every produce result is checked: `ProduceSync(...).FirstErr()`, or a promise that handles `err`. A request path that must not lose the event uses `ProduceSync`, or the outbox.
 - **Keys:** a record about an entity carries that entity's ID as its key, so its events stay in order on one partition.
 - **Consuming:** every poll checks `fetches.Errors()`; an offset is committed only after its record is processed; handlers tolerate a record delivered twice.
@@ -64,9 +67,12 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 | [kafka-check-errors](rules/kafka-check-errors.md) | Check every produce result and every fetch error | CRITICAL | scan, review |
 | [kafka-commit-after-processing](rules/kafka-commit-after-processing.md) | Commit an offset only after its record is processed | CRITICAL | scan (candidates), review |
 | [kafka-outbox-for-db-writes](rules/kafka-outbox-for-db-writes.md) | Publish database changes through a transactional outbox | CRITICAL | review |
+| [kafka-authenticated-connection](rules/kafka-authenticated-connection.md) | Always log in with SASL; TLS is optional, PLAIN only over it | CRITICAL | scan (candidates), test, review |
+| [kafka-stable-consumer-group](rules/kafka-stable-consumer-group.md) | Consume work in a fixed consumer group of the service's own | HIGH | scan (candidates), test, review |
 | [kafka-durable-writes](rules/kafka-durable-writes.md) | Keep all-ISR acks and idempotence; declare topics explicitly | HIGH | scan |
 | [kafka-key-for-ordering](rules/kafka-key-for-ordering.md) | Key records by the entity whose order matters | HIGH | review |
 | [kafka-idempotent-handler](rules/kafka-idempotent-handler.md) | Make every handler safe to run twice for one record | HIGH | review, test |
+| [kafka-client-id](rules/kafka-client-id.md) | Name every client with the service's client ID | MEDIUM | scan (candidates), test, review |
 | [kafka-poison-message-dlq](rules/kafka-poison-message-dlq.md) | Retry a bounded number of times, then dead-letter and move on | HIGH | review |
 | [kafka-bounded-concurrency](rules/kafka-bounded-concurrency.md) | Process with one worker per partition, never a goroutine per record | HIGH | scan (candidates), review |
 | [kafka-graceful-shutdown](rules/kafka-graceful-shutdown.md) | Stop polling, finish, commit, flush, then close | HIGH | scan (candidates), review |
@@ -91,60 +97,69 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 - [ ] Bounded retries, then a dead-letter topic; no infinite retry, no silent skip
 - [ ] One worker per partition or a fixed pool; no `go` per record
 - [ ] Database writes that must be announced go through the outbox
-- [ ] Credentials from settings or a mounted file, TLS verified, nothing secret logged
+- [ ] Every client logs in with SASL; `validate` refuses no mechanism, and PLAIN or OAUTHBEARER without TLS
+- [ ] Every client sends `kgo.ClientID` with the service's name; `validate` refuses an empty `client_id`
+- [ ] Credentials from settings or a mounted file, TLS verified when on, nothing secret logged
+- [ ] Each consumer of work has a fixed group ID from the settings, its own; no group only for a commented broadcast consumer with `ConsumeStartOffset`
 - [ ] Tests: handler unit tests, the loop against `kfake` or a real broker; no `time.Sleep` waits
 
 ## 1. The client
 
 The Platform package builds clients from the settings block; Domain code depends on a small interface it owns (`Publisher`), and consumer handlers live in the Surface layer next to the HTTP handlers: they decode, validate and call a Domain service ([go-project-layout](../go-project-layout/SKILL.md)).
 
+The settings are one `kafka` block: a shared connection and named consumers.
+
+```yaml
+kafka:
+  brokers: [kafka-0.example.com:9093, kafka-1.example.com:9093, kafka-2.example.com:9093]
+  client_id: orders-service        # required: the service's name, same on every replica
+  # instance: set per pod with -kafka-instance=$(POD_NAME); only for static membership and transactions
+  tls: {enabled: true, ca_file: /etc/kafka/ca.crt}   # optional; without it sasl.mechanism must be SCRAM
+  sasl:                            # required: every client logs in
+    mechanism: SCRAM-SHA-512
+    username: orders-service
+    password_file: /var/run/secrets/kafka/password
+  producer: {enabled: true, compression: zstd}
+  consumers:
+    billing:
+      group: billing-order-events  # fixed, this service's own
+      topics: [orders.v1]
+      start: earliest              # where a new group starts: earliest or latest
+```
+
+The config package decodes and checks it (`validate` refuses a missing client ID or login, PLAIN without TLS, a consumer without a group or a start, a group used twice); `internal/kafka` turns it into options that always carry the seeds, the client ID, the login and TLS when on:
+
 ```go
-// Package kafka builds the service's Kafka clients from its settings.
-package kafka
-
-// Config is the kafka settings block.
-type Config struct {
-	Brokers      []string      `koanf:"brokers"`       // seed brokers, host:port
-	ClientID     string        `koanf:"client_id"`     // shows up in broker logs and quotas
-	Group        string        `koanf:"group"`         // consumer group; empty for producers
-	Topics       []string      `koanf:"topics"`        // topics this consumer reads
-	SASL         SASL          `koanf:"sasl"`
-	TLS          bool          `koanf:"tls"`
-	CAFile       string        `koanf:"ca_file"`       // empty: the system roots
-	DialTimeout  time.Duration `koanf:"dial_timeout"`  // default 10s
-}
-
-func baseOpts(cfg Config, log *zap.Logger) ([]kgo.Opt, error) {
+// baseOpts are the options every client of the service shares: seeds, client ID, TLS and the login.
+func baseOpts(cfg config.Kafka, log *zap.Logger) ([]kgo.Opt, error) {
+	mech, err := mechanism(cfg.SASL) // SCRAM or PLAIN; reads password_file
+	if err != nil {
+		return nil, fmt.Errorf("kafka sasl: %w", err)
+	}
 	opts := []kgo.Opt{
 		kgo.SeedBrokers(cfg.Brokers...),
 		kgo.ClientID(cfg.ClientID),
 		kgo.DialTimeout(cfg.DialTimeout),
+		kgo.SASL(mech),
 		kgo.WithLogger(kzap.New(log.Named("kafka"), kzap.Level(kgo.LogLevelInfo))),
 	}
-	if cfg.TLS {
-		tc, err := cfg.tlsConfig() // MinVersion TLS 1.2, RootCAs from CAFile; never InsecureSkipVerify
+	if cfg.TLS.Enabled {
+		tc, err := tlsConfig(cfg.TLS) // TLS 1.2+, the CA, an optional client certificate; never InsecureSkipVerify
 		if err != nil {
 			return nil, fmt.Errorf("kafka tls: %w", err)
 		}
 		opts = append(opts, kgo.DialTLSConfig(tc))
 	}
-	if cfg.SASL.Mechanism != "" {
-		m, err := cfg.SASL.mechanism() // SCRAM-SHA-512 or PLAIN, password from a mounted file
-		if err != nil {
-			return nil, fmt.Errorf("kafka sasl: %w", err)
-		}
-		opts = append(opts, kgo.SASL(m))
-	}
 	return opts, nil
 }
 
-// NewProducer returns a producing client and checks that a broker answers.
-func NewProducer(ctx context.Context, cfg Config, log *zap.Logger) (*kgo.Client, error) {
-	opts, err := baseOpts(cfg, log)
+// NewProducer returns the producing client and checks that a broker answers (and the login works).
+func NewProducer(ctx context.Context, cfg config.Kafka, log *zap.Logger) (*kgo.Client, error) {
+	opts, err := ProducerOpts(cfg, log) // baseOpts plus the producer block; franz-go's safe defaults stay
 	if err != nil {
 		return nil, err
 	}
-	cl, err := kgo.NewClient(opts...) // defaults: acks=all, idempotent, linger 10ms, snappy
+	cl, err := kgo.NewClient(opts...)
 	if err != nil {
 		return nil, fmt.Errorf("kafka producer: %w", err)
 	}
@@ -155,6 +170,8 @@ func NewProducer(ctx context.Context, cfg Config, log *zap.Logger) (*kgo.Client,
 	return cl, nil
 }
 ```
+
+The whole block (structs, `validate` and what it refuses, `ProducerOpts`, `ConsumerOpts`, `TransactionalID`, TLS and SASL helpers) and its tests: [references/config.md](references/config.md).
 
 Producer settings, SASL, TLS, schemas, tracing and metrics: [references/producer.md](references/producer.md) and [references/operations.md](references/operations.md).
 
@@ -231,10 +248,11 @@ producer.Close()                  // Close fails whatever is still buffered
 
 ## 5. Testing
 
-Handlers are plain functions over a decoded event: table tests, no broker. The loop and its commits run against `kfake` in the same process; transactions, SASL and broker configs against a broker in a container. Setup, helpers and what to assert: [references/testing.md](references/testing.md).
+Handlers are plain functions over a decoded event: table tests, no broker. The loop, its commits and the SASL login run against `kfake` in the same process, with SASL on; transactions, TLS, ACLs and broker configs against a broker in a container. Setup, helpers and what to assert: [references/testing.md](references/testing.md).
 
 ## References
 
+- [references/config.md](references/config.md): the `kafka` settings block, `validate` and what it refuses, the client options, their tests
 - [references/producer.md](references/producer.md): producer options, async producing, batching and compression, settings named like the Java client, transactions
 - [references/consumer.md](references/consumer.md): commit strategies, rebalances, a worker per partition, retries and dead letters, exactly-once, lag
 - [references/operations.md](references/operations.md): settings and secrets, SASL and TLS, topics through `kadm` or infrastructure code, schemas and `sr`, logs, traces and metrics

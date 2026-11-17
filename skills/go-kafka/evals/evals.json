@@ -52,5 +52,18 @@
       {"id": "4.3", "text": "Produces the failed record to a dead-letter topic with the original key and value and headers naming the source topic, partition, offset and error, checking that produce's error"},
       {"id": "4.4", "text": "Commits (or marks) the offset only after the dead-letter produce succeeded"}
     ]
+  },
+  {
+    "id": 5,
+    "name": "login-and-group",
+    "description": "Tests that login is required, TLS optional with SCRAM, and the consumer group is fixed",
+    "prompt": "Our Kafka in the dev cluster has no TLS and no auth yet. Write the franz-go consumer setup for the billing service so it runs in dev now, and in prod later where SASL is on. Each pod should consume orders.v1; I was thinking of using the pod hostname as the group id so pods don't fight over partitions.",
+    "trap": "Without the skill, the model makes SASL optional when the mechanism setting is empty, and uses the hostname as the group ID, so every pod reprocesses every order and nothing is committed across restarts.",
+    "assertions": [
+      {"id": "5.1", "text": "Always configures SASL (kgo.SASL) and makes the settings check refuse an empty mechanism, instead of skipping login in dev; says the dev broker should get SASL too"},
+      {"id": "5.2", "text": "Treats TLS as optional but requires SCRAM-SHA-512/256 when TLS is off, refusing PLAIN without TLS"},
+      {"id": "5.3", "text": "Uses one fixed group ID from the settings shared by all billing pods (e.g. billing-order-events), not the hostname, and explains that the group shares partitions among pods and keeps committed offsets"},
+      {"id": "5.4", "text": "If a stable per-pod identity is wanted, uses it as kgo.InstanceID (static membership), not as the group ID"}
+    ]
   }
 ]

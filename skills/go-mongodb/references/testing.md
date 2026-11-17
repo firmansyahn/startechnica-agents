@@ -6,6 +6,7 @@ Read with [SKILL.md](../SKILL.md) and `go-testing` (`test-real-database`) when w
 
 - **A real MongoDB, no mocked driver.** Store code is tested against a real server: a mocked `Collection` passes while the real filter has a wrong key, a missing index or an operator the server rejects. The driver's `mtest` package is internal in v2 and not for applications; interface fakes of the store are for testing the services above it, not the store.
 - **A single-node replica set**, so transactions and change streams work as in production.
+- **Authorization on**, with a test user in the URI, so the store logs in as it does in production; a CI server from `MONGODB_TEST_URI` carries credentials too. A test of `ClientOptions` (no server needed) covers the refusals: an anonymous URI, PLAIN without TLS, credentials in both places.
 - **One database per test**, named from random bytes and dropped in cleanup, so tests can run with `t.Parallel()` against one server.
 - **The same `EnsureIndexes`** the service runs, so unique indexes and query plans are tested too.
 
@@ -32,7 +33,13 @@ func URI(t *testing.T) string {
 	}
 	once.Do(func() {
 		var ctr *mongodb.MongoDBContainer
-		ctr, err = mongodb.Run(context.Background(), "mongo:8.0", mongodb.WithReplicaSet("rs0"))
+		// Authorization on, as in production (mongo-authenticated-connection): the module creates
+		// the root user, sets up the replica set's key file, and puts the login in the URI.
+		ctr, err = mongodb.Run(context.Background(), "mongo:8.0",
+			mongodb.WithReplicaSet("rs0"),
+			mongodb.WithUsername("orders-test"),
+			mongodb.WithPassword("test-secret"),
+		)
 		if err == nil {
 			uri, err = ctr.ConnectionString(context.Background())
 		}
@@ -50,7 +57,8 @@ func Open(t *testing.T) *mongostore.Store {
 	b := make([]byte, 6)
 	_, _ = rand.Read(b)
 	cfg := mongostore.Defaults()
-	cfg.URI = URI(t)
+	cfg.URI = URI(t) // holds the test user's login
+	cfg.AppName = "orders-test"
 	cfg.Database = "test_" + hex.EncodeToString(b)
 
 	ctx := t.Context()

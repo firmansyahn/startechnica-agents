@@ -7,8 +7,10 @@ Part of [go-kafka](../SKILL.md); its rules win where this file is less strict. T
 | Level | Runs against | Proves | Doesn't prove |
 |---|---|---|---|
 | Handler | nothing: a decoded event in, effects out (a real database where the handler writes one, `test-real-database`) | Decoding, validation, the Domain call, idempotency (`kafka-idempotent-handler`), which errors are permanent | Anything about offsets |
-| Client wiring | `kfake`, in the test process | The poll loop, commits after processing, the dead-letter path, rebalances between two members, shutdown order | Broker configs, ACLs, SASL, real transaction markers |
-| Broker | the broker image production runs, through testcontainers | Transactions end to end, SASL and TLS settings, topic configs, compaction | Production sizing |
+| Client wiring | `kfake`, in the test process, with SASL on | The SASL login, the poll loop, commits after processing, the dead-letter path, rebalances between two members, shutdown order | Broker configs, the production ACLs, TLS, real transaction markers |
+| Broker | the broker image production runs, through testcontainers, with SASL on | Transactions end to end, the login against a real authorizer, TLS settings, topic configs, compaction | Production sizing |
+
+Tests log in like production (`kafka-authenticated-connection`): an unauthenticated test cluster would let a client that skips the login pass.
 
 All three run in plain `go test ./...` and block the merge. The broker level may sit behind the project's existing switch for container tests (an env var naming the Docker host); it is never skipped silently in CI.
 
@@ -17,10 +19,20 @@ All three run in plain `go test ./...` and block the merge. The broker level may
 ## A kfake cluster per test
 
 ```go
-// newCluster starts a one-broker fake cluster with the topics, closed on cleanup.
+const (
+	testUser = "orders-test"
+	testPass = "test-secret"
+)
+
+// newCluster starts a one-broker fake cluster with SASL on and the topics, closed on cleanup.
 func newCluster(t *testing.T, partitions int32, topics ...string) []string {
 	t.Helper()
-	c, err := kfake.NewCluster(kfake.NumBrokers(1), kfake.SeedTopics(partitions, topics...))
+	c, err := kfake.NewCluster(
+		kfake.NumBrokers(1),
+		kfake.EnableSASL(),
+		kfake.Superuser("SCRAM-SHA-512", testUser, testPass),
+		kfake.SeedTopics(partitions, topics...),
+	)
 	if err != nil {
 		t.Fatalf("kfake: %v", err)
 	}
@@ -28,12 +40,39 @@ func newCluster(t *testing.T, partitions int32, topics ...string) []string {
 	return c.ListenAddrs()
 }
 
+// testConfig is the kafka settings block for a test: the login with the password in a file, as
+// production mounts it, and one consumer with every value validate would otherwise fill in.
+func testConfig(t *testing.T, brokers []string) config.Kafka {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "password")
+	if err := os.WriteFile(path, []byte(testPass+"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	return config.Kafka{
+		Brokers:     brokers,
+		ClientID:    "billing-test",
+		DialTimeout: 5 * time.Second,
+		SASL:        config.KafkaSASL{Mechanism: "SCRAM-SHA-512", Username: testUser, PasswordFile: path},
+		Consumers: map[string]config.KafkaConsumer{
+			"billing": {
+				Group: "billing-test", Topics: []string{"orders.v1"}, Start: "earliest",
+				MaxPollRecords:  100,
+				Retry:           config.KafkaRetry{Attempts: 2, Backoff: 10 * time.Millisecond, MaxBackoff: 20 * time.Millisecond},
+				DeadLetterTopic: "orders.v1.dlq",
+			},
+		},
+	}
+}
+
 func TestConsumerCommitsAfterHandling(t *testing.T) {
 	t.Parallel()
 	brokers := newCluster(t, 3, "orders.v1", "orders.v1.dlq")
 	ctx := t.Context()
 
-	producer, err := kgo.NewClient(kgo.SeedBrokers(brokers...))
+	producer, err := kgo.NewClient(
+		kgo.SeedBrokers(brokers...),
+		kgo.SASL(scram.Auth{User: testUser, Pass: testPass}.AsSha512Mechanism()),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,8 +89,7 @@ func TestConsumerCommitsAfterHandling(t *testing.T) {
 		handled <- string(r.Key)
 		return nil
 	}
-	cfg := kafka.Config{Brokers: brokers, Group: "billing-test", Topics: []string{"orders.v1"}}
-	c, err := kafka.NewConsumer(cfg, producer, handler, zaptest.NewLogger(t))
+	c, err := kafka.NewConsumer(testConfig(t, brokers), "billing", producer, handler, zaptest.NewLogger(t))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -98,7 +136,13 @@ func TestConsumerCommitsAfterHandling(t *testing.T) {
 ```go
 func startBroker(t *testing.T) []string {
 	t.Helper()
-	ctr, err := redpanda.Run(t.Context(), "docker.redpanda.com/redpandadata/redpanda:<version production runs>")
+	// SASL on, with a SCRAM-SHA-256 service account as the superuser.
+	ctr, err := redpanda.Run(t.Context(), "docker.redpanda.com/redpandadata/redpanda:<version production runs>",
+		redpanda.WithEnableSASL(),
+		redpanda.WithEnableKafkaAuthorization(),
+		redpanda.WithNewServiceAccount(testUser, testPass),
+		redpanda.WithSuperusers(testUser),
+	)
 	testcontainers.CleanupContainer(t, ctr)
 	if err != nil {
 		t.Fatalf("start broker: %v", err)
@@ -112,5 +156,6 @@ func startBroker(t *testing.T) []string {
 ```
 
 - Apache Kafka: `github.com/testcontainers/testcontainers-go/modules/kafka` (`kafka.Run(ctx, image, kafka.WithClusterID("test"))`, then `ctr.Brokers(ctx)`). Redpanda: `modules/redpanda` (`redpanda.Run`, `KafkaSeedBroker`, `SchemaRegistryAddress`). Use the broker production runs, at its version.
+- Clients of the container log in with `SCRAM-SHA-256` (`scram.Auth{...}.AsSha256Mechanism()`, or `testConfig` with that mechanism). To test the service's own ACLs, add a second, non-super account and grant it only what production grants.
 - One container per package (started in `TestMain` or a `sync.OnceValue`), with a unique topic and group name per test, keeps the suite fast.
 - Create topics in the test with `kadm`, as production does; don't turn on auto-creation to save a line.

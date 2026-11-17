@@ -6,7 +6,7 @@ Part of [go-kafka](../SKILL.md); its rules win where this file is less strict.
 
 | franz-go option | Default | Java client name | Team guidance |
 |---|---|---|---|
-| `ConsumerGroup(g)`, `ConsumeTopics(t...)` | none | `group.id`, `subscribe` | One group per service and purpose (`billing-order-events`) |
+| `ConsumerGroup(g)`, `ConsumeTopics(t...)` | none | `group.id`, `subscribe` | One fixed group per service and purpose (`billing-order-events`), from the settings (`kafka-stable-consumer-group`) |
 | `Balancers(...)` | cooperative-sticky | `partition.assignment.strategy` | Keep. Moving a live group between eager and cooperative needs a rollout plan (KIP-429) |
 | `ConsumeStartOffset(o)` | `NewOffset().AtStart()` | `auto.offset.reset` (for a new group) | franz-go starts a new group at the **earliest** record, Java at the latest. Decide per consumer and write it down: a new projection usually wants the history, a notifier usually doesn't (`AtEnd()`) |
 | `ConsumeResetOffset(o)` | rewind one minute | `auto.offset.reset` (on lost data) | Keep |
@@ -15,6 +15,19 @@ Part of [go-kafka](../SKILL.md); its rules win where this file is less strict.
 | `InstanceID(id)` | none (dynamic) | `group.instance.id` | Static membership (a StatefulSet pod name) avoids a rebalance per rolling restart; needs a session timeout longer than a restart |
 | `FetchIsolationLevel(ReadCommitted())` | read uncommitted | `isolation.level` | Set when the topic is written transactionally |
 | `FetchMaxBytes`, `MaxConcurrentFetches` | 50MB, unlimited | `fetch.max.bytes` | Bound memory for big records |
+
+## With a group, or without one
+
+| The consumer | Group | Starts at | Why |
+|---|---|---|---|
+| Processes work: billing, projections, notifications, anything with side effects | `ConsumerGroup(cfg.Group)`, fixed and the service's own | its committed offset; `ConsumeStartOffset` only for the group's first start | Offsets survive restarts, replicas share the partitions, commits mean something |
+| Every replica must see every record: cache invalidation, an in-memory table from a compacted topic | none (`broadcast: true`) | `ConsumeStartOffset(kgo.NewOffset().AtEnd())` for invalidation, `AtStart()` to rebuild a table | Each replica has its own state; a group would hand each record to one replica only |
+| A replay, backfill or debugging tool | none, or a group named for the run when it must resume | set explicitly, often `ConsumePartitions` with exact offsets | It must not move the service's committed offsets |
+
+- **One ID, one service.** Two services in one group split the partitions between them: each processes some records and never sees the rest. Two deployments of the same service (blue and green) share the group on purpose.
+- **Never generated.** A UUID, hostname, pod name or timestamp in the group ID makes a new group per start: no committed offsets, the topic reprocessed from `ConsumeStartOffset`, and old groups left on the broker. Static membership uses the pod name as `kgo.InstanceID`, which names the member, not the group.
+- **Renaming a group** starts from scratch: copy the offsets first (`kadm` `FetchOffsets` then `CommitOffsets` to the new group) or accept the replay or the gap.
+- **ACLs:** the principal needs Read on the group as well as on the topics.
 
 ## Choosing a commit strategy
 
@@ -50,19 +63,23 @@ type Consumer struct {
 	producer *kgo.Client                              // for the dead-letter topic
 	handler  func(context.Context, *kgo.Record) error // decodes and calls the Domain service
 	log      *zap.Logger
-	runCtx  context.Context
-	workers map[tp]*worker // touched by the poll loop and the callbacks only
+	settings config.KafkaConsumer // retries, dead-letter topic, poll size
+	runCtx   context.Context
+	workers  map[tp]*worker // touched by the poll loop and the callbacks only
 }
 
-func NewConsumer(cfg Config, producer *kgo.Client, handler func(context.Context, *kgo.Record) error, log *zap.Logger) (*Consumer, error) {
-	c := &Consumer{producer: producer, handler: handler, log: log, workers: make(map[tp]*worker)}
-	opts, err := baseOpts(cfg, log)
+// NewConsumer builds the named consumer of the kafka settings block (config.md).
+func NewConsumer(cfg config.Kafka, name string, producer *kgo.Client, handler func(context.Context, *kgo.Record) error, log *zap.Logger) (*Consumer, error) {
+	settings, err := cfg.Consumer(name)
+	if err != nil {
+		return nil, err
+	}
+	c := &Consumer{producer: producer, handler: handler, log: log, settings: settings, workers: make(map[tp]*worker)}
+	opts, err := ConsumerOpts(cfg, name, log) // login, client ID, topics, start, group, static membership
 	if err != nil {
 		return nil, err
 	}
 	opts = append(opts,
-		kgo.ConsumerGroup(cfg.Group),
-		kgo.ConsumeTopics(cfg.Topics...),
 		kgo.AutoCommitMarks(),
 		kgo.BlockRebalanceOnPoll(),
 		kgo.OnPartitionsAssigned(c.assigned),
@@ -78,7 +95,7 @@ func NewConsumer(cfg Config, producer *kgo.Client, handler func(context.Context,
 func (c *Consumer) Run(ctx context.Context) error {
 	c.runCtx = ctx
 	for {
-		fetches := c.cl.PollRecords(ctx, 500)
+		fetches := c.cl.PollRecords(ctx, c.settings.MaxPollRecords)
 		if fetches.IsClientClosed() || ctx.Err() != nil {
 			c.cl.AllowRebalance()
 			return nil
@@ -167,16 +184,19 @@ func (c *Consumer) Close() { c.cl.Close() } // the final revoke stops the worker
 var ErrPermanent = errors.New("permanent") // wrap decode and validation failures with it
 
 func (c *Consumer) handleWithRetry(ctx context.Context, r *kgo.Record) error {
+	retry := c.settings.Retry // attempts, backoff doubling up to max_backoff (config.md)
+	backoff := retry.Backoff
 	var err error
-	for attempt := range 3 {
-		if err = c.handler(ctx, r); err == nil || errors.Is(err, ErrPermanent) {
+	for attempt := 1; ; attempt++ {
+		if err = c.handler(ctx, r); err == nil || errors.Is(err, ErrPermanent) || attempt >= retry.Attempts {
 			break
 		}
 		select {
-		case <-time.After(time.Duration(100<<attempt) * time.Millisecond): // 100ms, 200ms, 400ms
+		case <-time.After(backoff):
 		case <-ctx.Done():
 			return ctx.Err()
 		}
+		backoff = min(2*backoff, retry.MaxBackoff)
 	}
 	if err == nil {
 		return nil
@@ -196,7 +216,7 @@ func (c *Consumer) deadLetter(ctx context.Context, r *kgo.Record, cause error) e
 		kgo.RecordHeader{Key: "dlq-source-offset", Value: []byte(strconv.FormatInt(r.Offset, 10))},
 		kgo.RecordHeader{Key: "dlq-error", Value: []byte(msg)},
 	)
-	dl := &kgo.Record{Topic: r.Topic + ".dlq", Key: r.Key, Value: r.Value, Headers: headers}
+	dl := &kgo.Record{Topic: c.settings.DeadLetterTopic, Key: r.Key, Value: r.Value, Headers: headers}
 	if err := c.producer.ProduceSync(ctx, dl).FirstErr(); err != nil {
 		return fmt.Errorf("dead-letter %s/%d@%d: %w", r.Topic, r.Partition, r.Offset, err)
 	}

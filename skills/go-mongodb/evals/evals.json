@@ -55,5 +55,18 @@
       {"id": "4.5", "text": "Decrements stock with a guarded $inc filter (stock >= quantity) and checks MatchedCount"},
       {"id": "4.6", "text": "Notes that transactions need a replica set"}
     ]
+  },
+  {
+    "id": 5,
+    "name": "login-and-app-name",
+    "description": "Tests that the client always logs in, TLS is optional with SCRAM, and the app name comes from the settings",
+    "prompt": "Our dev MongoDB has no auth and no TLS; prod has both. Write the mongo-driver v2 connection code and the settings block for the orders service so the same code works in dev (just the host URI) and in prod.",
+    "trap": "Without the skill, the model connects with whatever URI it is given, so dev runs anonymously and a missing login in prod goes unnoticed, and it leaves the app name unset or hard-coded.",
+    "assertions": [
+      {"id": "5.1", "text": "Refuses to build a client without credentials (checks the parsed options or the settings), in every environment, and says the dev server should run with authorization on too"},
+      {"id": "5.2", "text": "Treats TLS as optional but refuses PLAIN without TLS, using SCRAM-SHA-256 when TLS is off"},
+      {"id": "5.3", "text": "Keeps the password out of the code and logs: an auth block with a password file, or the whole URI read from a mounted file"},
+      {"id": "5.4", "text": "Sets SetAppName from a required app_name setting with the service's name"}
+    ]
   }
 ]
