@@ -10,18 +10,20 @@ One `kafka` block in the service's settings file ([go-knadh-koanf](../../go-knad
 kafka:
   brokers: [kafka-0.example.com:9093, kafka-1.example.com:9093, kafka-2.example.com:9093]
   client_id: orders-service
-  tls: true
+  tls: true                            # optional; without it the mechanism must be SCRAM
   ca_file: /etc/kafka/ca.crt           # empty: the system roots
-  sasl:
-    mechanism: SCRAM-SHA-512           # or PLAIN, or empty for none
+  sasl:                                # required: every client logs in
+    mechanism: SCRAM-SHA-512           # or SCRAM-SHA-256; PLAIN only with tls: true
     username: orders-service
     password_file: /var/run/secrets/kafka/password
   dial_timeout: 10s
-  group: billing-order-events          # consumers only
+  group: billing-order-events          # consumers only: fixed, this service's own
   topics: [orders.v1]                  # consumers only
 ```
 
-- **Secrets** come from a mounted file (`password_file`) or the settings file kept out of the image, never from flags or the code, and never logged ([go-security](../../go-security/SKILL.md), `sec-no-secrets-in-logs`). `validate` refuses a mechanism without a password.
+- **Login** is required (`kafka-authenticated-connection`): `validate` refuses an empty mechanism, a missing username or password file, and PLAIN without TLS, so a service never falls back to connecting anonymously.
+- **Secrets** come from a mounted file (`password_file`) or the settings file kept out of the image, never from flags or the code, and never logged ([go-security](../../go-security/SKILL.md), `sec-no-secrets-in-logs`).
+- **Group IDs** are settings, not code: `<service>-<purpose>`, the same in every replica and across deploys, and not used by any other service (`kafka-stable-consumer-group`).
 - **Topics** in settings, not as constants spread through the code, so an environment can rename them.
 
 ## SASL and TLS
@@ -46,7 +48,8 @@ func (s SASL) mechanism() (sasl.Mechanism, error) {
 ```
 
 - Packages: `github.com/twmb/franz-go/pkg/sasl/scram`, `.../sasl/plain`, `.../sasl/oauth` (OAUTHBEARER, with a token function that refreshes), `.../sasl/aws` (MSK IAM).
-- PLAIN only over TLS. TLS through `kgo.DialTLSConfig(&tls.Config{MinVersion: tls.VersionTLS12, RootCAs: pool})`; never `InsecureSkipVerify` (`sec-tls-verify`). A cluster with self-signed certificates gets its CA in `ca_file`.
+- **SASL always; TLS when the network needs it.** SCRAM proves the password without sending it, so it is safe without TLS; PLAIN and OAUTHBEARER send the secret as it is and need TLS. TLS through `kgo.DialTLSConfig(&tls.Config{MinVersion: tls.VersionTLS12, RootCAs: pool})`; never `InsecureSkipVerify` (`sec-tls-verify`). A cluster with self-signed certificates gets its CA in `ca_file`. Without TLS the records themselves travel unencrypted: keep TLS on wherever the traffic leaves a network the team trusts.
+- **The broker enforces it.** No `PLAINTEXT` listener reachable by services, an authorizer on, `allow.everyone.if.no.acl.found=false`, and ACLs per service principal: Write on the topics it produces to, Read on the topics and the group it consumes, Describe where `kadm` needs it.
 - The settings name the mechanism; the client doesn't guess. Rotation of a password file needs a restart unless the project wires a refreshing `scram.Sha512(func(ctx) (scram.Auth, error))`.
 
 ## Topics

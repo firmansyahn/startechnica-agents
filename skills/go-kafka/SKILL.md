@@ -1,12 +1,12 @@
 ---
 name: go-kafka
-description: "Use when a Go service produces to or consumes from Kafka or a Kafka-compatible broker (Redpanda, managed Kafka) with franz-go (github.com/twmb/franz-go, kgo, kadm, sr): building the client, producer settings (acks, idempotence, linger, compression), ProduceSync versus Produce with a promise, Flush, record keys for per-entity ordering, headers, consumer groups and PollFetches, checking fetch errors, committing offsets after processing (DisableAutoCommit, AutoCommitMarks, MarkCommitRecords), rebalances and OnPartitionsRevoked, a worker per partition, retries and dead-letter topics, idempotent handlers, the transactional outbox, exactly-once with GroupTransactSession, schemas and the schema registry, topic creation, SASL and TLS, lag, metrics, tracing (kotel, kprom, kzap), graceful shutdown, and tests with kfake or a broker in a container. Also when choosing a Go Kafka client (franz-go versus sarama, segmentio/kafka-go, confluent-kafka-go) or reviewing Kafka code. Holds the kafka-* rules."
+description: "Use when a Go service produces to or consumes from Kafka or a Kafka-compatible broker (Redpanda, managed Kafka) with franz-go (github.com/twmb/franz-go, kgo, kadm, sr): building the client, producer settings (acks, idempotence, linger, compression), ProduceSync versus Produce with a promise, Flush, record keys for ordering, consumer group IDs (fixed, per service, or none for a broadcast consumer), PollFetches and fetch errors, committing offsets after processing (DisableAutoCommit, AutoCommitMarks), rebalances, a worker per partition, retries and dead-letter topics, idempotent handlers, the transactional outbox, exactly-once, schemas and the schema registry, topic creation, login (SASL required, TLS optional), lag, metrics, tracing (kotel, kprom, kzap), graceful shutdown, and tests with kfake or a broker in a container. Also when choosing a Go Kafka client (franz-go versus sarama, segmentio/kafka-go, confluent-kafka-go) or reviewing Kafka code. Holds the kafka-* rules."
 user-invocable: true
 license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go services that talk to Kafka-protocol brokers with franz-go v1.
 metadata:
   author: firmansyahn
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Kafka from Go (team)
@@ -30,6 +30,8 @@ Related: [go-concurrency](../go-concurrency/SKILL.md) (goroutine owners, context
 ## The team's rules
 
 - **One long-lived client per role**, built once in the Platform package (`internal/kafka`) from the settings block and handed to constructors. Never a client per request or per message.
+- **Login is required, TLS is optional:** every client authenticates with SASL in every environment, and the settings check refuses a missing mechanism or password. Without TLS the mechanism is SCRAM (SHA-512 or SHA-256); PLAIN and OAUTHBEARER only over TLS. The broker refuses anonymous clients and grants each service only its topics and group.
+- **Consumer groups:** a consumer that processes work joins a group whose ID comes from the settings, names the service and purpose, stays fixed across restarts and is used by no other service. No group only when every replica must read every record, on purpose and with an explicit start offset. Producers have no group.
 - **Producing:** acks from all in-sync replicas and idempotence stay on (franz-go's defaults). Every produce result is checked: `ProduceSync(...).FirstErr()`, or a promise that handles `err`. A request path that must not lose the event uses `ProduceSync`, or the outbox.
 - **Keys:** a record about an entity carries that entity's ID as its key, so its events stay in order on one partition.
 - **Consuming:** every poll checks `fetches.Errors()`; an offset is committed only after its record is processed; handlers tolerate a record delivered twice.
@@ -64,6 +66,8 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 | [kafka-check-errors](rules/kafka-check-errors.md) | Check every produce result and every fetch error | CRITICAL | scan, review |
 | [kafka-commit-after-processing](rules/kafka-commit-after-processing.md) | Commit an offset only after its record is processed | CRITICAL | scan (candidates), review |
 | [kafka-outbox-for-db-writes](rules/kafka-outbox-for-db-writes.md) | Publish database changes through a transactional outbox | CRITICAL | review |
+| [kafka-authenticated-connection](rules/kafka-authenticated-connection.md) | Always log in with SASL; TLS is optional, PLAIN only over it | CRITICAL | scan (candidates), test, review |
+| [kafka-stable-consumer-group](rules/kafka-stable-consumer-group.md) | Consume work in a fixed consumer group of the service's own | HIGH | scan (candidates), test, review |
 | [kafka-durable-writes](rules/kafka-durable-writes.md) | Keep all-ISR acks and idempotence; declare topics explicitly | HIGH | scan |
 | [kafka-key-for-ordering](rules/kafka-key-for-ordering.md) | Key records by the entity whose order matters | HIGH | review |
 | [kafka-idempotent-handler](rules/kafka-idempotent-handler.md) | Make every handler safe to run twice for one record | HIGH | review, test |
@@ -91,7 +95,9 @@ One file per rule in `rules/`; the file name is the rule ID. Sections: [rules/_s
 - [ ] Bounded retries, then a dead-letter topic; no infinite retry, no silent skip
 - [ ] One worker per partition or a fixed pool; no `go` per record
 - [ ] Database writes that must be announced go through the outbox
-- [ ] Credentials from settings or a mounted file, TLS verified, nothing secret logged
+- [ ] Every client logs in with SASL; `validate` refuses no mechanism, and PLAIN or OAUTHBEARER without TLS
+- [ ] Credentials from settings or a mounted file, TLS verified when on, nothing secret logged
+- [ ] Each consumer of work has a fixed group ID from the settings, its own; no group only for a commented broadcast consumer with `ConsumeStartOffset`
 - [ ] Tests: handler unit tests, the loop against `kfake` or a real broker; no `time.Sleep` waits
 
 ## 1. The client
@@ -106,12 +112,38 @@ package kafka
 type Config struct {
 	Brokers      []string      `koanf:"brokers"`       // seed brokers, host:port
 	ClientID     string        `koanf:"client_id"`     // shows up in broker logs and quotas
-	Group        string        `koanf:"group"`         // consumer group; empty for producers
-	Topics       []string      `koanf:"topics"`        // topics this consumer reads
-	SASL         SASL          `koanf:"sasl"`
-	TLS          bool          `koanf:"tls"`
+	Group        string        `koanf:"group"`         // fixed consumer group, the service's own; empty for producers
+	Topics       []string      `koanf:"topics"`        // topics this consumer reads; require a group unless Broadcast
+	Broadcast    bool          `koanf:"broadcast"`     // every replica reads every record, no group (rare)
+	SASL         SASL          `koanf:"sasl"`          // required: every client logs in
+	TLS          bool          `koanf:"tls"`           // optional; without it SASL must be SCRAM
 	CAFile       string        `koanf:"ca_file"`       // empty: the system roots
 	DialTimeout  time.Duration `koanf:"dial_timeout"`  // default 10s
+}
+
+// validate runs when the settings load (kafka-authenticated-connection, kafka-stable-consumer-group).
+func (c Config) validate() error {
+	switch c.SASL.Mechanism {
+	case "SCRAM-SHA-512", "SCRAM-SHA-256":
+	case "PLAIN":
+		if !c.TLS {
+			return errors.New("kafka.sasl.mechanism: PLAIN sends the password in clear; set kafka.tls: true or use SCRAM-SHA-512")
+		}
+	case "":
+		return errors.New("kafka.sasl.mechanism is required: every client logs in")
+	default:
+		return fmt.Errorf("kafka.sasl.mechanism %q: want SCRAM-SHA-512, SCRAM-SHA-256 or PLAIN", c.SASL.Mechanism)
+	}
+	if c.SASL.Username == "" || c.SASL.PasswordFile == "" {
+		return errors.New("kafka.sasl: username and password_file are required")
+	}
+	switch {
+	case len(c.Topics) > 0 && c.Group == "" && !c.Broadcast:
+		return errors.New("kafka.group is required for a consumer (or set kafka.broadcast: true)")
+	case c.Broadcast && c.Group != "":
+		return errors.New("kafka.broadcast and kafka.group exclude each other")
+	}
+	return nil
 }
 
 func baseOpts(cfg Config, log *zap.Logger) ([]kgo.Opt, error) {
@@ -128,13 +160,11 @@ func baseOpts(cfg Config, log *zap.Logger) ([]kgo.Opt, error) {
 		}
 		opts = append(opts, kgo.DialTLSConfig(tc))
 	}
-	if cfg.SASL.Mechanism != "" {
-		m, err := cfg.SASL.mechanism() // SCRAM-SHA-512 or PLAIN, password from a mounted file
-		if err != nil {
-			return nil, fmt.Errorf("kafka sasl: %w", err)
-		}
-		opts = append(opts, kgo.SASL(m))
+	m, err := cfg.SASL.mechanism() // always: SCRAM or PLAIN, password from a mounted file
+	if err != nil {
+		return nil, fmt.Errorf("kafka sasl: %w", err)
 	}
+	opts = append(opts, kgo.SASL(m))
 	return opts, nil
 }
 
@@ -231,7 +261,7 @@ producer.Close()                  // Close fails whatever is still buffered
 
 ## 5. Testing
 
-Handlers are plain functions over a decoded event: table tests, no broker. The loop and its commits run against `kfake` in the same process; transactions, SASL and broker configs against a broker in a container. Setup, helpers and what to assert: [references/testing.md](references/testing.md).
+Handlers are plain functions over a decoded event: table tests, no broker. The loop, its commits and the SASL login run against `kfake` in the same process, with SASL on; transactions, TLS, ACLs and broker configs against a broker in a container. Setup, helpers and what to assert: [references/testing.md](references/testing.md).
 
 ## References
 

@@ -6,7 +6,7 @@ Part of [go-kafka](../SKILL.md); its rules win where this file is less strict.
 
 | franz-go option | Default | Java client name | Team guidance |
 |---|---|---|---|
-| `ConsumerGroup(g)`, `ConsumeTopics(t...)` | none | `group.id`, `subscribe` | One group per service and purpose (`billing-order-events`) |
+| `ConsumerGroup(g)`, `ConsumeTopics(t...)` | none | `group.id`, `subscribe` | One fixed group per service and purpose (`billing-order-events`), from the settings (`kafka-stable-consumer-group`) |
 | `Balancers(...)` | cooperative-sticky | `partition.assignment.strategy` | Keep. Moving a live group between eager and cooperative needs a rollout plan (KIP-429) |
 | `ConsumeStartOffset(o)` | `NewOffset().AtStart()` | `auto.offset.reset` (for a new group) | franz-go starts a new group at the **earliest** record, Java at the latest. Decide per consumer and write it down: a new projection usually wants the history, a notifier usually doesn't (`AtEnd()`) |
 | `ConsumeResetOffset(o)` | rewind one minute | `auto.offset.reset` (on lost data) | Keep |
@@ -15,6 +15,19 @@ Part of [go-kafka](../SKILL.md); its rules win where this file is less strict.
 | `InstanceID(id)` | none (dynamic) | `group.instance.id` | Static membership (a StatefulSet pod name) avoids a rebalance per rolling restart; needs a session timeout longer than a restart |
 | `FetchIsolationLevel(ReadCommitted())` | read uncommitted | `isolation.level` | Set when the topic is written transactionally |
 | `FetchMaxBytes`, `MaxConcurrentFetches` | 50MB, unlimited | `fetch.max.bytes` | Bound memory for big records |
+
+## With a group, or without one
+
+| The consumer | Group | Starts at | Why |
+|---|---|---|---|
+| Processes work: billing, projections, notifications, anything with side effects | `ConsumerGroup(cfg.Group)`, fixed and the service's own | its committed offset; `ConsumeStartOffset` only for the group's first start | Offsets survive restarts, replicas share the partitions, commits mean something |
+| Every replica must see every record: cache invalidation, an in-memory table from a compacted topic | none (`broadcast: true`) | `ConsumeStartOffset(kgo.NewOffset().AtEnd())` for invalidation, `AtStart()` to rebuild a table | Each replica has its own state; a group would hand each record to one replica only |
+| A replay, backfill or debugging tool | none, or a group named for the run when it must resume | set explicitly, often `ConsumePartitions` with exact offsets | It must not move the service's committed offsets |
+
+- **One ID, one service.** Two services in one group split the partitions between them: each processes some records and never sees the rest. Two deployments of the same service (blue and green) share the group on purpose.
+- **Never generated.** A UUID, hostname, pod name or timestamp in the group ID makes a new group per start: no committed offsets, the topic reprocessed from `ConsumeStartOffset`, and old groups left on the broker. Static membership uses the pod name as `kgo.InstanceID`, which names the member, not the group.
+- **Renaming a group** starts from scratch: copy the offsets first (`kadm` `FetchOffsets` then `CommitOffsets` to the new group) or accept the replay or the gap.
+- **ACLs:** the principal needs Read on the group as well as on the topics.
 
 ## Choosing a commit strategy
 

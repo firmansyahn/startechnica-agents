@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.5.0
+
+- [go-kafka](skills/go-kafka/SKILL.md) 0.2.0: every Kafka client logs in. The new `kafka-authenticated-connection` rule (CRITICAL) makes SASL required in every environment, keeps TLS optional, and allows PLAIN only over TLS; the settings check refuses an empty mechanism. The new `kafka-stable-consumer-group` rule (HIGH) gives every consumer of work a fixed group ID of its own from the settings, and allows no group only for a deliberate broadcast consumer with an explicit start offset. Tests log in too (`kfake` with SASL, Redpanda with SASL), and `scan.sh` checks both rules.
+
 ## v1.4.0
 
 - Add Go skills for four more stores, routed from [go-how-to](skills/go-how-to/SKILL.md): [go-mongodb](skills/go-mongodb/SKILL.md) (mongo-driver v2, `mongo-` rules), [go-redis](skills/go-redis/SKILL.md) (go-redis v9, `redis-` rules), [go-kafka](skills/go-kafka/SKILL.md) (franz-go, `kafka-` rules) and [go-clickhouse](skills/go-clickhouse/SKILL.md) (clickhouse-go v2, `ch-` rules), each with a `scripts/scan.sh` and evals.
