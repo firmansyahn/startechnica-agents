@@ -23,6 +23,6 @@ Every rule lives in the skill that teaches it, as `<skill>/rules/<id>.md`; the f
 | `commit-` | git-commit | Messages, staging, line endings, `[ci skip]`, author identity |
 | `ignore-` | git-gitignore | What is ignored and where, pattern shape, tracked files that match, files never ignored, other ignore files |
 
-Go rules are in the focused `go-<topic>` skills, one prefix each (`layer-` go-project-layout, `style-` go-code-style, `err-` go-error-handling, `conc-` go-concurrency, `db-` go-database, `test-` go-testing, `sec-` go-security, `api-` go-http-handlers, `goci-` go-continuous-integration, `obs-` go-observability); their IDs don't collide with these.
+Go rules are in the focused `go-<topic>` skills, one prefix each (`layer-` go-project-layout, `style-` go-code-style, `err-` go-error-handling, `conc-` go-concurrency, `db-` go-database, `mongo-` go-mongodb, `redis-` go-redis, `kafka-` go-kafka, `ch-` go-clickhouse, `test-` go-testing, `sec-` go-security, `api-` go-http-handlers, `goci-` go-continuous-integration, `obs-` go-observability); their IDs don't collide with these.
 
 Impact levels and how to raise them: `agent-skills-authoring` ("Impact").

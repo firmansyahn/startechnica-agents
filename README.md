@@ -229,7 +229,7 @@ Each area has a small router skill that sends a task to the right skill and list
 
 | Area | Router | Topic skills |
 |---|---|---|
-| Go services | `go-how-to` | `go-project-layout`, `go-code-style`, `go-error-handling`, `go-concurrency`, `go-database`, `go-testing`, `go-continuous-integration`, `go-security`, `go-http-handlers`, `go-knadh-koanf`, `go-observability`, `go-performance`, `go-safety`, `go-data-structures`, `go-refactoring`, `go-troubleshooting`, `go-nextjs-api-contract` |
+| Go services | `go-how-to` | `go-project-layout`, `go-code-style`, `go-error-handling`, `go-concurrency`, `go-database`, `go-mongodb`, `go-redis`, `go-kafka`, `go-clickhouse`, `go-testing`, `go-continuous-integration`, `go-security`, `go-http-handlers`, `go-knadh-koanf`, `go-observability`, `go-performance`, `go-safety`, `go-data-structures`, `go-refactoring`, `go-troubleshooting`, `go-nextjs-api-contract` |
 | Next.js apps | `nextjs-how-to` | `nextjs-new-app`, `nextjs-app-structure`, `nextjs-data`, `nextjs-bff`, `nextjs-forms`, `nextjs-ui`, `nextjs-logging`, `nextjs-security`, `nextjs-e2e`, `nextjs-deploy`, `nextjs-package-manager`, `nextjs-upgrade` |
 | OAuth / OIDC | (from `go-how-to`, `nextjs-how-to`) | `oauth-server`, `oauth-client` |
 | git | `git-how-to` | `git-worktree`, `git-commit`, `git-gitignore` |
@@ -255,6 +255,9 @@ Included unchanged, each under its own licence (see its `LICENSE` and `UPSTREAM.
 | Skills | Source | Licence |
 |---|---|---|
 | `gitlab-glab`, `gitlab-mr-description`, `git-mr-adversarial-review`, `gitlab-pipeline-watch`, `gitlab-babysit-mr`, `gitlab-stacked-mrs` | [gitlab-org/ai/skills](https://gitlab.com/gitlab-org/ai/skills) | MIT |
+| `mongodb-schema-design`, `mongodb-query-optimizer` (named by `go-mongodb`) | [mongodb/agent-skills](https://github.com/mongodb/agent-skills) | Apache-2.0 |
+| `redis-security`, `redis-observability` (named by `go-redis`) | [redis/agent-skills](https://github.com/redis/agent-skills) | MIT |
+| `clickhouse-best-practices` (named by `go-clickhouse`) | [ClickHouse/agent-skills](https://github.com/ClickHouse/agent-skills) | Apache-2.0 |
 
 All of samber's Go skills the team uses ([samber/cc-skills-golang](https://github.com/samber/cc-skills-golang), MIT) are adapted rather than vendored: each `go-<topic>` skill holds the team's rules and decisions first, and the upstream material, edited to agree, under "In depth" or as one of its references, with both copyrights in its `LICENSE`. `go-how-to` maps every upstream `golang-*` name to the team skill that holds it.
 

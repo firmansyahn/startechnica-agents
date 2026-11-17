@@ -1,0 +1,56 @@
+[
+  {
+    "id": 1,
+    "name": "client-choice",
+    "description": "Tests whether the model picks franz-go and gives the team's reasons",
+    "prompt": "I'm adding Kafka to a Go service that publishes order events and consumes payment events. Which Go client should I use? I've seen segmentio/kafka-go and sarama recommended a lot. Set up the producer for me.",
+    "trap": "Without the skill, the model often picks segmentio/kafka-go for its simple API (no transactions, key-ignoring default balancer) or confluent-kafka-go (cgo).",
+    "assertions": [
+      {"id": "1.1", "text": "Recommends github.com/twmb/franz-go (kgo)"},
+      {"id": "1.2", "text": "Explains at least two reasons against the alternatives (cgo for confluent-kafka-go; no transactions or exactly-once, or the key-ignoring default balancer, for segmentio/kafka-go; error-channel pitfalls for sarama)"},
+      {"id": "1.3", "text": "Builds one long-lived client and keeps acks=all and idempotence (does not set LeaderAck, NoAck or DisableIdempotentWrite)"},
+      {"id": "1.4", "text": "Checks the produce error: ProduceSync(...).FirstErr() or a promise that handles err; no Produce(ctx, rec, nil)"},
+      {"id": "1.5", "text": "Keys order events by the order ID"}
+    ]
+  },
+  {
+    "id": 2,
+    "name": "worker-pool-commit",
+    "description": "Tests the rule that handing records to goroutines needs marks or manual commits",
+    "prompt": "My franz-go consumer is too slow. Each record takes ~50ms to process. Make it process records in parallel. Current code:\n\ncl, _ := kgo.NewClient(kgo.SeedBrokers(brokers...), kgo.ConsumerGroup(\"billing\"), kgo.ConsumeTopics(\"orders.v1\"))\nfor {\n  fetches := cl.PollFetches(ctx)\n  fetches.EachRecord(func(r *kgo.Record) { handle(ctx, r) })\n}",
+    "trap": "The obvious fix is `go handle(ctx, r)` per record, which breaks per-key order, is unbounded, and lets default autocommit commit records that are still being processed.",
+    "assertions": [
+      {"id": "2.1", "text": "Does not start a goroutine per record"},
+      {"id": "2.2", "text": "Uses a worker per partition (or a fixed pool keyed by partition or record key) to keep per-key order"},
+      {"id": "2.3", "text": "Switches to AutoCommitMarks with MarkCommitRecords after processing, or DisableAutoCommit with commits after processing"},
+      {"id": "2.4", "text": "Handles revocation: stops the partition's worker and commits in OnPartitionsRevoked (with BlockRebalanceOnPoll or equivalent)"},
+      {"id": "2.5", "text": "Adds fetch error handling (fetches.Errors() or EachError) and leaves the loop on IsClientClosed or a canceled context"}
+    ]
+  },
+  {
+    "id": 3,
+    "name": "db-then-publish",
+    "description": "Tests that writing to the database and Kafka uses the outbox",
+    "prompt": "In my Go service (pgx v5), when an order is created I insert it into PostgreSQL and then publish an OrderPlaced event to Kafka with franz-go. Write the CreateOrder function.",
+    "trap": "Without the skill, the model commits the transaction and then calls ProduceSync, losing the event if the produce fails or the process dies in between.",
+    "assertions": [
+      {"id": "3.1", "text": "Writes the event to an outbox table in the same transaction as the order"},
+      {"id": "3.2", "text": "Describes or writes a relay that publishes unsent outbox rows with ProduceSync and marks them sent"},
+      {"id": "3.3", "text": "Says consumers must dedupe because the relay can send a row twice (event ID)"},
+      {"id": "3.4", "text": "Uses defer tx.Rollback(ctx) right after Begin and $1 placeholders"}
+    ]
+  },
+  {
+    "id": 4,
+    "name": "poison-message",
+    "description": "Tests bounded retries and a dead-letter topic",
+    "prompt": "Sometimes a record on orders.v1 has a malformed payload and my franz-go consumer gets stuck retrying it forever. How should I handle failures in the consumer?",
+    "trap": "Common answers either skip the record silently (commit and log) or keep retrying, blocking the partition.",
+    "assertions": [
+      {"id": "4.1", "text": "Treats decode/validation failures as permanent: no retry, straight to a dead-letter topic"},
+      {"id": "4.2", "text": "Retries transient failures a bounded number of times with backoff that respects the context"},
+      {"id": "4.3", "text": "Produces the failed record to a dead-letter topic with the original key and value and headers naming the source topic, partition, offset and error, checking that produce's error"},
+      {"id": "4.4", "text": "Commits (or marks) the offset only after the dead-letter produce succeeded"}
+    ]
+  }
+]

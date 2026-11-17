@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.4.0
+
+- Add Go skills for four more stores, routed from [go-how-to](skills/go-how-to/SKILL.md): [go-mongodb](skills/go-mongodb/SKILL.md) (mongo-driver v2, `mongo-` rules), [go-redis](skills/go-redis/SKILL.md) (go-redis v9, `redis-` rules), [go-kafka](skills/go-kafka/SKILL.md) (franz-go, `kafka-` rules) and [go-clickhouse](skills/go-clickhouse/SKILL.md) (clickhouse-go v2, `ch-` rules), each with a `scripts/scan.sh` and evals.
+- Vendor the vendors' official server-side skills unchanged: `mongodb-schema-design` and `mongodb-query-optimizer` (Apache-2.0), `redis-security` and `redis-observability` (MIT), `clickhouse-best-practices` (Apache-2.0).
+
 ## v1.3.0
 
 - Fix OpenCode Git installation with a root npm package, a locked OpenCode v2.3.0 SDK dependency, and an entrypoint under [.opencode/plugins/](.opencode/plugins/). Update local installation paths, package tests and CI.

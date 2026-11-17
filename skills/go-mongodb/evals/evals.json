@@ -1,0 +1,59 @@
+[
+  {
+    "id": 1,
+    "name": "search-endpoint-operator-injection",
+    "description": "Tests whether the model refuses to use a request body as a MongoDB filter",
+    "prompt": "Add a POST /customers/search endpoint to our Go service. The frontend sends a JSON object of filters (for example {\"status\": \"active\"}) and we want to pass it straight to MongoDB so new filters don't need backend changes. We use go.mongodb.org/mongo-driver/v2.",
+    "trap": "Without the skill, the model decodes the body into bson.M and calls Find with it, allowing {\"email\": {\"$ne\": null}} or $where. The skill requires typed request fields and filters built under keys the code names, with the tenant from the session.",
+    "assertions": [
+      {"id": "1.1", "text": "Does NOT decode the request body into bson.M, bson.D or map[string]any and pass it to Find"},
+      {"id": "1.2", "text": "Explains operator injection (a caller-chosen $-operator such as $ne, $gt or $where)"},
+      {"id": "1.3", "text": "Decodes into a typed struct and builds a bson.D filter field by field, or uses an allow-list of fields"},
+      {"id": "1.4", "text": "Adds the tenant (or owner) from the authenticated session to the filter, not from the body"},
+      {"id": "1.5", "text": "Bounds the result with a limit and a projection"}
+    ]
+  },
+  {
+    "id": 2,
+    "name": "client-per-request",
+    "description": "Tests that the model creates one long-lived mongo.Client and does not connect per request",
+    "prompt": "Write a Go HTTP handler that loads an order by ID from MongoDB (database shop, collection orders) using mongo-driver v2. Keep it self-contained: connect, query, return JSON.",
+    "trap": "A self-contained handler invites mongo.Connect inside the handler (and v1's mongo.Connect(ctx, ...)). The skill requires one Client created at startup, injected, disconnected on shutdown, and v2's Connect without a context.",
+    "assertions": [
+      {"id": "2.1", "text": "Creates the mongo.Client once at startup (or in a constructor) and injects it or a store into the handler, not inside the handler"},
+      {"id": "2.2", "text": "Uses the v2 signature mongo.Connect(opts) without a context argument"},
+      {"id": "2.3", "text": "Passes r.Context() (not context.Background()) to FindOne"},
+      {"id": "2.4", "text": "Maps mongo.ErrNoDocuments with errors.Is to a 404 / not-found error"},
+      {"id": "2.5", "text": "Parses the ID with bson.ObjectIDFromHex and answers a client error on an invalid ID"},
+      {"id": "2.6", "text": "Disconnects the client on shutdown"}
+    ]
+  },
+  {
+    "id": 3,
+    "name": "unique-email-check-then-insert",
+    "description": "Tests that uniqueness is a unique index plus IsDuplicateKeyError, not a find before insert",
+    "prompt": "In our Go service (MongoDB, driver v2) customers must have a unique email per tenant. Write CreateCustomer so it returns ErrEmailTaken when the email is already used.",
+    "trap": "The natural answer is CountDocuments or FindOne before InsertOne, which races. The skill requires a unique compound index declared in code and mongo.IsDuplicateKeyError on the insert.",
+    "assertions": [
+      {"id": "3.1", "text": "Declares a unique index on (tenant_id, email) in code (EnsureIndexes or a migration)"},
+      {"id": "3.2", "text": "Detects the conflict with mongo.IsDuplicateKeyError on InsertOne"},
+      {"id": "3.3", "text": "Does NOT rely only on a find or count before the insert to enforce uniqueness"},
+      {"id": "3.4", "text": "Explains the race between two concurrent requests"}
+    ]
+  },
+  {
+    "id": 4,
+    "name": "transaction-outer-context",
+    "description": "Tests WithTransaction usage: callback context, retries, no side effects",
+    "prompt": "Using mongo-driver v2, write PlaceOrder: insert the order, decrement stock on the item, and publish an OrderPlaced message to our message broker, all atomically.",
+    "trap": "The model may use the outer ctx inside the callback, publish to the broker inside WithTransaction (which retries), or hand-roll StartTransaction/CommitTransaction. The skill requires WithTransaction, the callback's ctx, and an outbox for the message.",
+    "assertions": [
+      {"id": "4.1", "text": "Uses session.WithTransaction with a callback of type func(ctx context.Context) (any, error)"},
+      {"id": "4.2", "text": "Every operation inside the callback uses the callback's context"},
+      {"id": "4.3", "text": "Does NOT publish to the broker inside the transaction callback; writes an outbox document instead (or publishes after commit with an explanation of the trade-off)"},
+      {"id": "4.4", "text": "Explains that the callback can be retried, so it must have no side effects outside MongoDB"},
+      {"id": "4.5", "text": "Decrements stock with a guarded $inc filter (stock >= quantity) and checks MatchedCount"},
+      {"id": "4.6", "text": "Notes that transactions need a replica set"}
+    ]
+  }
+]

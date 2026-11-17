@@ -1,0 +1,56 @@
+[
+  {
+    "id": 1,
+    "name": "per-request-insert",
+    "description": "Tests whether the model batches inserts instead of one INSERT per HTTP request",
+    "prompt": "Our Go API receives page-view events over HTTP (about 2,000 per second across 4 replicas). Write the handler and the code that stores each event in a ClickHouse table page_views(ts DateTime64(3, 'UTC'), site_id UInt32, path String, user_id UUID) using clickhouse-go v2.",
+    "trap": "Without the skill, the model writes conn.Exec(ctx, \"INSERT INTO page_views VALUES (?, ?, ?, ?)\", ...) in the handler, creating one part per request and 'too many parts' errors.",
+    "assertions": [
+      {"id": "1.1", "text": "Does NOT run one INSERT per request; buffers events and inserts them in batches (thousands of rows), or uses async inserts that wait for the flush"},
+      {"id": "1.2", "text": "Uses PrepareBatch with Append/AppendStruct and Send, with defer batch.Close() right after PrepareBatch"},
+      {"id": "1.3", "text": "The buffer is bounded and flushes by size and by time, and on shutdown before the connection closes"},
+      {"id": "1.4", "text": "If async inserts are used, sets wait_for_async_insert=1 (WithAsync(true)), never fire-and-forget"},
+      {"id": "1.5", "text": "Opens one driver.Conn at start (clickhouse.Open + Ping) and passes it in; does not open a connection per request"}
+    ]
+  },
+  {
+    "id": 2,
+    "name": "update-order-status",
+    "description": "Tests whether the model avoids ALTER TABLE UPDATE mutations for row changes",
+    "prompt": "We keep orders in ClickHouse for analytics. When an order is cancelled in our Go service we need ClickHouse to reflect status = 'cancelled'. Write the Go store method using clickhouse-go v2.",
+    "trap": "Without the skill, the model writes ALTER TABLE orders UPDATE status = 'cancelled' WHERE order_id = ?, a heavy mutation per request.",
+    "assertions": [
+      {"id": "2.1", "text": "Does NOT use ALTER TABLE ... UPDATE (or DELETE) from the service"},
+      {"id": "2.2", "text": "Inserts a new version of the row into a ReplacingMergeTree (or a sign row into a CollapsingMergeTree)"},
+      {"id": "2.3", "text": "Explains that readers must use FINAL or argMax(..., version) to see the latest version before merges"},
+      {"id": "2.4", "text": "Passes the caller's context, with a deadline, to the insert"}
+    ]
+  },
+  {
+    "id": 3,
+    "name": "dynamic-filter-query",
+    "description": "Tests parameter binding and scanning types for a report query",
+    "prompt": "Write a Go function that returns daily page-view counts for a site between two dates from ClickHouse, optionally filtered by a path prefix the user types in the dashboard. Use clickhouse-go v2.",
+    "trap": "Without the skill, the model builds the WHERE clause with fmt.Sprintf (injection), scans count() into int (the driver refuses: count() is UInt64), and forgets rows.Err().",
+    "assertions": [
+      {"id": "3.1", "text": "Binds the site, the dates and the prefix as parameters (?, Named or {name:Type}); no fmt.Sprintf of values into SQL"},
+      {"id": "3.2", "text": "Scans count() into uint64"},
+      {"id": "3.3", "text": "Uses conn.Select, or closes rows and checks rows.Err()"},
+      {"id": "3.4", "text": "Sets a deadline on the context"},
+      {"id": "3.5", "text": "Filters on the site and time columns of the table's ORDER BY and adds a LIMIT"}
+    ]
+  },
+  {
+    "id": 4,
+    "name": "retry-without-duplicates",
+    "description": "Tests retry-safe inserts from a queue consumer",
+    "prompt": "A Go consumer reads order events from a queue in batches of 20,000 and writes each batch to ClickHouse with clickhouse-go v2. Inserts sometimes time out. Add retries without creating duplicate rows.",
+    "trap": "Without the skill, the model retries by re-reading whatever is buffered, or adds random IDs, so a retried block differs and ClickHouse can't deduplicate it.",
+    "assertions": [
+      {"id": "4.1", "text": "Retries resend the identical batch (same rows, same order), built once before the retry loop"},
+      {"id": "4.2", "text": "Sets insert_deduplication_token derived from the source (partition and offset range), not a random value"},
+      {"id": "4.3", "text": "Mentions that deduplication needs a Replicated*MergeTree table or non_replicated_deduplication_window on MergeTree"},
+      {"id": "4.4", "text": "Retries only transient errors, with backoff, and commits the queue offsets after the insert succeeds"}
+    ]
+  }
+]
