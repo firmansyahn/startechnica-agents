@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects on PostgreSQL.
 metadata:
   author: firmansyahn
-  version: "0.1.3"
+  version: "0.1.4"
 ---
 
 # Go database access (team)
@@ -15,7 +15,7 @@ metadata:
 
 > **Absorbed.** This skill includes `samber/cc-skills-golang@golang-database` (MIT, Samuel Berthe; source and pinned commit in [UPSTREAM.md](UPSTREAM.md)), adapted to the team: the team's rules and decisions come first and win, and "In depth" holds the upstream material, edited where the team decided otherwise. The project's own `AGENTS.md`, `CLAUDE.md` and project skills win over this skill.
 
-Related: [go-security](../go-security/SKILL.md) (`sec-sql-parameterized`, `sec-authz-every-route`: scope every query to the caller), [go-testing](../go-testing/SKILL.md) (`test-real-database`), [go-project-layout](../go-project-layout/SKILL.md) (the Platform layer), [go-how-to](../go-how-to/SKILL.md) (the Go skills and the rules they all assume).
+Related: [go-security](../go-security/SKILL.md) (`sec-sql-parameterized`, `sec-authz-every-route`: scope every query to the caller), [go-testing](../go-testing/SKILL.md) (`test-real-database`), [go-project-layout](../go-project-layout/SKILL.md) (the Platform layer), [go-mongodb](../go-mongodb/SKILL.md), [go-redis](../go-redis/SKILL.md), [go-clickhouse](../go-clickhouse/SKILL.md) (the other stores), [go-kafka](../go-kafka/SKILL.md) (publishing after a write: the outbox), [go-how-to](../go-how-to/SKILL.md) (the Go skills and the rules they all assume).
 
 ## When to use
 

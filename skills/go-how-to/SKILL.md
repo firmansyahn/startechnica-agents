@@ -1,12 +1,12 @@
 ---
 name: go-how-to
-description: "Use at the start of any Go backend work when it isn't clear which skill applies, or when a task spans several: starting a service, adding an endpoint end to end, onboarding to the team's Go conventions, asking 'what are our rules for Go' or 'how do we do X in Go'. Routes to the focused team skills (go-project-layout, go-code-style, go-error-handling, go-concurrency, go-database, go-testing, go-continuous-integration, go-security, go-http-handlers, go-knadh-koanf, go-observability, go-performance, go-safety, go-data-structures, go-refactoring, go-troubleshooting), go-nextjs-api-contract and the OAuth skills, maps every samber/cc-skills-golang golang-* name to the team skill that absorbed it, says how to ask each harness for deep thinking or subagents, and lists the rules they all assume and the toolchain commands. Each skill reviews its own rules."
+description: "Use at the start of any Go backend work when it isn't clear which skill applies, or when a task spans several: starting a service, adding an endpoint end to end, onboarding to the team's Go conventions, asking 'what are our rules for Go' or 'how do we do X in Go'. Routes to the focused team skills (go-project-layout, go-code-style, go-error-handling, go-concurrency, go-database, go-mongodb, go-redis, go-kafka, go-clickhouse, go-testing, go-continuous-integration, go-security, go-http-handlers, go-knadh-koanf, go-observability, go-performance, go-safety, go-data-structures, go-refactoring, go-troubleshooting), go-nextjs-api-contract and the OAuth skills, maps every samber/cc-skills-golang golang-* name to the team skill that absorbed it, says how to ask each harness for deep thinking or subagents, and lists the rules they all assume and the toolchain commands. Each skill reviews its own rules."
 user-invocable: true
 license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.3.0"
+  version: "0.4.0"
 ---
 
 # Go: which skill, and what they all assume
@@ -28,6 +28,10 @@ The skills follow the samber/cc-skills-golang shape: one focused skill per topic
 | Creating, wrapping, matching and logging errors; panics; exits | [go-error-handling](../go-error-handling/SKILL.md) | golang-error-handling | `err-` |
 | Goroutines, workers, `context.Context`, deadlines, mutexes, channels, shutdown | [go-concurrency](../go-concurrency/SKILL.md) | golang-concurrency; golang-context | `conc-` |
 | Queries, transactions, soft deletes, IDs, migrations, `pgx` | [go-database](../go-database/SKILL.md) | golang-database | `db-` |
+| MongoDB from Go: the v2 driver, one client, cursors, filters from input, indexes in code, transactions | [go-mongodb](../go-mongodb/SKILL.md) | (no samber skill; vendors MongoDB's `mongodb-schema-design`, `mongodb-query-optimizer`) | `mongo-` |
+| Redis from Go: go-redis v9, caching, TTLs and key names, locks, rate limits, Streams and pub/sub | [go-redis](../go-redis/SKILL.md) | (no samber skill; vendors Redis's `redis-security`, `redis-observability`) | `redis-` |
+| Kafka from Go: franz-go producers and consumer groups, commits, ordering, retries and dead letters, the outbox | [go-kafka](../go-kafka/SKILL.md) | (no upstream skill vendored) | `kafka-` |
+| ClickHouse from Go: clickhouse-go v2, batch and async inserts, parameters, scanning, retries without duplicates | [go-clickhouse](../go-clickhouse/SKILL.md) | (no samber skill; vendors ClickHouse's `clickhouse-best-practices`) | `ch-` |
 | Unit, database and handler tests; `-race`, `t.Parallel`, flaky or slow tests | [go-testing](../go-testing/SKILL.md) | golang-testing | `test-` |
 | Go CI quality gates: module checks, Go tests, lint and vulnerability scanning | [go-continuous-integration](../go-continuous-integration/SKILL.md) | golang-continuous-integration | `goci-` |
 | Logs (zap), metrics, traces, profiling toggles, alerts, dashboards | [go-observability](../go-observability/SKILL.md) | golang-observability | |
@@ -45,7 +49,7 @@ The skills follow the samber/cc-skills-golang shape: one focused skill per topic
 | Committing, worktrees, conflicts; MRs and the pipeline | `git-how-to`, `gitlab-how-to` | | |
 | Writing or changing a skill or rule, vendoring or absorbing an upstream skill, the skills lint | `agent-skills-authoring` | | |
 
-A new endpoint loads `go-project-layout` (where the handler, rule and query go) → `go-http-handlers` → `go-database` → `go-nextjs-api-contract` (the shape it answers) → `go-testing`, then each skill's "Reviewing" section before the merge request. A review of a whole change goes skill by skill: a handler → `go-http-handlers`, `go-security`, `go-error-handling`; a query or repository → `go-database`, `go-security`; a worker or anything with `go` → `go-concurrency`; a new package → `go-project-layout`; a test → `go-testing`; a CI change → `go-continuous-integration`, `gitlab-ci`; everything → `go-code-style`.
+A new endpoint loads `go-project-layout` (where the handler, rule and query go) → `go-http-handlers` → `go-database` → `go-nextjs-api-contract` (the shape it answers) → `go-testing`, then each skill's "Reviewing" section before the merge request. A review of a whole change goes skill by skill: a handler → `go-http-handlers`, `go-security`, `go-error-handling`; a query or repository → `go-database` (or `go-mongodb`, `go-redis`, `go-clickhouse` for those stores), `go-security`; a producer or consumer → `go-kafka`, `go-concurrency`; a worker or anything with `go` → `go-concurrency`; a new package → `go-project-layout`; a test → `go-testing`; a CI change → `go-continuous-integration`, `gitlab-ci`; everything → `go-code-style`.
 
 ## Rules every skill assumes
 
