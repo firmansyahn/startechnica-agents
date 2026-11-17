@@ -79,6 +79,18 @@ if has "$LIST" 'mongo\.Connect\(' && ! has "$LIST" '(SetTimeout\(|timeoutMS)'; t
   g "$LIST" '(^|[^A-Za-z0-9_])mongo\.Connect\(' | head -1 | sed 's/$/  (no SetTimeout or timeoutMS in the module)/' | emit mongo-context-deadline
 fi
 
+# --- login and app name ------------------------------------------------------------------------
+# mongo-authenticated-connection: a client built where nothing sets or checks a login; a URI written
+# into the code (it has no login, or it embeds a password)
+if ! has "$LIST" '(SetAuth\(|checkLogin\(|\.Auth[[:space:]]*==[[:space:]]*nil)'; then
+  g "$LIST" '(^|[^A-Za-z0-9_])mongo\.Connect\(' | sed 's/$/  (no SetAuth or login check in the module)/' | emit mongo-authenticated-connection
+fi
+g "$SRC" '"mongodb(\+srv)?://[A-Za-z0-9[]' | emit mongo-authenticated-connection
+# mongo-app-name: a client built where nothing names it
+if ! has "$LIST" 'SetAppName\('; then
+  g "$LIST" '(^|[^A-Za-z0-9_])mongo\.Connect\(' | sed 's/$/  (no SetAppName in the module)/' | emit mongo-app-name
+fi
+
 # --- reads -------------------------------------------------------------------------------------
 # mongo-close-cursor
 CURV='cur|cursor|[A-Za-z_]*Cursor|[A-Za-z_]*Cur|cs|stream|[A-Za-z_]*Stream'
@@ -118,6 +130,8 @@ g "$LIST" 'WithTransaction\(.*func\([A-Za-z_][A-Za-z0-9_]*[[:space:]]+(context\.
   | grep -vE 'func\(ctx[[:space:]]+context\.Context' | emit mongo-with-transaction
 
 if [ ! -s "$OUT" ]; then echo "no findings"; exit 0; fi
+# never print a password found in a connection string
+sed 's#\(mongodb[+a-z]*://\)[^"@/[:space:]]*@#\1<credentials>@#g' "$OUT" > "$OUT.redacted" && mv "$OUT.redacted" "$OUT"
 sort -u "$OUT"
 echo
 echo "--- findings per rule (candidates: confirm each against its rule file in rules/) ---"
