@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for git repositories hosted on GitLab.
 metadata:
   author: firmansyahn
-  version: "0.2.0"
+  version: "0.2.1"
 ---
 
 # Merge requests: the team's overlay
@@ -83,6 +83,7 @@ glab mr merge <iid> --yes --sha <the sha you saw pass>
 - `--sha` makes GitLab refuse if someone pushed after you checked.
 - Plain merge commits; no `--squash` or `--rebase` (squash merges also desynchronise stacked children, as `gitlab-stacked-mrs` warns).
 - **Stacks:** after a base merges, each MR above it needs a new MR pipeline against its new target before it merges (`mr-new-pipeline-after-retarget`): `glab api projects/:id/merge_requests/<iid>/pipelines -X POST`.
+- **Several MRs ready at once** (parallel agents): merge one at a time, in dependency order, each on its own green pipeline; sync only the worktrees that share files with it before the next (`wt-no-merge-loop`). The project's merge method stays "Merge commit": fast-forward and semi-linear need an up-to-date branch, so every merge sends every other MR back for a sync and a new pipeline.
 
 ## 5. After the merge
 

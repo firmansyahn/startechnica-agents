@@ -19,7 +19,7 @@ Every rule lives in the skill that teaches it, as `<skill>/rules/<id>.md`; the f
 | `upgrade-`, `router-`, `migrate-` | nextjs-upgrade | Crossing Next.js majors (checkpoints, breaking changes, verifying against a baseline); Pages Router to App Router; migrating onto the team's stack in phases |
 | `ci-` | gitlab-ci | Workflow rules, per-app rules and variables, org template overrides, manual jobs, triggers, images |
 | `mr-` | gitlab-mr | Merging on a green pipeline, stacked MRs, public MRs, reaching GitLab through glab |
-| `wt-` | git-worktree | When to make a worktree, its base, its dependencies, removing it safely |
+| `wt-` | git-worktree | When to make a worktree, its base, its dependencies, removing it safely; splitting parallel work by files, syncing with the base, merge order |
 | `commit-` | git-commit | Messages, staging, line endings, `[ci skip]`, author identity |
 | `ignore-` | git-gitignore | What is ignored and where, pattern shape, tracked files that match, files never ignored, other ignore files |
 

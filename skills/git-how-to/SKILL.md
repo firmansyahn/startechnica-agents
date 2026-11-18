@@ -1,12 +1,12 @@
 ---
 name: git-how-to
-description: "Use at the start of any git work when it isn't clear which skill applies, or when a task spans several: starting branch work in an isolated worktree, setting the base, dependencies in a worktree, committing (Conventional Commits, staging by name, line endings, [ci skip], author identity), what to ignore and where, merge conflicts and generated files, finishing a branch and cleaning up after the merge, or asking 'what are our rules for git'. Routes to the team skills (git-worktree, git-commit, git-gitignore, git-using-worktrees, finishing-a-development-branch, git-resolve-conflicts), lists the rules they all assume, and hands merge requests and pipelines to gitlab-how-to."
+description: "Use at the start of any git work when it isn't clear which skill applies, or when a task spans several: starting branch work in an isolated worktree, setting the base, dependencies in a worktree, committing (Conventional Commits, staging by name, line endings, [ci skip], author identity), what to ignore and where, merge conflicts and generated files, several agents on one repository (fewer conflicts, no merge loop), finishing a branch and cleaning up after the merge, or asking 'what are our rules for git'. Routes to the team skills (git-worktree, git-commit, git-gitignore, git-using-worktrees, finishing-a-development-branch, git-resolve-conflicts), lists the rules they all assume, and hands merge requests and pipelines to gitlab-how-to."
 user-invocable: true
 license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for any git repository.
 metadata:
   author: firmansyahn
-  version: "0.1.3"
+  version: "0.1.4"
 ---
 
 # Git: which skill, and the rules they all assume
@@ -26,6 +26,7 @@ The workflow includes team-maintained skills adapted from established public sou
 | Start branch work in isolation; set the base; dependencies in a worktree | [git-worktree](../git-worktree/SKILL.md) | [git-using-worktrees](../git-using-worktrees/SKILL.md) (team workflow adapted from obra/superpowers) | `wt-` |
 | Finish a branch; clean up after the merge; sync the other worktrees | [git-worktree](../git-worktree/SKILL.md) | [finishing-a-development-branch](../finishing-a-development-branch/SKILL.md) (team workflow adapted from obra/superpowers) | `wt-` |
 | Merge conflicts, generated files in a conflict | [git-resolve-conflicts](../git-resolve-conflicts/SKILL.md), then [git-worktree](../git-worktree/SKILL.md) section 4 | Team workflow adapted from tailcallhq/forgecode | |
+| Several agents or worktrees on one repository: split the files, hot files, syncing, merge order, a merge loop | [git-worktree](../git-worktree/SKILL.md) section 5 | [gitlab-stacked-mrs](../gitlab-stacked-mrs/SKILL.md) for dependent work | `wt-` |
 | A commit message, what to stage, line endings, `[ci skip]`, author identity | [git-commit](../git-commit/SKILL.md) | The Conventional Commits 1.0.0 spec | `commit-` |
 | What to ignore and where, a `.gitignore` change, a committed file that should be ignored, `.dockerignore` in step | [git-gitignore](../git-gitignore/SKILL.md) | gitignore(5), GitHub's github/gitignore templates | `ignore-` |
 | Merge requests, reviews posted to them, pipelines, merging | `gitlab-how-to` | | |
@@ -45,7 +46,7 @@ git-worktree (§4)    conflicts on the way: merge from the base, git-resolve-con
 ## Rules every skill assumes
 
 1. **The project wins.** Its `AGENTS.md`, `CLAUDE.md`, hooks and project skills override the team skills where they differ. The team overlays override the upstream skills.
-2. **Branch work in its own worktree** when the checkout isn't yours alone, with its own dependencies: its own `node_modules` and Go modules, never a link to another checkout's (`wt-no-switch-in-shared-checkout`, `wt-own-dependencies`).
+2. **Branch work in its own worktree** when the checkout isn't yours alone, with its own dependencies: its own `node_modules` and Go modules, never a link to another checkout's (`wt-no-switch-in-shared-checkout`, `wt-own-dependencies`). Parallel worktrees change different files (`wt-disjoint-files`).
 3. **Know the base.** A branch starts from whatever the work builds on; the MR targets it, and you merge from it to stay current. Merge, don't rebase, a pushed branch (`wt-know-the-base`).
 4. **Conventional Commits**, files staged by name, LF only (`commit-conventional`, `commit-stage-by-name`, `commit-lf-endings`).
 5. **Env files with values are ignored**, lockfiles never (`ignore-env-with-values`, `ignore-never-shared-files`).
