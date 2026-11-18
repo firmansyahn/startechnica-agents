@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.1.3"
+  version: "0.1.4"
 ---
 
 # Go refactoring (team)
@@ -24,7 +24,7 @@ Related: [go-project-layout](../go-project-layout/SKILL.md) (where code may move
 3. **Moves keep the layers:** a package split or move follows [go-project-layout](../go-project-layout/SKILL.md), and its architecture test stays green at every step.
 4. **Characterization tests use the standard `testing` package** with golden files under `testdata/` ([go-testing](../go-testing/SKILL.md); no testify).
 5. **The project's impact-analysis tooling wins** for blast radius when it has one (a code graph's impact or rename tool), before gopls alone.
-6. Links to upstream skills that aren't absorbed (`samber/cc-skills-golang@golang-samber-*`, `-uber-*`, `-google-wire`, `-popular-libraries`, `-gopls`, `-pkg-go-dev` and the rest in [go-how-to](../go-how-to/SKILL.md) rule 9) are skipped, and so are their install commands.
+6. Links to upstream skills that aren't absorbed (`samber/cc-skills-golang@golang-samber-*`, `-uber-*`, `-google-wire`, `-popular-libraries`, `-pkg-go-dev` and the rest in [go-how-to](../go-how-to/SKILL.md) rule 9) are skipped, and so are their install commands.
 
 ## In depth
 
@@ -45,7 +45,7 @@ The material below is `samber/cc-skills-golang@golang-refactoring`, absorbed int
 
 **Questions:** Sign-off gates in this skill (Plan mode's initial approval, and every mid-refactor checkpoint below) are asked through the environment's question tool, never as plain-text prose the reader might skim past — a refactor is exactly the kind of workflow where an unnoticed "assumed yes" is expensive to undo. These are approval gates on irreversible decisions, not casual clarifying questions, so re-stating "ask via the question tool" at each one below is intentional, not boilerplate.
 
-**Dependencies:** `gopls` (primary actuator) — `go install golang.org/x/tools/gopls@latest`. Optional: `golangci-lint`, `benchstat`, `deadcode`, `eg`, `gopatch`. This is the only place this skill explains how to get gopls; every other reference to it in this skill assumes it's already installed.
+**Dependencies:** `gopls` (primary actuator) — `go install golang.org/x/tools/gopls@latest`. Optional: `golangci-lint`, `benchstat`, `deadcode`, `eg`, `gopatch`. This is the only place this skill explains how to get gopls; every other reference to it in this skill assumes it's already installed. How to reach it from an agent (MCP server, `LSP` tool, CLI) and the read and edit workflows are [go-gopls](../go-gopls/SKILL.md).
 
 ### Go Refactoring — Safe Change at Scale
 

@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.1.3"
+  version: "0.1.4"
 ---
 
 # Go troubleshooting (team)
@@ -22,7 +22,7 @@ Related: [go-observability](../go-observability/SKILL.md) (the logs, metrics, tr
 1. **Production evidence comes from the [go-observability](../go-observability/SKILL.md) setup:** zap logs with `trace.id`, Prometheus metrics, traces, and pprof on the internal port, switched on by a setting; upstream's basic-auth-plus-environment-variable pprof setup is the fallback for a service that has neither.
 2. **A fix starts with a failing test** that reproduces the bug ([go-testing](../go-testing/SKILL.md)), and the test stays.
 3. **Read-only in production:** inspecting pods, logs and profiles is fine; restarting, scaling or changing a deployment is the user's decision.
-4. Links to upstream skills that aren't absorbed (`samber/cc-skills-golang@golang-samber-*`, `-uber-*`, `-google-wire`, `-popular-libraries`, `-gopls`, `-pkg-go-dev` and the rest in [go-how-to](../go-how-to/SKILL.md) rule 9) are skipped, and so are their install commands.
+4. Links to upstream skills that aren't absorbed (`samber/cc-skills-golang@golang-samber-*`, `-uber-*`, `-google-wire`, `-popular-libraries`, `-pkg-go-dev` and the rest in [go-how-to](../go-how-to/SKILL.md) rule 9) are skipped, and so are their install commands.
 
 ## In depth
 
@@ -149,7 +149,7 @@ When you don't understand the issue:
 
 Before flagging a bug or proposing a fix, trace the data flow and check for upstream handling. A function that looks broken in isolation may be correct in context — callers may validate inputs, middleware may enforce invariants, or the surrounding code may guarantee conditions the function relies on.
 
-1. **Trace callers** — who calls this function and with what values? Call sites can be found with code search tools. A language server such as gopls (`gopls references`, `gopls implementation`) resolves the actual symbol through interfaces and embedding — it finds indirect call sites and skips unrelated same-named identifiers that plain grep would respectively miss or falsely match.
+1. **Trace callers** — who calls this function and with what values? Call sites can be found with code search tools. A language server such as gopls ([go-gopls](../go-gopls/SKILL.md); `gopls references`, `gopls implementation`) resolves the actual symbol through interfaces and embedding — it finds indirect call sites and skips unrelated same-named identifiers that plain grep would respectively miss or falsely match.
 2. **Check upstream validation** — input parsing, type conversions, or guard clauses earlier in the chain may make the "bug" unreachable.
 3. **Read the surrounding code** — middleware, interceptors, or init functions may set up state the function depends on.
 
