@@ -229,7 +229,7 @@ Each area has a small router skill that sends a task to the right skill and list
 
 | Area | Router | Topic skills |
 |---|---|---|
-| Go services | `go-how-to` | `go-project-layout`, `go-code-style`, `go-error-handling`, `go-concurrency`, `go-database`, `go-mongodb`, `go-redis`, `go-kafka`, `go-clickhouse`, `go-testing`, `go-continuous-integration`, `go-security`, `go-http-handlers`, `go-knadh-koanf`, `go-observability`, `go-performance`, `go-safety`, `go-data-structures`, `go-refactoring`, `go-troubleshooting`, `go-nextjs-api-contract` |
+| Go services | `go-how-to` | `go-project-layout`, `go-code-style`, `go-error-handling`, `go-concurrency`, `go-database`, `go-mongodb`, `go-redis`, `go-kafka`, `go-clickhouse`, `go-testing`, `go-continuous-integration`, `go-security`, `go-http-handlers`, `go-knadh-koanf`, `go-observability`, `go-performance`, `go-safety`, `go-data-structures`, `go-refactoring`, `go-gopls`, `go-troubleshooting`, `go-nextjs-api-contract` |
 | Next.js apps | `nextjs-how-to` | `nextjs-new-app`, `nextjs-app-structure`, `nextjs-data`, `nextjs-bff`, `nextjs-forms`, `nextjs-ui`, `nextjs-logging`, `nextjs-security`, `nextjs-e2e`, `nextjs-deploy`, `nextjs-package-manager`, `nextjs-upgrade` |
 | OAuth / OIDC | (from `go-how-to`, `nextjs-how-to`) | `oauth-server`, `oauth-client` |
 | git | `git-how-to` | `git-worktree`, `git-commit`, `git-gitignore` |

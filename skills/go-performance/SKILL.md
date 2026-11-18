@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.1.3"
+  version: "0.1.4"
 ---
 
 # Go performance (team)
@@ -23,7 +23,7 @@ Related: [go-testing](../go-testing/SKILL.md) (benchmarks are tests, beside the 
 2. **Profiling endpoints and continuous profiling** are set up as [go-observability](../go-observability/SKILL.md) says: pprof on an internal port, never the public one, and Pyroscope behind a setting.
 3. **No `samber/*` libraries** ([go-code-style](../go-code-style/SKILL.md), decision 1): the standard library, and `golang.org/x/sync/singleflight` for request coalescing.
 4. **Benchmarks live beside the code** under [go-testing](../go-testing/SKILL.md)'s rules, and CI benchmark checks run in GitLab CI ([gitlab-ci](../gitlab-ci/SKILL.md)), not GitHub Actions.
-5. Links to upstream skills that aren't absorbed (`samber/cc-skills-golang@golang-samber-*`, `-uber-*`, `-google-wire`, `-popular-libraries`, `-gopls`, `-pkg-go-dev` and the rest in [go-how-to](../go-how-to/SKILL.md) rule 9) are skipped, and so are their install commands.
+5. Links to upstream skills that aren't absorbed (`samber/cc-skills-golang@golang-samber-*`, `-uber-*`, `-google-wire`, `-popular-libraries`, `-pkg-go-dev` and the rest in [go-how-to](../go-how-to/SKILL.md) rule 9) are skipped, and so are their install commands.
 
 ## In depth
 

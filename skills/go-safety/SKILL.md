@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.1.3"
+  version: "0.1.4"
 ---
 
 # Go safety (team)
@@ -20,7 +20,7 @@ Related: [go-error-handling](../go-error-handling/SKILL.md) (errors, panics and 
 ## Team decisions
 
 1. **Errors and panics follow [go-error-handling](../go-error-handling/SKILL.md):** no `panic` in request or worker paths, and errors handled once; the defensive patterns here never swallow an error to avoid a crash.
-2. Links to upstream skills that aren't absorbed (`samber/cc-skills-golang@golang-samber-*`, `-uber-*`, `-google-wire`, `-popular-libraries`, `-gopls`, `-pkg-go-dev` and the rest in [go-how-to](../go-how-to/SKILL.md) rule 9) are skipped, and so are their install commands.
+2. Links to upstream skills that aren't absorbed (`samber/cc-skills-golang@golang-samber-*`, `-uber-*`, `-google-wire`, `-popular-libraries`, `-pkg-go-dev` and the rest in [go-how-to](../go-how-to/SKILL.md) rule 9) are skipped, and so are their install commands.
 
 ## In depth
 

@@ -6,7 +6,7 @@ license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for Go server projects.
 metadata:
   author: firmansyahn
-  version: "0.3.3"
+  version: "0.3.4"
 ---
 
 # Go code style (team)
@@ -53,7 +53,7 @@ Related: [go-error-handling](../go-error-handling/SKILL.md) (error style), [go-c
 4. **zap, not slog:** upstream's `log/slog` examples are written with zap; building the logger (ECS json, the `logging` block) is in [go-observability](../go-observability/SKILL.md).
 5. **Metrics, tracing and profiling** (Prometheus, OpenTelemetry, Pyroscope) only where the project already has them; otherwise suggest, don't add.
 6. **CI is GitLab CI** ([gitlab-ci](../gitlab-ci/SKILL.md)) and **tests use the standard `testing` package**: the lint and modernize references assume both, and `sloglint`/`testifylint` only flag leftovers of slog and testify.
-7. Links to upstream skills that aren't absorbed (`golang-samber-*`, `golang-uber-*`, `golang-popular-libraries`, `golang-gopls`, `golang-cli`, `golang-pkg-go-dev`) are skipped; Go CI checks are in [go-continuous-integration](../go-continuous-integration/SKILL.md), with GitLab pipeline rules in [gitlab-ci](../gitlab-ci/SKILL.md).
+7. Links to upstream skills that aren't absorbed (`golang-samber-*`, `golang-uber-*`, `golang-popular-libraries`, `golang-cli`, `golang-pkg-go-dev`) are skipped; Go CI checks are in [go-continuous-integration](../go-continuous-integration/SKILL.md), with GitLab pipeline rules in [gitlab-ci](../gitlab-ci/SKILL.md).
 
 ## Rules
 
