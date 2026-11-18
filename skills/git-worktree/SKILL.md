@@ -1,12 +1,12 @@
 ---
 name: git-worktree
-description: "Team overlay on git-using-worktrees, finishing-a-development-branch and git-resolve-conflicts. Read it when starting branch work, sharing a checkout, finishing work, removing a worktree, or resolving conflicts. It sets team policy for worktree paths, base branches, dependencies, local files, merge requests, cleanup, and generated files."
+description: "Team overlay on git-using-worktrees, finishing-a-development-branch and git-resolve-conflicts. Read it when starting branch work, sharing a checkout, finishing work, removing a worktree, resolving conflicts, or running several agents or worktrees on one repository. It sets team policy for worktree paths, base branches, dependencies, local files, merge requests, cleanup, generated files, and for fewer conflicts and no merge loop between parallel work: disjoint files, hot-file owners, syncing with the base, merge order."
 user-invocable: true
 license: MIT
 compatibility: Designed for Claude Code, Codex, OpenCode, oh-my-pi or similar harness, and for git repositories hosted on GitLab.
 metadata:
   author: firmansyahn
-  version: "0.2.1"
+  version: "0.3.0"
 ---
 
 # Worktrees: the team's overlay
@@ -21,6 +21,7 @@ This overlay works with the team-maintained [git-using-worktrees](../git-using-w
 | Make it runnable | git-using-worktrees, Step 2 | Section 2 |
 | Finish the branch | [finishing-a-development-branch](../finishing-a-development-branch/SKILL.md) (obra/superpowers) | Section 3 |
 | Merge conflicts | [git-resolve-conflicts](../git-resolve-conflicts/SKILL.md) (tailcallhq/forgecode) | Section 4 |
+| Several agents or worktrees at once | The rules below | Section 5 |
 | MR, pipeline, merge | [gitlab-glab](../gitlab-glab/SKILL.md), [gitlab-pipeline-watch](../gitlab-pipeline-watch/SKILL.md), [gitlab-stacked-mrs](../gitlab-stacked-mrs/SKILL.md) (GitLab) | `gitlab-mr` |
 
 Everything here works on Linux, macOS and Windows; the few platform differences (what deletes through a link, how to remove one, what a running process does to a removal) and the hooks are in [references/platforms-and-hooks.md](references/platforms-and-hooks.md).
@@ -69,14 +70,25 @@ Upstream checks `.gitignore`. Git doesn't recurse into worktrees (each `.worktre
   3. Check there's no `node_modules` or `vendor` link; if an older tool left one, remove the link alone and check it's gone (`wt-unlink-before-remove`; commands per platform in the reference).
   4. From the main checkout: `git worktree remove .worktrees/<topic>`, then `git worktree prune`.
   5. `git branch -D feat/<topic>` (upstream's `-d` refuses, because the MR's merge commit isn't on your local copy of the target); `git ls-remote --heads origin feat/<topic>` prints nothing.
-  6. **Sync the other open worktrees** whose base is the branch that just moved: `git fetch origin && git merge origin/<their base>` in each, now, while the conflicts are small (section 4).
+  6. **Sync the other open worktrees** whose base is the branch that just moved: `git fetch origin && git merge origin/<their base>` in each, now, while the conflicts are small (section 4). Once per merge, and no more (`wt-no-merge-loop`).
 
 ## 4. Conflicts: git-resolve-conflicts, with the team's generated files
 
 - **Merge, don't rebase** a pushed branch: `git fetch origin && git merge origin/<base>` (the MR's target). Then follow `git-resolve-conflicts`.
 - **Generated files are regenerated, never merged by hand** (upstream's principle 4). Each project lists its generated files and the commands that rebuild them in its `AGENTS.md`; take either side, run the commands on the merged code, and stage the result.
 - **Turn on rerere** once per clone (`git config rerere.enabled true`): every worktree shares it, so a conflict resolved once is reapplied the next time.
-- Fewer conflicts start before the merge: small MRs merged in order (`gitlab-stacked-mrs` for dependent work), and the sync in section 3, step 6.
+- Fewer conflicts start before the merge: small MRs merged in order (`gitlab-stacked-mrs` for dependent work), and the sync in section 3, step 6. With several agents at work, section 5.
+
+## 5. Several agents at once: fewer conflicts, no merge loop
+
+Most conflicts between parallel worktrees are decided before the first edit, and most "merge loops" come from every merge making every other open branch stale. Agents coordinate through the repository and the MRs, not by messaging each other: harnesses differ, and separately launched sessions often can't. A lead (the user, or one agent) assigns the work and merges it.
+
+1. **Plan the split by files.** Each task names the files it changes; no file is in two tasks (`wt-disjoint-files`). Dependent work becomes a stack, not parallel work. The project's hot files (version fields, indexes, changelogs, registries, lockfiles) each have one owner, or are edited once by the last MR of the batch (`wt-one-owner-for-hot-files`).
+2. **Check for overlap while the work runs.** `bash <this skill>/scripts/scan.sh` lists every file changed in two worktrees. A file in the list is a decision for the lead: move the edit, or hold one worktree until the other has merged.
+3. **Sync at four fixed points**: at the start, after a sibling merged, before the MR, before the merge (`wt-sync-with-base`). Small MRs, one concern each.
+4. **Merge one MR at a time, in dependency order**, each on its own green pipeline; sync only the worktrees that share files with it. An agent that still conflicts after its second sync stops and reports instead of trying again (`wt-no-merge-loop`). Never rebase a pushed branch, and never merge a sibling's branch into yours.
+
+If the project's merge method requires an up-to-date branch (fast-forward, semi-linear), every merge sends every other MR back for a sync and a new pipeline: use "Merge commit" (`gitlab-mr` section 4).
 
 ## Rules index
 
@@ -90,6 +102,10 @@ Team rules on top of the upstream skills. One file per rule in `rules/`; the fil
 | [wt-unlink-before-remove](rules/wt-unlink-before-remove.md) | Remove links alone, and check, before removing the worktree | CRITICAL | hook (`guard-worktree-remove.mjs`) |
 | [wt-stop-processes-before-remove](rules/wt-stop-processes-before-remove.md) | Stop processes running from the worktree before removing it | MEDIUM | hook, review |
 | [wt-remove-after-merge](rules/wt-remove-after-merge.md) | Remove the worktree and its branch once the MR merged | LOW | scan (worktree folders that are gone), review (`git worktree list`) |
+| [wt-disjoint-files](rules/wt-disjoint-files.md) | Give parallel worktrees files nobody else touches | MEDIUM | scan (files changed in two worktrees), review |
+| [wt-one-owner-for-hot-files](rules/wt-one-owner-for-hot-files.md) | Let one worktree own each hot shared file | MEDIUM | review (the project's hot-file list) |
+| [wt-sync-with-base](rules/wt-sync-with-base.md) | Merge the base into the worktree at four fixed points | MEDIUM | review (`git log HEAD..origin/<base>`) |
+| [wt-no-merge-loop](rules/wt-no-merge-loop.md) | Sync once per merge of the base, then stop and report | MEDIUM | review (one merge of the base per merge on it, no force-push) |
 
 ## Reviewing
 
@@ -120,3 +136,4 @@ Two `PreToolUse` hooks for the `Bash` tool (Node; Linux, macOS and Windows). Cop
 - [ ] `.worktrees/` ignored in `.gitignore`, `.dockerignore`, the code indexer and the editor
 - [ ] The worktree's own `yarn install` and Go modules; no `node_modules`/`vendor` link, no `replace` or `go.work` pointing outside it; local files copied, not committed
 - [ ] Finished through an MR; after the merge: processes stopped, no links, worktree removed, branch deleted, other worktrees synced
+- [ ] Parallel agents: files split per task, hot files owned, `scan.sh` shows no unplanned overlap, base merged at the four points, MRs merged one at a time, no rebase of pushed branches

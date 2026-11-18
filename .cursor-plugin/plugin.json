@@ -2,7 +2,7 @@
   "name": "startechnica-agents",
   "displayName": "Startechnica agent skills",
   "description": "Agent skills for Go services, Next.js apps, OAuth, git and GitLab: focused skills with rules, review scans and checklists",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "author": {
     "name": "Firmansyah Nainggolan"
   },

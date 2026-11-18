@@ -54,6 +54,34 @@ git worktree list --porcelain | sed -n 's/^worktree //p' | while IFS= read -r wt
   done
 done | sort -u | emit wt-own-dependencies   # sort -u: a worktree inside .worktrees/ is also seen from the main checkout
 
+# wt-disjoint-files: files changed in two worktrees since their commits last had a common ancestor.
+# A worktree's own changes are its non-merge commits since that ancestor that aren't on the default
+# branch yet (so commits it merged in from the base don't count), plus uncommitted and untracked
+# files. A stack's child shares its parent's commits, so it doesn't report the parent's files.
+git worktree list --porcelain | sed -n 's/^worktree //p' > "$TMP/wts"
+DEFAULT_BASE="$(git rev-parse -q --verify origin/HEAD 2>/dev/null)"
+own_changes() { # <worktree> <merge-base>
+  if [ -n "$DEFAULT_BASE" ]; then git -C "$1" log --no-merges --name-only --format= "$2..HEAD" --not "$DEFAULT_BASE" 2>/dev/null </dev/null
+  else git -C "$1" log --no-merges --name-only --format= "$2..HEAD" 2>/dev/null </dev/null; fi
+  git -C "$1" diff --name-only HEAD 2>/dev/null </dev/null
+  git -C "$1" ls-files --others --exclude-standard 2>/dev/null </dev/null
+}
+i=0
+while IFS= read -r a; do
+  i=$((i + 1)); j=0
+  while IFS= read -r b; do
+    j=$((j + 1))
+    [ "$j" -le "$i" ] && continue
+    [ -d "$a" ] && [ -d "$b" ] || continue
+    ha="$(git -C "$a" rev-parse -q --verify HEAD 2>/dev/null </dev/null)" || continue
+    hb="$(git -C "$b" rev-parse -q --verify HEAD 2>/dev/null </dev/null)" || continue
+    mb="$(git merge-base "$ha" "$hb" 2>/dev/null </dev/null)" || continue
+    own_changes "$a" "$mb" | sed '/^$/d' | sort -u > "$TMP/fa"
+    own_changes "$b" "$mb" | sed '/^$/d' | sort -u > "$TMP/fb"
+    comm -12 "$TMP/fa" "$TMP/fb" | sed "s#^#$a and $b: #; s#\$# is changed in both worktrees#"
+  done < "$TMP/wts"
+done < "$TMP/wts" | emit wt-disjoint-files
+
 # --- report --------------------------------------------------------------------------------------
 if [ -s "$OUT" ]; then
   sort -s -t "$(printf '\t')" -k1,1 "$OUT"
