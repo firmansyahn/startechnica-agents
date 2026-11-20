@@ -161,7 +161,9 @@ Add the absolute path to the clone's root directory (which contains [package.jso
 ```jsonc
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugins": ["<absolute-path-to-clone>"]
+  "plugins": [
+    "startechnica-agents@git+https://github.com/firmansyahn/startechnica-agents.git",
+  ]
 }
 ```
 
